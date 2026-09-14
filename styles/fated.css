@@ -1,0 +1,127 @@
+.fated.sheet {
+  --fated-gap: 0.75rem;
+  --fated-border: color-mix(in srgb, var(--color-border-light-primary, #777) 50%, transparent);
+}
+
+.fated .fated-sheet-body {
+  display: grid;
+  gap: var(--fated-gap);
+  padding: 0.75rem;
+  min-width: 0;
+}
+
+.fated .fated-sheet-header {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--fated-gap);
+  align-items: center;
+}
+
+.fated .fated-sheet-header.compact {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+
+.fated .portrait {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--fated-border);
+  border-radius: 0.5rem;
+}
+
+.fated .identity {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.fated .actor-type,
+.fated .muted {
+  opacity: 0.7;
+}
+
+.fated .panel {
+  border: 1px solid var(--fated-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  min-width: 0;
+}
+
+.fated .panel h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+}
+
+.fated .stat-grid,
+.fated .resource-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fated .stat-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fated .resource-pair {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.fated label {
+  display: grid;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.fated input,
+.fated select,
+.fated textarea {
+  width: 100%;
+}
+
+.fated .checkbox-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.fated .checkbox-line input {
+  width: auto;
+}
+
+.fated .item-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fated .item-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem;
+  border-bottom: 1px solid var(--fated-border);
+}
+
+.fated .item-row img {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+}
+
+@media (max-width: 600px) {
+  .fated .stat-grid,
+  .fated .stat-grid.three,
+  .fated .resource-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fated .fated-sheet-header {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+}

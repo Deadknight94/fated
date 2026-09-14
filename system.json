@@ -1,0 +1,77 @@
+{
+  "id": "fated",
+  "title": "Fated",
+  "description": "Foundry VTT game system for Fated TTRPG.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": 14,
+    "verified": "14.367"
+  },
+  "authors": [
+    {
+      "name": "Fated TTRPG Project"
+    }
+  ],
+  "esmodules": [
+    "fated.mjs"
+  ],
+  "styles": [
+    {
+      "src": "styles/fated.css",
+      "layer": "system"
+    }
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "fated": {
+        "htmlFields": [
+          "biography"
+        ]
+      },
+      "npc": {
+        "htmlFields": [
+          "description"
+        ]
+      }
+    },
+    "Item": {
+      "weapon": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "armor": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "equipment": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "weaponProficiency": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "feature": {
+        "htmlFields": [
+          "description"
+        ]
+      }
+    }
+  },
+  "socket": false,
+  "grid": {
+    "distance": 1,
+    "units": "hex"
+  }
+}

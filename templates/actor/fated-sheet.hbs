@@ -1,0 +1,61 @@
+<div class="fated-sheet-body">
+  <header class="fated-sheet-header">
+    <img class="portrait" src="{{actor.img}}" alt="{{actor.name}}">
+    <div class="identity">
+      <label>Name</label>
+      <input type="text" name="name" value="{{actor.name}}" {{disabled (not editable)}}>
+      <span class="actor-type">Fated</span>
+    </div>
+  </header>
+
+  <section class="panel">
+    <h2>Primary Attributes</h2>
+    <div class="stat-grid three">
+      <label>Heart <input type="number" name="system.attributes.heart" value="{{system.attributes.heart}}" min="0" {{disabled (not editable)}}></label>
+      <label>Body <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" {{disabled (not editable)}}></label>
+      <label>Mind <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" {{disabled (not editable)}}></label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Resources</h2>
+    <div class="resource-grid">
+      <label>Endurance
+        <span class="resource-pair">
+          <input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}>
+          <strong>/ {{system.resources.endurance.max}}</strong>
+        </span>
+      </label>
+      <label>Hope
+        <span class="resource-pair">
+          <input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}>
+          <strong>± {{system.resources.hope.max}}</strong>
+        </span>
+      </label>
+      <label>Power <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
+      <label>Load <input type="number" value="{{system.load}}" readonly></label>
+    </div>
+  </section>
+
+  <section class="panel inventory">
+    <h2>Items</h2>
+    {{#if items.length}}
+      <ul class="item-list">
+        {{#each items as |item|}}
+          <li class="item-row draggable" data-item-id="{{item.id}}">
+            <img src="{{item.img}}" alt="">
+            <span>{{item.name}}</span>
+            <small>{{item.type}}</small>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="muted">No items yet.</p>
+    {{/if}}
+  </section>
+
+  <section class="panel biography">
+    <h2>Biography / Notes</h2>
+    <textarea name="system.biography" rows="8" {{disabled (not editable)}}>{{system.biography}}</textarea>
+  </section>
+</div>
