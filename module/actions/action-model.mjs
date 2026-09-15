@@ -18,6 +18,7 @@ export class ActionDataModel extends foundry.abstract.DataModel {
       enabled: new BooleanField({ initial: true }),
       name: text(),
       classification: choice(["main", "free", "power"]),
+      rollRequirement: new StringField({ required: true, nullable: true, initial: null, choices: ["required", "none"] }),
       successDice: new SchemaField({ source: choice(["fixed", "heart", "body", "mind"]), base: optionalNumber() }),
       successThreshold: optionalNumber(),
       attackType: choice(["melee", "ranged"]),

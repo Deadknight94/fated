@@ -1,4 +1,5 @@
 import { actionsField, migrateLegacyAction } from "./actions/action-model.mjs";
+import { declarationField } from "./declaration/data-model.mjs";
 
 const {
   HTMLField,
@@ -24,6 +25,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       biography: new HTMLField({ required: false, nullable: false, initial: "" }),
+      declaration: declarationField(),
       attributes: new SchemaField({
         heart: int(0, 0),
         body: int(0, 0),

@@ -10,6 +10,7 @@ export function readActionForm(submitted, current) {
     const number = value => value === "" || value === null || value === undefined ? null : Number(value);
     merged.successDice.base = number(merged.successDice.base);
     merged.successThreshold = number(merged.successThreshold);
+    merged.rollRequirement = merged.rollRequirement || null;
     merged.range.min = number(merged.range.min);
     merged.range.max = number(merged.range.max);
     merged.multiActionEligible = input.multiActionEligible === "" ? null

@@ -22,10 +22,7 @@
     </section>
     {{/if}}
     {{#if turn}}
-    <section class="mobile-empty" aria-label="Turn">
-      <h2>Turn</h2><p>Your turn planner will live here.</p>
-      <p>For this playtest, declare your turn at the table. Use Actions to consult your Item rules.</p>
-    </section>
+    {{> "systems/fated/templates/actor/turn-planner.hbs"}}
     {{/if}}
     {{#if actionsView}}
     <section aria-label="Actions">
@@ -35,6 +32,7 @@
       {{#each actions as |action|}}
       <article class="mobile-action-card">
         <header><p class="mobile-eyebrow">{{action.classificationLabel}}</p><h3>{{action.name}}</h3><p class="mobile-source">{{action.source.itemName}}</p></header>
+        <p>{{action.rollRequirementLabel}}</p>
         <dl class="mobile-action-facts">
           <div><dt>Success Dice</dt><dd>{{action.dice.total}}</dd></div>
           <div><dt>Success Threshold</dt><dd>{{action.threshold.total}}</dd></div>

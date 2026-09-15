@@ -1,10 +1,10 @@
-# Item Actions and mobile foundation
+# Item Actions and mobile Turn Declaration Planner
 
 Target: Foundry VTT 14.367. Physical dice remain the primary play method.
 
 ## Data and services
 
-Every current Item type stores an array of embedded `ActionDataModel` values at `system.actions`. Each Action has a stable ID, name, enabled flag, optional classification, Success Dice source/base, threshold, melee/ranged classification, range with explicit units, effect summary, plain rules text, allowed stances, optional Multi-Action eligibility, and two independent modifier arrays.
+Every current Item type stores an array of embedded `ActionDataModel` values at `system.actions`. Each Action has a stable ID, name, enabled flag, optional classification, explicit three-state roll requirement (`required`, `none`, null/unspecified), Success Dice source/base, threshold, melee/ranged classification, range with explicit units, effect summary, plain rules text, allowed stances, optional Multi-Action eligibility, and two independent modifier arrays.
 
 Blank choices, null numbers and null eligibility mean **unspecified**. An empty stance list also means unspecified, not unrestricted. Selecting all stances explicitly records permission for all four. No example weapon rules or numeric rule defaults are installed. Attribute-based dice sources only resolve when explicitly selected; they do not prescribe which attribute an Action uses.
 
@@ -16,21 +16,25 @@ The previous single `system.action` is migrated to the array when read, includin
 
 `calculateAction(action, attributes, additionalModifiers)` recalculates from the base every time. Each of `successDice` and `successThreshold` receives its own list of `{id, label, value, source}` entries. Item configuration stores the ID, label and optional value; the service derives Item/Action provenance. Additional future modifier providers can supply their own provenance.
 
-Results expose the base, individual modifiers, total and completeness. An unknown base or modifier produces an unknown total. There is no guessed minimum, maximum, stance modifier, Multi-Action penalty, equipment bonus or Power effect. Removing a supplied modifier and recalculating removes its contribution without accumulating an earlier total.
+Results expose the base, individual modifiers, total and completeness. An unknown base or modifier produces an unknown total. The planner supplies the established Multi-Action Threshold modifier separately; there is no guessed minimum, maximum, stance modifier, equipment bonus or Power effect. Removing a supplied modifier and recalculating removes its contribution without accumulating an earlier total.
 
 ## Interface
 
 The desktop Fated sheet offers **Open mobile interface**. The mobile sheet is also registered as an optional Fated sheet in Foundry's sheet configuration. It is separate from the existing desktop and NPC layouts, while sharing documents and services.
 
-Character edits existing resources and attributes. Actions shows enabled Item Actions and expandable, separate dice/threshold breakdowns. Items opens owned Item sheets for authoring. Turn is only a placeholder. No targets, rolls, locking, movement tracking or combat resolution are implemented.
+Character edits existing resources and attributes. Actions shows enabled Item Actions and expandable, separate dice/threshold breakdowns. Items opens owned Item sheets for authoring. Turn selects stance and orders Main/Free/Power Actions plus one optional continuous Movement segment. Locking produces a persistent execution checklist with frozen text and calculations. No targets, paths, digital rolls, movement execution or combat resolution are implemented.
 
 Cards adapt to the width of their sheet, including narrow resizable windows on a desktop. Controls in the player shell, including its window buttons, are at least 48px high. Phone viewports up to 600px use a full-screen sheet. Above that, the sheet remains a resizable window; Foundry may retain a narrowed window size after rotation, so resize or reopen it if desired.
 
-## Future planner compatibility (not implemented)
+## Declaration data and legality
 
-A future turn document can hold stance plus an ordered list of entries referencing Action keys, with its own entry IDs so the same Action can occur more than once. Main/Free/Power classification and allowed stance metadata already exist. One optional Movement entry belongs to that future turn structure, not to an Item Action or a target. No target fields exist here.
+Fated Actors store `system.declaration`: version, revision, editing/locked status, stance, ordered entries, nullable snapshot and completion IDs. Each Action entry retains Item/Action references and its own entry ID, allowing repeated ordinary Actions. One optional Movement entry belongs to the declaration. No target fields exist here.
 
-Rebuilding both modifier lists and recalculating from the bases supports adding/removing planned Actions without reusing previous totals. Future stance, Multi-Action and condition providers must supply separately labelled sources; none are applied now. On locking, the future planner must deep-copy the Action data, calculation breakdowns and physical instructions into a saved snapshot, rather than continuing to read live Item values. The detached service results support this boundary, but snapshot persistence, instruction formatting, locking and legality checks are deliberately absent.
+Editable declarations recalculate from current owned/enabled Actions. The evaluator checks configured stance restrictions, Main/Movement limits, explicit Multi-Action eligibility, Power exclusivity and roll completeness. One/two/three Main Actions add +0/+1/+2 Threshold, independently of Success Dice. Required rolls need complete dice and Threshold data; no-roll Actions do not; unspecified roll requirements block locking.
+
+The picker disables Main/additional Power choices while Power is present and disables Power choices while Main Actions are present, with a visible explanation. A shared addition guard enforces the same rule in the persistence service. Movement and Free Actions remain allowed. Neither layer removes existing entries or repairs stored illegal combinations; evaluator-level Power validation still blocks their locking. A valid Power-only turn receives no Multi-Action modifier.
+
+Locking deep-copies Action data, provenance, calculation breakdowns, stance, sequence and original Main count into a saved snapshot. Locked display reads that snapshot. Checklist changes do not recalculate it. Ending a declaration clears entries, snapshot and checklist while preserving stance and resources; no combat-triggered reset occurs.
 
 ## Verification performed for this milestone
 
@@ -44,7 +48,7 @@ Rebuilding both modifier lists and recalculating from the bases supports adding/
 
 ## Repeatable checks
 
-Run `node --test --test-isolation=none tests/actions.test.mjs` with Foundry installed. Set `FOUNDRY_APP_PATH` to its `resources/app` directory if needed. These tests use installed Foundry DataModels and cover schema serialization, legacy conversion, invalid data, modifier recalculation, source provenance, form conversion and baseline resource derivation.
+Run `node --test --test-isolation=none tests/actions.test.mjs tests/declaration.test.mjs` with Foundry installed. Set `FOUNDRY_APP_PATH` to its `resources/app` directory if needed. These tests use installed Foundry DataModels and cover Action serialization, legacy conversion, invalid data, modifiers, provenance, forms, resources, declaration legality, Power addition prevention, snapshots and clearing.
 
 ## Manual Foundry smoke test
 
@@ -57,4 +61,4 @@ Run `node --test --test-isolation=none tests/actions.test.mjs` with Foundry inst
 7. Repeat on a physical phone and iPad, including Safari, the on-screen keyboard and an Actor-owner player account. Confirm editing permissions and no reliance on hover, sidebars or canvas controls after opening the interface.
 8. Inspect browser console and Network for Fated errors or missing templates/modules/styles during all steps. Foundry's own minimum-resolution warning may still appear below its supported core viewport size; it is separate from the mobile sheet layout.
 
-Unspecified Action bases, thresholds, range units, permitted stances, effects and eligibility require explicit rule/configuration decisions before those particular Actions can provide complete physical-dice instructions. They do not block this foundation milestone.
+Unspecified roll requirements and required dice/Threshold values block declaration locking. Missing classification, permitted stances or required Multi-Action eligibility also appear as incomplete. Range, targets and situational map legality remain table adjudication within this milestone.

@@ -18,6 +18,21 @@
 .fated.sheet.item { max-width: 100vw; min-width: 0; }
 
 /* Purpose-built player shell. Desktop and NPC layouts keep their existing styles. */
+.fated-mobile .turn-planner { display: grid; gap: 0.8rem; }
+.fated-mobile .turn-stance-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.fated-mobile .turn-stance-buttons [aria-pressed="true"], .fated-mobile .turn-primary { background: var(--mobile-accent); color: #171c23; font-weight: bold; }
+.fated-mobile .turn-stance { font-size: 1.6rem; text-transform: uppercase; color: var(--mobile-accent); margin: 0; }
+.fated-mobile .turn-sequence { display: grid; gap: 1rem; list-style: none; margin: 0; padding: 0; }
+.fated-mobile .turn-entry { background: var(--mobile-surface); border: 1px solid #65707d; border-radius: 12px; padding: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.fated-mobile .turn-instruction { font-size: 1.2rem; font-weight: bold; margin: 0.6rem 0; }
+.fated-mobile .turn-entry-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.fated-mobile .turn-number { color: var(--mobile-accent); }
+.fated-mobile .turn-issues { padding: 0.75rem; border: 1px solid #e0ab65; border-radius: 8px; color: #ffe2bd; }
+.fated-mobile .turn-issues ul { padding-left: 1.2rem; }
+.fated-mobile .turn-picker button { display: grid; width: 100%; text-align: left; margin: 0.5rem 0; gap: 0.25rem; }
+.fated-mobile .turn-picker span { color: var(--mobile-muted); font-size: 0.85rem; }
+.fated-mobile .turn-completed { border-color: var(--mobile-accent); }
+.fated-mobile button:disabled { opacity: 0.5; cursor: default; }
 .fated-mobile.application {
   --mobile-accent: #d6a85b;
   --mobile-surface: #242a32;

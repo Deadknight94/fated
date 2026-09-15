@@ -8,6 +8,11 @@
       <label class="checkbox-line"><input type="checkbox" name="system.actions.{{action.index}}.enabled" {{checked action.enabled}} {{disabled (not @root.editable)}}> Enabled</label>
       <label>Action name <input name="system.actions.{{action.index}}.name" value="{{action.name}}" {{disabled (not @root.editable)}}></label>
       <div class="stat-grid two">
+        <label>Roll requirement
+          <select name="system.actions.{{action.index}}.rollRequirement" {{disabled (not @root.editable)}}>
+            {{selectOptions @root.rollRequirements selected=action.rollRequirement}}
+          </select>
+        </label>
         <label>Classification
           <select name="system.actions.{{action.index}}.classification" {{disabled (not @root.editable)}}>
             {{selectOptions @root.classifications selected=action.classification}}

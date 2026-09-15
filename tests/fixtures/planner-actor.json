@@ -1,0 +1,162 @@
+{
+  "name": "Planner UI Test",
+  "type": "fated",
+  "system": {
+    "attributes": {
+      "heart": 2,
+      "body": 3,
+      "mind": 4
+    },
+    "resources": {
+      "endurance": {
+        "value": 4
+      },
+      "hope": {
+        "value": 1
+      },
+      "power": 2
+    }
+  },
+  "items": [
+    {
+      "name": "Planner Test Equipment",
+      "type": "equipment",
+      "system": {
+        "load": 0,
+        "actions": [
+          {
+            "enabled": true,
+            "classification": "main",
+            "rollRequirement": "required",
+            "successDice": {
+              "source": "fixed",
+              "base": 4
+            },
+            "successThreshold": 4,
+            "allowedStances": [
+              "neutral",
+              "offensive"
+            ],
+            "multiActionEligible": true,
+            "range": {
+              "min": 0,
+              "max": 3,
+              "units": "hexes"
+            },
+            "rules": "Synthetic UI test configuration. Not a Fated rule.",
+            "id": "test-main",
+            "name": "Test Main",
+            "modifiers": {
+              "successDice": [
+                {
+                  "id": "test-dice",
+                  "label": "Test dice adjustment",
+                  "value": 1
+                }
+              ],
+              "successThreshold": [
+                {
+                  "id": "test-threshold",
+                  "label": "Test threshold adjustment",
+                  "value": -1
+                }
+              ]
+            }
+          },
+          {
+            "enabled": true,
+            "classification": "free",
+            "rollRequirement": "none",
+            "successDice": {
+              "source": "",
+              "base": null
+            },
+            "successThreshold": null,
+            "allowedStances": [
+              "neutral",
+              "offensive"
+            ],
+            "multiActionEligible": true,
+            "range": {
+              "min": 0,
+              "max": 3,
+              "units": "hexes"
+            },
+            "rules": "Synthetic UI test configuration. Not a Fated rule.",
+            "id": "test-free",
+            "name": "Test Free"
+          },
+          {
+            "enabled": true,
+            "classification": "power",
+            "rollRequirement": "required",
+            "successDice": {
+              "source": "fixed",
+              "base": 4
+            },
+            "successThreshold": 4,
+            "allowedStances": [
+              "neutral",
+              "offensive"
+            ],
+            "multiActionEligible": true,
+            "range": {
+              "min": 0,
+              "max": 3,
+              "units": "hexes"
+            },
+            "rules": "Synthetic UI test configuration. Not a Fated rule.",
+            "id": "test-power",
+            "name": "Test Power"
+          },
+          {
+            "enabled": true,
+            "classification": "main",
+            "rollRequirement": null,
+            "successDice": {
+              "source": "fixed",
+              "base": 4
+            },
+            "successThreshold": 4,
+            "allowedStances": [
+              "neutral",
+              "offensive"
+            ],
+            "multiActionEligible": true,
+            "range": {
+              "min": 0,
+              "max": 3,
+              "units": "hexes"
+            },
+            "rules": "Synthetic UI test configuration. Not a Fated rule.",
+            "id": "test-unknown",
+            "name": "Test Unspecified"
+          },
+          {
+            "enabled": true,
+            "classification": "main",
+            "rollRequirement": "required",
+            "successDice": {
+              "source": "fixed",
+              "base": 4
+            },
+            "successThreshold": 4,
+            "allowedStances": [
+              "neutral",
+              "offensive"
+            ],
+            "multiActionEligible": false,
+            "range": {
+              "min": 0,
+              "max": 3,
+              "units": "hexes"
+            },
+            "rules": "Synthetic UI test configuration. Not a Fated rule.",
+            "id": "test-single",
+            "name": "Test Single Only"
+          }
+        ]
+      }
+    }
+  ]
+}
