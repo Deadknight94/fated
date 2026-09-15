@@ -30,34 +30,7 @@
     </section>
   {{/if}}
 
-  {{#if hasAction}}
-    <section class="panel">
-      <h2>Item Action</h2>
-      <label class="checkbox-line"><input type="checkbox" name="system.action.enabled" {{checked system.action.enabled}} {{disabled (not editable)}}> Has an action</label>
-      <div class="stat-grid two">
-        <label>Action Name <input type="text" name="system.action.name" value="{{system.action.name}}" {{disabled (not editable)}}></label>
-        <label>Action Type
-          <select name="system.action.type" {{disabled (not editable)}}>
-            <option value="main" {{#if (eq system.action.type "main")}}selected{{/if}}>Main</option>
-            <option value="free" {{#if (eq system.action.type "free")}}selected{{/if}}>Free</option>
-            <option value="power" {{#if (eq system.action.type "power")}}selected{{/if}}>Power</option>
-            <option value="passive" {{#if (eq system.action.type "passive")}}selected{{/if}}>Passive</option>
-          </select>
-        </label>
-        <label>Stance
-          <select name="system.action.stance" {{disabled (not editable)}}>
-            <option value="any" {{#if (eq system.action.stance "any")}}selected{{/if}}>Any</option>
-            <option value="neutral" {{#if (eq system.action.stance "neutral")}}selected{{/if}}>Neutral</option>
-            <option value="offensive" {{#if (eq system.action.stance "offensive")}}selected{{/if}}>Offensive</option>
-            <option value="defensive" {{#if (eq system.action.stance "defensive")}}selected{{/if}}>Defensive</option>
-            <option value="ranged" {{#if (eq system.action.stance "ranged")}}selected{{/if}}>Ranged</option>
-          </select>
-        </label>
-        <label>Minimum Range <input type="number" name="system.action.range.min" value="{{system.action.range.min}}" min="0" {{disabled (not editable)}}></label>
-        <label>Maximum Range <input type="number" name="system.action.range.max" value="{{system.action.range.max}}" min="0" {{disabled (not editable)}}></label>
-      </div>
-    </section>
-  {{/if}}
+  {{> "systems/fated/templates/item/action-editor.hbs"}}
 
   <section class="panel">
     <h2>Description</h2>

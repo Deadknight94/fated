@@ -499,9 +499,19 @@ Do not combine unrelated mechanics and UI redesign work into one large change wi
 
 \---
 
-## Implementation Order
+## First In-Person Playtest Priorities
 
-Current intended implementation sequence:
+Physical dice are the primary play method. Do not build digital dice rolling unless specifically requested later. The TV displays the battlemap with physical miniatures; players use phones, tablets, and iPads.
+
+The player interface must be mobile-first and touch-friendly. No essential interaction may depend on hover, Foundry sidebars, or canvas/token controls.
+
+The future Turn Declaration Planner is target-agnostic. It will declare stance and an ordered sequence of Main Actions, one optional continuous Movement segment, and Free Actions. Targets are not selected or stored by the planner. This overrides earlier target/path requirements for the planner's implementation scope, without changing the tabletop rules.
+
+As Actions are added or removed, final Success Dice and Success Threshold values must be recalculable from all applicable modifiers. Dice-pool modifiers and Success-Threshold modifiers are distinct and must remain separately traceable. Once a turn is locked, the eventual planner will show the ordered Actions and exact physical dice instructions for each Action.
+
+The current milestone implements structured Item Actions, minimal traceable modifier infrastructure, and a purpose-built mobile Fated interface with Character, Turn, Actions, and Items navigation. Turn is a placeholder only. Do not implement the full declaration planner, rolling, resolution, stance mechanics, Multi-Action calculation, Power spending, locking, movement tracking, combat automation, or an NPC mobile interface in this milestone.
+
+The following historical sequence is superseded by these playtest priorities; deferred systems require explicit authorization:
 
 1. Foundry v14 scaffold and DataModels
 2. Basic Fated and NPC sheets
@@ -532,4 +542,3 @@ When a missing rule does block implementation, flag it for rules review.
 Playtesting is expected to reveal rules that require revision.
 
 The Foundry implementation should make those revisions reasonably easy to apply.
-
