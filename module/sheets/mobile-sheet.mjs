@@ -1,6 +1,7 @@
 import { calculateAction } from "../actions/actions.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
+import { adjustResource } from "../resources.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -21,7 +22,8 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     position: { width: 760, height: 780 },
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
-    actions: { showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem, planner: FatedMobileSheet.planner }
+    actions: { showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
+      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource }
   };
 
   static PARTS = { main: { template: "systems/fated/templates/actor/mobile-sheet.hbs",
@@ -76,6 +78,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };
     return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner,
+      currentStances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === this.document.system.currentStance })),
       items: this.document.items.contents,
       sections: ["character", "turn", "actions", "items"].map(id => ({ id, label: label(id), active: id === this.section })),
       character: this.section === "character", turn: this.section === "turn",
@@ -92,6 +95,18 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   static openItem(event, button) {
     this.document.items.get(button.dataset.itemId)?.sheet.render({ force: true });
+  }
+
+  static async adjustResource(event, button) {
+    if (!this.isEditable || this.resourcePending) return;
+    this.resourcePending = true;
+    try {
+      await adjustResource(this.document, button.dataset.resource, Number(button.dataset.delta));
+    } catch (error) {
+      ui.notifications.warn(error.message);
+    } finally {
+      this.resourcePending = false;
+    }
   }
 
   static async planner(event, button) {

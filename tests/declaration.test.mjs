@@ -178,13 +178,13 @@ test("ordering, completion and clearing preserve snapshot and Actor resources", 
 });
 
 test("Actor persistence service rejects stale controls and touches only declaration", async () => {
-  const actor = { type: "fated", isOwner: true, system: { declaration: new DeclarationDataModel(freshDeclaration()) },
+  const actor = { type: "fated", isOwner: true, system: { currentStance: "neutral", declaration: new DeclarationDataModel(freshDeclaration()) },
     getAvailableActions: () => [], update: async changes => { assert.deepEqual(Object.keys(changes), ["system.declaration"]); actor.system.declaration = new DeclarationDataModel(changes["system.declaration"]); } };
   await updateDeclaration(actor, 0, { type: "stance", stance: "offensive" });
   assert.equal(actor.system.declaration.revision, 1);
   await assert.rejects(updateDeclaration(actor, 0, { type: "clear" }), /changed/);
   await updateDeclaration(actor, 1, { type: "clear" });
-  assert.equal(actor.system.declaration.stance, "offensive");
+  assert.equal(actor.system.declaration.stance, "neutral");
   actor.type = "npc";
   await assert.rejects(updateDeclaration(actor, 2, { type: "clear" }), /Fated/);
 });

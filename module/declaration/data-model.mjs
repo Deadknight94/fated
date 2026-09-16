@@ -57,4 +57,4 @@ export class DeclarationDataModel extends foundry.abstract.DataModel {
   }
 }
 
-export const declarationField = () => new EmbeddedDataField(DeclarationDataModel);
+export const declarationField = options => new EmbeddedDataField(DeclarationDataModel, options);

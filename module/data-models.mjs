@@ -1,5 +1,7 @@
-import { actionsField, migrateLegacyAction } from "./actions/action-model.mjs";
+import { actionsField, migrateLegacyAction, STANCES } from "./actions/action-model.mjs";
 import { declarationField } from "./declaration/data-model.mjs";
+import { clampHope } from "./resources.mjs";
+import { freshDeclaration } from "./declaration/evaluate.mjs";
 
 const {
   HTMLField,
@@ -25,7 +27,8 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       biography: new HTMLField({ required: false, nullable: false, initial: "" }),
-      declaration: declarationField(),
+      currentStance: new StringField({ required: true, nullable: false, blank: false, initial: "neutral", choices: STANCES }),
+      declaration: declarationField({ initial: source => freshDeclaration(source.currentStance ?? "neutral") }),
       attributes: new SchemaField({
         heart: int(0, 0),
         body: int(0, 0),
@@ -38,6 +41,27 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
       }),
       load: int(0, 0)
     };
+  }
+
+  async _preCreate(data, options, user) {
+    if (await super._preCreate(data, options, user) === false) return false;
+    const source = this.toObject();
+    this.parent.updateSource({ "system.resources.hope.value": clampHope(source.resources.hope.value, source.attributes) });
+  }
+
+  async _preUpdate(changes, options, user) {
+    if (await super._preUpdate(changes, options, user) === false) return false;
+    const expanded = foundry.utils.expandObject(changes);
+    const candidate = this.clone(expanded.system ?? {});
+    const source = this.toObject();
+    // Old out-of-range source values must not resurface when an attribute increases.
+    const hope = expanded.system?.resources?.hope?.value === undefined
+      ? clampHope(source.resources.hope.value, source.attributes) : candidate.resources.hope.value;
+    const corrected = clampHope(hope, candidate.attributes);
+    if (corrected !== source.resources.hope.value || expanded.system?.resources?.hope?.value !== undefined) {
+      if (Object.hasOwn(changes, "system")) foundry.utils.setProperty(changes, "system.resources.hope.value", corrected);
+      else changes["system.resources.hope.value"] = corrected;
+    }
   }
 
   prepareDerivedData() {
@@ -56,11 +80,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
       this.resources.endurance.max
     );
 
-    this.resources.hope.value = Math.clamp(
-      this.resources.hope.value,
-      -this.resources.hope.max,
-      this.resources.hope.max
-    );
+    this.resources.hope.value = clampHope(this.resources.hope.value, this.attributes);
   }
 }
 

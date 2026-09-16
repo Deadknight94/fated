@@ -1,4 +1,4 @@
-import { editDeclaration, evaluateDeclaration, lockDeclaration, powerActionAdditionIssue } from "./evaluate.mjs";
+import { editDeclaration, evaluateDeclaration, lockDeclaration, powerActionAdditionIssue, freshDeclaration } from "./evaluate.mjs";
 
 export function getDeclarationEvaluation(actor) {
   const declaration = actor.system.declaration.toObject();
@@ -21,8 +21,10 @@ export async function updateDeclaration(actor, revision, operation) {
       const issue = powerActionAdditionIssue(action, evaluateDeclaration(current, actions, actor.system.attributes));
       if (issue) throw new Error(issue);
     }
-    next = editDeclaration(current, operation, { id: foundry.utils.randomID() });
+    next = operation.type === "clear" ? freshDeclaration(actor.system.currentStance, current.revision)
+      : editDeclaration(current, operation, { id: foundry.utils.randomID() });
   }
   next.revision = current.revision + 1;
-  await actor.update({ "system.declaration": next });
+  await actor.update({ "system.declaration": next,
+    ...(operation.type === "lock" ? { "system.currentStance": next.stance } : {}) });
 }

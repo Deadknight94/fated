@@ -83,6 +83,9 @@
 .fated-mobile .mobile-resource-value { display: flex; gap: 0.4rem; align-items: center; }
 .fated-mobile .mobile-resource-value input { min-width: 0; width: 55%; }
 .fated-mobile .mobile-resource-value > span { white-space: nowrap; font-size: 0.95rem; }
+.fated-mobile .mobile-resource-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
+.fated-mobile .mobile-current-stance { margin-top: 1rem; }
+.fated-mobile .mobile-current-stance select { min-height: 48px; font-size: 1.2rem; background: #10151b; color: var(--mobile-text); border: 1px solid #65707d; border-radius: 8px; }
 .fated-mobile .mobile-load { display: grid; gap: 0.25rem; }
 .fated-mobile .mobile-load strong { font-size: 1.7rem; }
 .fated-mobile .mobile-note, .fated-mobile small, .fated-mobile .mobile-source { color: var(--mobile-muted); line-height: 1.5; }

@@ -35,6 +35,7 @@
       </label>
       <label>Power <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
       <label>Load <input type="number" value="{{system.load}}" readonly></label>
+      <label>Current Stance <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
     </div>
   </section>
 
