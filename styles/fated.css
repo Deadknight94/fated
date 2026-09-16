@@ -1,3 +1,21 @@
+.fated-companion-active #interface,
+.fated-companion-active #board,
+.fated-companion-active #pause { display: none !important; }
+.fated-companion {
+  position: fixed !important; inset: 0 !important;
+  width: 100vw !important; height: 100dvh !important;
+  border-radius: 0; margin: 0; padding: 0; overflow: hidden;
+}
+.fated-companion .mobile-header { padding-top: max(1rem, env(safe-area-inset-top)); padding-right: 10rem; }
+.fated-companion-menu {
+  position: fixed; top: max(0.5rem, env(safe-area-inset-top)); right: 0.5rem;
+  z-index: 2147483646; width: 9rem; color: #f4f0e7; background: #242a32;
+  border: 1px solid #65707d; border-radius: 8px; padding: 0.25rem;
+}
+.fated-companion-menu summary, .fated-companion-menu button {
+  min-height: 48px; padding: 0.6rem; cursor: pointer; font-size: 0.9rem;
+}
+.fated-companion-menu button { display: block; width: 100%; height: auto; white-space: normal; margin-top: 0.4rem; }
 .fated.sheet {
   --fated-gap: 0.75rem;
   --fated-border: color-mix(in srgb, var(--color-border-light-primary, #777) 50%, transparent);
@@ -33,7 +51,7 @@
 .fated-mobile .turn-picker span { color: var(--mobile-muted); font-size: 0.85rem; }
 .fated-mobile .turn-completed { border-color: var(--mobile-accent); }
 .fated-mobile button:disabled { opacity: 0.5; cursor: default; }
-.fated-mobile.application {
+.fated-mobile.application, .fated-companion {
   --mobile-accent: #d6a85b;
   --mobile-surface: #242a32;
   --mobile-text: #f4f0e7;

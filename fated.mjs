@@ -11,6 +11,9 @@ import {
 import { FatedActorSheet, NpcActorSheet } from "./module/sheets/actor-sheets.mjs";
 import { FatedItemSheet } from "./module/sheets/item-sheet.mjs";
 import { FatedMobileSheet } from "./module/sheets/mobile-sheet.mjs";
+import { initializeCompanionMode } from "./module/companion.mjs";
+
+Hooks.once("ready", initializeCompanionMode);
 
 Hooks.once("init", () => {
   console.log("Fated | Initializing Fated system");
