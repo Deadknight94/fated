@@ -499,9 +499,23 @@ Do not combine unrelated mechanics and UI redesign work into one large change wi
 
 \---
 
-## Implementation Order
+## First In-Person Playtest Priorities
 
-Current intended implementation sequence:
+Physical dice are the primary play method. Do not build digital dice rolling unless specifically requested later. The TV displays the battlemap with physical miniatures; players use phones, tablets, and iPads.
+
+The player interface must be mobile-first and touch-friendly. No essential interaction may depend on hover, Foundry sidebars, or canvas/token controls.
+
+The future Turn Declaration Planner is target-agnostic. It will declare stance and an ordered sequence of Main Actions, one optional continuous Movement segment, and Free Actions. Targets are not selected or stored by the planner. This overrides earlier target/path requirements for the planner's implementation scope, without changing the tabletop rules.
+
+As Actions are added or removed, final Success Dice and Success Threshold values must be recalculable from all applicable modifiers. Dice-pool modifiers and Success-Threshold modifiers are distinct and must remain separately traceable. Once a turn is locked, the eventual planner will show the ordered Actions and exact physical dice instructions for each Action.
+
+The Action/mobile foundation is accepted. The current milestone adds the first target-agnostic Turn Declaration Planner: explicit stance selection, ordered Main/Free/Power Actions and one optional Movement segment, the established Multi-Action Threshold modifier, determinable legality, persistent locking and an execution checklist. Locked values must remain independent of subsequent Item/Actor changes. Clearing preserves the selected stance and current resources; there is no combat-triggered reset.
+
+Actions explicitly declare `rollRequirement`: `required`, `none`, or unspecified/null. Required rolls need complete Success Dice and Threshold values before locking; no-roll Actions do not. Unspecified requirements block locking. Never infer a requirement from missing dice data or legacy numeric defaults.
+
+Do not add targets, paths, positions, digital dice, Power Dice spending, resolution, damage/wounds, situational map legality, combat automation or an NPC planner. Only existing configured modifiers and the established Multi-Action Threshold modifier apply. Unknown required legality data must be shown as incomplete, not guessed.
+
+The following historical sequence is superseded by these playtest priorities; deferred systems require explicit authorization:
 
 1. Foundry v14 scaffold and DataModels
 2. Basic Fated and NPC sheets
@@ -532,4 +546,3 @@ When a missing rule does block implementation, flag it for rules review.
 Playtesting is expected to reveal rules that require revision.
 
 The Foundry implementation should make those revisions reasonably easy to apply.
-

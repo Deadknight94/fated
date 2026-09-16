@@ -10,6 +10,7 @@ import {
 } from "./module/data-models.mjs";
 import { FatedActorSheet, NpcActorSheet } from "./module/sheets/actor-sheets.mjs";
 import { FatedItemSheet } from "./module/sheets/item-sheet.mjs";
+import { FatedMobileSheet } from "./module/sheets/mobile-sheet.mjs";
 
 Hooks.once("init", () => {
   console.log("Fated | Initializing Fated system");
@@ -53,6 +54,9 @@ Hooks.once("init", () => {
     types: ["npc"],
     label: "FATED.Sheets.Npc",
     makeDefault: true
+  });
+  sheets.registerSheet(Actor, "fated", FatedMobileSheet, {
+    types: ["fated"], label: "FATED.Sheets.Mobile", makeDefault: false
   });
 
   sheets.unregisterSheet(Item, "core", foundry.appv1.sheets.ItemSheet);

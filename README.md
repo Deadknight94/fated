@@ -1,6 +1,6 @@
 # Fated for Foundry VTT
 
-Early development scaffold for the Fated TTRPG system.
+Physical-dice playtest interface for the Fated TTRPG system.
 
 ## Target
 
@@ -10,7 +10,7 @@ Early development scaffold for the Fated TTRPG system.
 
 ## Current milestone
 
-This build intentionally implements only the first installable data-model milestone:
+This build implements the data-model baseline, Item Actions and mobile Turn Declaration Planner:
 
 - Actor types: `fated`, `npc`
 - Item types: `weapon`, `armor`, `equipment`, `weaponProficiency`, `feature`
@@ -21,17 +21,18 @@ This build intentionally implements only the first installable data-model milest
 - Load derived from carried weapons, armor, and equipment
 - NPC Resilience and Shadow
 - Basic ApplicationV2 actor and item sheets
-- Basic responsive/mobile layout
+- Multiple structured Actions per Item, with separate traceable dice and threshold modifiers
+- Optional mobile Fated sheet with Character, Turn, Actions, and Items navigation
+- Target-agnostic declarations with stance selection, ordered Actions, one Movement segment, Multi-Action Threshold calculation, persistent locking and an execution checklist
 
 Not yet implemented:
 
-- Success Dice / Fate Die rolls
+- Digital dice rolling (physical dice are primary; requires a later explicit request)
 - Power Dice or Shadow Dice rolls
 - Critical success resource generation
 - Wounds and healing
 - Broken / Death's Door automation
-- Stances
-- turn declaration / multi-action workflow
+- Additional stance mechanics beyond configured Action restrictions
 - range, LOS, and combat automation
 - world-level Shadow pool
 - rest automation
@@ -44,11 +45,12 @@ Copy the `fated` directory into the Foundry User Data systems directory:
 
 Restart Foundry, create or edit a World, and select **Fated** as the game system.
 
-## Development sequence
+## Player interface
 
-1. Confirm the package loads cleanly in Foundry v14.
-2. Confirm Fated/NPC creation and sheet editing.
-3. Confirm embedded Items can be created and Load is derived correctly.
-4. Add the core roll engine.
-5. Add wound/resource automation.
-6. Add combat declaration and stance UX.
+Open a Fated Actor and press **Open mobile interface**. Alternatively select **Fated Mobile Sheet** in its sheet configuration. The desktop sheet remains the default; NPCs are unchanged. The mobile sheet fills phone viewports up to 600px wide and remains a resizable window on larger screens.
+
+Configure Actions on owned Items using **Add Action**. Fields save on change. Unspecified fields remain unknown; they do not imply zero or unrestricted use. Set each Action's roll requirement explicitly.
+
+Use **Turn** to choose a stance and order Main, Free and Power Actions plus one optional continuous Movement segment. A declared Power Action disables additional Main/Power choices; declared Main Actions disable Power choices. Movement and Free Actions remain available. Incomplete or illegal declarations cannot lock. Locking freezes Action text and calculations for physical-dice execution; ending the declaration clears it while preserving stance and resources. No digital rolling or combat resolution is included.
+
+See [Action architecture and smoke tests](docs/actions-mobile.md) for implementation details and verification steps.

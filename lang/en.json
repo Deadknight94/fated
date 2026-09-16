@@ -2,6 +2,7 @@
   "FATED": {
     "Sheets": {
       "Fated": "Fated Sheet",
+      "Mobile": "Fated Mobile Sheet",
       "Npc": "NPC / Adversary Sheet",
       "Item": "Fated Item Sheet"
     }

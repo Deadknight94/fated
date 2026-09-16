@@ -1,0 +1,77 @@
+<div class="mobile-shell">
+  <header class="mobile-header">
+    <img src="{{actor.img}}" alt="" width="48" height="48">
+    <div><p class="mobile-eyebrow">Fated · At the table</p><h1>{{actor.name}}</h1></div>
+  </header>
+  <main class="mobile-content">
+    {{#if character}}
+    <section aria-label="Character">
+      <h2>Character</h2>
+      <div class="mobile-attributes">
+        <label>Heart <input type="number" name="system.attributes.heart" value="{{system.attributes.heart}}" min="0" {{disabled (not editable)}}></label>
+        <label>Body <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" {{disabled (not editable)}}></label>
+        <label>Mind <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" {{disabled (not editable)}}></label>
+      </div>
+      <div class="mobile-resources">
+        <label>Endurance <span class="mobile-resource-value"><input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}><span>/ {{system.resources.endurance.max}}</span></span></label>
+        <label>Hope <span class="mobile-resource-value"><input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}><span>/ ±{{system.resources.hope.max}}</span></span></label>
+        <label>Power <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
+        <div class="mobile-load"><span>Load</span><strong>{{system.load}}</strong><small>From owned weapons, armor, and equipment</small></div>
+      </div>
+      <p class="mobile-note">Dice are rolled physically at the table.</p>
+    </section>
+    {{/if}}
+    {{#if turn}}
+    {{> "systems/fated/templates/actor/turn-planner.hbs"}}
+    {{/if}}
+    {{#if actionsView}}
+    <section aria-label="Actions">
+      <h2>Actions <span class="mobile-count">{{actions.length}}</span></h2>
+      <p class="mobile-note">Enabled Item Actions. Stance and other situational restrictions are checked at the table. Values below include configured Action modifiers only.</p>
+      <div class="mobile-action-list">
+      {{#each actions as |action|}}
+      <article class="mobile-action-card">
+        <header><p class="mobile-eyebrow">{{action.classificationLabel}}</p><h3>{{action.name}}</h3><p class="mobile-source">{{action.source.itemName}}</p></header>
+        <p>{{action.rollRequirementLabel}}</p>
+        <dl class="mobile-action-facts">
+          <div><dt>Success Dice</dt><dd>{{action.dice.total}}</dd></div>
+          <div><dt>Success Threshold</dt><dd>{{action.threshold.total}}</dd></div>
+          <div><dt>Use</dt><dd>{{action.attackLabel}}</dd></div>
+          <div><dt>Range</dt><dd>{{action.rangeLabel}}</dd></div>
+        </dl>
+        {{#if action.effect}}<p class="mobile-rules"><strong>Damage / effect:</strong> {{action.effect}}</p>{{/if}}
+        <p><strong>Allowed stances:</strong> {{action.stanceLabel}}</p>
+        {{#if action.rules}}<p class="mobile-rules">{{action.rules}}</p>{{/if}}
+        <details class="mobile-breakdown">
+          <summary>Dice &amp; threshold details</summary>
+          <p>Multi-Action eligible: {{action.eligibilityLabel}}</p>
+          <h4>Success Dice · {{action.diceSourceLabel}}</h4>
+          <dl><div><dt>Base Success Dice</dt><dd>{{action.dice.base}}</dd></div>
+          {{#each action.dice.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+          <div><dt>Total configured Success Dice</dt><dd>{{action.dice.total}}</dd></div></dl>
+          <h4>Success Threshold</h4>
+          <dl><div><dt>Base Threshold</dt><dd>{{action.threshold.base}}</dd></div>
+          {{#each action.threshold.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+          <div><dt>Total configured Threshold</dt><dd>{{action.threshold.total}}</dd></div></dl>
+        </details>
+        <button type="button" data-action="openItem" data-item-id="{{action.source.itemId}}">Open {{action.source.itemName}}</button>
+      </article>
+      {{else}}<div class="mobile-empty"><h3>No Actions yet</h3><p>Open an Item from Items and add an Action. Enable it to show it here.</p></div>{{/each}}
+      </div>
+    </section>
+    {{/if}}
+    {{#if itemsView}}
+    <section aria-label="Items">
+      <h2>Items</h2><p class="mobile-note">Tap an Item to read or configure its Actions.</p>
+      <div class="mobile-item-list">
+      {{#each items as |item|}}
+      <button class="mobile-item" type="button" data-action="openItem" data-item-id="{{item.id}}"><img src="{{item.img}}" alt="" width="40" height="40"><span>{{item.name}}<small>{{item.type}}</small></span><span aria-hidden="true">›</span></button>
+      {{else}}<p>No owned Items yet. Ask the GM to add your equipment and features.</p>{{/each}}
+      </div>
+    </section>
+    {{/if}}
+  </main>
+  <nav class="mobile-nav" aria-label="Character sections">
+    {{#each sections}}<button type="button" data-action="showSection" data-section="{{id}}" {{#if active}}aria-current="page"{{/if}}>{{label}}</button>{{/each}}
+  </nav>
+</div>

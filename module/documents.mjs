@@ -1,4 +1,10 @@
+import { getActorActions, getItemActions } from "./actions/actions.mjs";
+
 export class FatedActor extends Actor {
+  getAvailableActions() {
+    return getActorActions(this);
+  }
+
   prepareDerivedData() {
     super.prepareDerivedData();
 
@@ -16,4 +22,8 @@ export class FatedActor extends Actor {
   }
 }
 
-export class FatedItem extends Item {}
+export class FatedItem extends Item {
+  getAvailableActions() {
+    return getItemActions(this);
+  }
+}

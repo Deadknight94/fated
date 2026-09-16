@@ -1,6 +1,7 @@
+import { actionsField, migrateLegacyAction } from "./actions/action-model.mjs";
+import { declarationField } from "./declaration/data-model.mjs";
+
 const {
-  ArrayField,
-  BooleanField,
   HTMLField,
   NumberField,
   SchemaField,
@@ -24,6 +25,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       biography: new HTMLField({ required: false, nullable: false, initial: "" }),
+      declaration: declarationField(),
       attributes: new SchemaField({
         heart: int(0, 0),
         body: int(0, 0),
@@ -78,20 +80,20 @@ export class NpcDataModel extends foundry.abstract.TypeDataModel {
 }
 
 class BaseItemDataModel extends foundry.abstract.TypeDataModel {
+  static migrateData(source) {
+    return super.migrateData(migrateLegacyAction(source));
+  }
+
+  static validateJoint(data) {
+    const ids = data.actions.map(action => action.id);
+    if (new Set(ids).size !== ids.length) throw new Error("Action IDs must be unique within an Item.");
+  }
+
   static defineSchema() {
     return {
       description: new HTMLField({ required: false, nullable: false, initial: "" }),
       load: int(0, 0),
-      action: new SchemaField({
-        enabled: new BooleanField({ required: true, nullable: false, initial: false }),
-        name: new StringField({ required: true, nullable: false, initial: "" }),
-        type: new StringField({ required: true, nullable: false, initial: "main" }),
-        stance: new StringField({ required: true, nullable: false, initial: "any" }),
-        range: new SchemaField({
-          min: int(0, 0),
-          max: int(1, 0)
-        })
-      })
+      actions: actionsField()
     };
   }
 }
@@ -109,10 +111,11 @@ export class WeaponDataModel extends BaseItemDataModel {
 export class ArmorDataModel extends BaseItemDataModel {}
 export class EquipmentDataModel extends BaseItemDataModel {}
 
-export class WeaponProficiencyDataModel extends foundry.abstract.TypeDataModel {
+export class WeaponProficiencyDataModel extends BaseItemDataModel {
   static defineSchema() {
     return {
       description: new HTMLField({ required: false, nullable: false, initial: "" }),
+      actions: actionsField(),
       key: new StringField({ required: true, nullable: false, initial: "" })
     };
   }
