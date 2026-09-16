@@ -19,7 +19,7 @@ test("unknown rules stay unspecified and model round trips preserve multiple Act
   const action = item.actions[0];
   assert.equal(action.successDice.base, null);
   assert.equal(action.successDice.source, "");
-  assert.equal(action.successThreshold, null);
+  assert.equal(action.successThreshold, 4);
   assert.equal(action.multiActionEligible, null);
   assert.equal(action.range.max, null);
   assert.deepEqual(action.allowedStances, []);
@@ -33,7 +33,7 @@ test("legacy Action migration is loss-aware and never recreates deliberately rem
   assert.equal(item.actions[0].classification, "main");
   assert.deepEqual(item.actions[0].allowedStances, ["ranged"]);
   assert.equal(item.actions[0].range.max, 3);
-  assert.equal(item.actions[0].successThreshold, null);
+  assert.equal(item.actions[0].successThreshold, 4);
   assert.deepEqual(new EquipmentDataModel({ ...legacy, actions: [] }).actions, []);
   const disabled = new EquipmentDataModel({ action: { enabled: false, name: "Disabled configuration" } });
   assert.equal(disabled.actions[0].enabled, false);
@@ -106,13 +106,48 @@ test("indexed form edits retain sibling Actions and can clear a modifier", () =>
   const submitted = { 0: { name: "Edited", successThreshold: "0", multiActionEligible: "false",
     stances: { neutral: true, ranged: false }, modifiers: { successDice: { 0: { value: null } } } } };
   const parsed = readActionForm(submitted, current);
-  assert.equal(parsed[0].successThreshold, 0);
+  assert.equal(parsed[0].successThreshold, 4); // Old editable-base input cannot override the universal base.
   assert.equal(parsed[0].multiActionEligible, false);
   assert.equal(parsed[0].modifiers.successDice[0].value, null);
   assert.deepEqual(parsed[0].allowedStances, ["neutral"]);
   assert.deepEqual(parsed[1], current[1]);
   assert.equal(current[0].name, "A");
   assert.doesNotThrow(() => new EquipmentDataModel({ actions: parsed }, { strict: true }));
+});
+
+test("universal Threshold resolves absent, undefined, null and redundant 4 without configuration", () => {
+  for (const stored of [{}, { successThreshold: undefined }, { successThreshold: null }, { successThreshold: 4 }]) {
+    const a = new ActionDataModel({ successDice: { source: "fixed", base: 3 }, ...stored }).toObject();
+    const threshold = calculateAction(a).successThreshold;
+    assert.equal(threshold.base, 4);
+    assert.equal(threshold.total, 4);
+    assert.equal(threshold.complete, true);
+    assert.equal(threshold.reviewIssue, null);
+    delete a.successThreshold;
+    assert.equal(calculateAction(a).successThreshold.total, 4);
+  }
+});
+
+test("universal Threshold plus configured and external modifiers remains traceable", () => {
+  const a = new ActionDataModel({ modifiers: { successThreshold: [{ id: "specific", label: "Action deviation", value: -1 }] } }).toObject();
+  const result = calculateAction(a, {}, { successThreshold: [{ id: "other", label: "Other modifier", value: 2, source: { type: "test" } }] });
+  assert.equal(result.successThreshold.base, 4);
+  assert.equal(result.successThreshold.total, 5);
+  assert.deepEqual(result.successThreshold.modifiers.map(m => m.id), ["specific", "other"]);
+  assert.equal(result.successThreshold.modifiers[1].source.type, "test");
+});
+
+test("non-4 legacy Thresholds remain stored and reported, even through unrelated form edits", () => {
+  for (const value of [0, 8]) {
+    const a = new ActionDataModel({ successThreshold: value }).toObject();
+    const parsed = readActionForm({ 0: { name: "Edited" } }, [a])[0];
+    assert.equal(parsed.successThreshold, value);
+    const reloaded = new ActionDataModel(JSON.parse(JSON.stringify(parsed))).toObject();
+    assert.equal(reloaded.successThreshold, value);
+    assert.equal(calculateAction(reloaded).successThreshold.base, 4);
+    assert.match(calculateAction(reloaded).successThreshold.reviewIssue, /requires review/);
+    assert.deepEqual(reloaded.modifiers.successThreshold, []);
+  }
 });
 
 test("existing Fated and NPC derived resources are preserved", () => {

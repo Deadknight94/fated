@@ -31,9 +31,7 @@
         <label>Fixed base Success Dice
           <input type="number" step="1" name="system.actions.{{action.index}}.successDice.base" value="{{action.successDice.base}}" placeholder="Unspecified" {{disabled (not @root.editable)}}>
         </label>
-        <label>Base Success Threshold
-          <input type="number" step="1" name="system.actions.{{action.index}}.successThreshold" value="{{action.successThreshold}}" placeholder="Unspecified" {{disabled (not @root.editable)}}>
-        </label>
+        <div>Base Success Threshold <strong>4</strong><p class="muted">Universal base. Configure deviations as Threshold modifiers.</p>{{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}</div>
         <label>Multi-Action eligible
           <select name="system.actions.{{action.index}}.multiActionEligible" {{disabled (not @root.editable)}}>
             {{selectOptions @root.eligibilityOptions selected=action.eligibility}}

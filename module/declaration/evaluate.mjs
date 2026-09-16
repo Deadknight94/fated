@@ -52,8 +52,11 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
       if (action.classification === "main") threshold.push({ id: "multi-action", label: "Multi-Action",
         value: multiActionPenalty, source: { type: "declaration", mainCount, stance: declaration.stance } });
       entry.calculation = calculateAction(action, attributes, { ...extra, successThreshold: threshold });
+      if (entry.calculation.successThreshold.reviewIssue) {
+        issue("threshold-review", `${name}: ${entry.calculation.successThreshold.reviewIssue}`, entry.id, true);
+      }
       if (!entry.calculation.successDice.complete || !entry.calculation.successThreshold.complete) {
-        issue("roll-incomplete", `${name}: complete Success Dice, Threshold and modifier values before locking.`, entry.id, true);
+        issue("roll-incomplete", `${name}: complete Success Dice and modifier values before locking.`, entry.id, true);
       }
     }
   }

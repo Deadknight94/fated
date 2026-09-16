@@ -6,7 +6,7 @@ Target: Foundry VTT 14.367. Physical dice remain the primary play method.
 
 Every current Item type stores an array of embedded `ActionDataModel` values at `system.actions`. Each Action has a stable ID, name, enabled flag, optional classification, explicit three-state roll requirement (`required`, `none`, null/unspecified), Success Dice source/base, threshold, melee/ranged classification, range with explicit units, effect summary, plain rules text, allowed stances, optional Multi-Action eligibility, and two independent modifier arrays.
 
-Blank choices, null numbers and null eligibility mean **unspecified**. An empty stance list also means unspecified, not unrestricted. Selecting all stances explicitly records permission for all four. No example weapon rules or numeric rule defaults are installed. Attribute-based dice sources only resolve when explicitly selected; they do not prescribe which attribute an Action uses.
+Blank choices, null numbers (except the legacy base Threshold) and null eligibility mean **unspecified**. An empty stance list also means unspecified, not unrestricted. Selecting all stances explicitly records permission for all four. The universal Success Threshold base is 4; other unknown rules remain unspecified. Attribute-based dice sources only resolve when explicitly selected; they do not prescribe which attribute an Action uses.
 
 `item.getAvailableActions()` returns detached enabled Action data with current Item ID, UUID, name and type. `actor.getAvailableActions()` combines those results from owned Items. Availability here means enabled and owned, not an automated stance, equipment, condition or turn legality check. Copying an Item derives fresh source provenance; it cannot retain another owner's source UUID.
 
@@ -16,7 +16,7 @@ The previous single `system.action` is migrated to the array when read, includin
 
 `calculateAction(action, attributes, additionalModifiers)` recalculates from the base every time. Each of `successDice` and `successThreshold` receives its own list of `{id, label, value, source}` entries. Item configuration stores the ID, label and optional value; the service derives Item/Action provenance. Additional future modifier providers can supply their own provenance.
 
-Results expose the base, individual modifiers, total and completeness. An unknown base or modifier produces an unknown total. The planner supplies the established Multi-Action Threshold modifier separately; there is no guessed minimum, maximum, stance modifier, equipment bonus or Power effect. Removing a supplied modifier and recalculating removes its contribution without accumulating an earlier total.
+Results expose the base, individual modifiers, total and completeness. An unknown Success Dice base or modifier produces an unknown total. Success Threshold always starts from universal base 4, even when the legacy stored threshold is absent or null. The planner supplies the established Multi-Action Threshold modifier separately; there is no guessed minimum, maximum, stance modifier, equipment bonus or Power effect. Removing a supplied modifier and recalculating removes its contribution without accumulating an earlier total.
 
 ## Interface
 
@@ -30,7 +30,7 @@ Cards adapt to the width of their sheet, including narrow resizable windows on a
 
 Fated Actors store `system.declaration`: version, revision, editing/locked status, stance, ordered entries, nullable snapshot and completion IDs. Each Action entry retains Item/Action references and its own entry ID, allowing repeated ordinary Actions. One optional Movement entry belongs to the declaration. No target fields exist here.
 
-Editable declarations recalculate from current owned/enabled Actions. The evaluator checks configured stance restrictions, Main/Movement limits, explicit Multi-Action eligibility, Power exclusivity and roll completeness. One/two/three Main Actions add +0/+1/+2 Threshold, independently of Success Dice. Required rolls need complete dice and Threshold data; no-roll Actions do not; unspecified roll requirements block locking.
+Editable declarations recalculate from current owned/enabled Actions. The evaluator checks configured stance restrictions, Main/Movement limits, explicit Multi-Action eligibility, Power exclusivity and roll completeness. One/two/three Main Actions add +0/+1/+2 Threshold, independently of Success Dice. Required rolls need complete dice and modifier data; no-roll Actions do not; unspecified roll requirements block locking.
 
 The picker disables Main/additional Power choices while Power is present and disables Power choices while Main Actions are present, with a visible explanation. A shared addition guard enforces the same rule in the persistence service. Movement and Free Actions remain allowed. Neither layer removes existing entries or repairs stored illegal combinations; evaluator-level Power validation still blocks their locking. A valid Power-only turn receives no Multi-Action modifier.
 
@@ -61,4 +61,8 @@ Run `node --test --test-isolation=none tests/actions.test.mjs tests/declaration.
 7. Repeat on a physical phone and iPad, including Safari, the on-screen keyboard and an Actor-owner player account. Confirm editing permissions and no reliance on hover, sidebars or canvas controls after opening the interface.
 8. Inspect browser console and Network for Fated errors or missing templates/modules/styles during all steps. Foundry's own minimum-resolution warning may still appear below its supported core viewport size; it is separate from the mobile sheet layout.
 
-Unspecified roll requirements and required dice/Threshold values block declaration locking. Missing classification, permitted stances or required Multi-Action eligibility also appear as incomplete. Range, targets and situational map legality remain table adjudication within this milestone.
+Unspecified roll requirements and incomplete required dice/modifier values block declaration locking. Missing classification, permitted stances or required Multi-Action eligibility also appear as incomplete. Range, targets and situational map legality remain table adjudication within this milestone.
+
+## Universal Success Threshold correction
+
+All calculations start at 4. Action-specific deviations belong in the traceable Success Threshold modifier array. New Actions default to 4 and the Item editor shows a fixed base rather than an editable per-Action base. The legacy numeric field remains for lossless review: 4 is redundant, absent/null values transparently calculate as 4, and non-4 values are preserved without automatic conversion. Non-4 values produce visible Item/Action review warnings and block locking affected required-roll declarations until their intent is reviewed. Confirmed deviations must be entered as named modifiers and the legacy value reset to 4 through document data; no intent is inferred automatically. Existing locked snapshot calculations are never recalculated or normalized.

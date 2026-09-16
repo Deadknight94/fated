@@ -37,6 +37,7 @@
       <article class="mobile-action-card">
         <header><p class="mobile-eyebrow">{{action.classificationLabel}}</p><h3>{{action.name}}</h3><p class="mobile-source">{{action.source.itemName}}</p></header>
         <p>{{action.rollRequirementLabel}}</p>
+        {{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}
         <dl class="mobile-action-facts">
           <div><dt>Success Dice</dt><dd>{{action.dice.total}}</dd></div>
           <div><dt>Success Threshold</dt><dd>{{action.threshold.total}}</dd></div>
