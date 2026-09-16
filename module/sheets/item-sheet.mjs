@@ -1,5 +1,6 @@
 import { ActionDataModel, STANCES } from "../actions/action-model.mjs";
 import { readActionForm } from "./action-form.mjs";
+import { legacyThresholdIssue } from "../actions/actions.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -53,6 +54,7 @@ export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       hasLoad: ["weapon", "armor", "equipment", "feature"].includes(this.document.type),
       actions: this.document.system.actions.map((action, index) => ({
         ...action.toObject(), index,
+        thresholdReviewIssue: legacyThresholdIssue(action),
         eligibility: action.multiActionEligible === null ? "" : String(action.multiActionEligible),
         stances: STANCES.map(value => ({ value, checked: action.allowedStances.includes(value) })),
         modifierGroups: [

@@ -60,7 +60,8 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         stanceLabel: action.allowedStances.length ? action.allowedStances.map(label).join(", ") : "Unspecified",
         eligibilityLabel: action.multiActionEligible === null ? "Unspecified" : action.multiActionEligible ? "Yes" : "No",
         diceSourceLabel: label(action.successDice.source),
-        dice: breakdownView(calculation.successDice), threshold: breakdownView(calculation.successThreshold)
+        dice: breakdownView(calculation.successDice), threshold: breakdownView(calculation.successThreshold),
+        thresholdReviewIssue: calculation.successThreshold.reviewIssue
       };
     });
     const planner = { ...evaluation, revision: declaration.revision, stanceLabel: label(declaration.stance),

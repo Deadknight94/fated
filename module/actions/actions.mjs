@@ -1,3 +1,12 @@
+import { BASE_SUCCESS_THRESHOLD } from "./action-model.mjs";
+
+/** Preserve ambiguous legacy data for explicit review instead of inventing a modifier. */
+export function legacyThresholdIssue(action) {
+  const value = action.successThreshold;
+  return value !== null && value !== undefined && value !== BASE_SUCCESS_THRESHOLD
+    ? `Stored legacy Success Threshold ${value} requires review. The universal base is 4; represent confirmed deviations as named Threshold modifiers and reset the legacy value to 4.` : null;
+}
+
 /** Pure, additive infrastructure. Call afresh with all applicable modifiers; never accumulate prior totals. */
 export function calculateValue(base, modifiers = []) {
   const entries = modifiers.map(modifier => ({ ...modifier }));
@@ -11,8 +20,9 @@ export function calculateAction(action, attributes = {}, additionalModifiers = {
   const baseDice = source === "fixed" ? action.successDice.base : attributes[source] ?? null;
   return {
     successDice: calculateValue(baseDice, [...action.modifiers.successDice, ...(additionalModifiers.successDice ?? [])]),
-    successThreshold: calculateValue(action.successThreshold,
-      [...action.modifiers.successThreshold, ...(additionalModifiers.successThreshold ?? [])])
+    successThreshold: { ...calculateValue(BASE_SUCCESS_THRESHOLD,
+      [...action.modifiers.successThreshold, ...(additionalModifiers.successThreshold ?? [])]),
+      reviewIssue: legacyThresholdIssue(action) }
   };
 }
 

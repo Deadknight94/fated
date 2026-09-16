@@ -123,7 +123,8 @@ test("roll requirement remains three-state including legacy numeric data", () =>
   assert.equal(new ActionDataModel({ successDice: { source: "fixed", base: 4 }, successThreshold: 4 }).rollRequirement, null);
   const d = draft([entry("a")]);
   assert.ok(codes(evaluateDeclaration(d, [action({ rollRequirement: null })])).includes("roll-unknown"));
-  assert.ok(codes(evaluateDeclaration(d, [action({ successThreshold: null })])).includes("roll-incomplete"));
+  assert.equal(evaluateDeclaration(d, [action({ successThreshold: null })]).canLock, true);
+  assert.ok(codes(evaluateDeclaration(d, [action({ modifiers: { successThreshold: [{ value: null }] } })])).includes("roll-incomplete"));
   assert.ok(codes(evaluateDeclaration(d, [action({ successDice: { source: "", base: 4 } })])).includes("roll-incomplete"));
   assert.equal(evaluateDeclaration(d, [action({ rollRequirement: "none", successThreshold: null, successDice: { source: "", base: null } })]).canLock, true);
   assert.throws(() => new ActionDataModel({ rollRequirement: false }, { strict: true }));
@@ -175,6 +176,38 @@ test("ordering, completion and clearing preserve snapshot and Actor resources", 
   assert.deepEqual(cleared.entries, []); assert.equal(cleared.snapshot, null); assert.deepEqual(cleared.completed, []);
   actor.updateSource({ declaration: cleared });
   assert.deepEqual(actor.toObject().resources, oldResources);
+});
+
+test("required rolls with valid dice and no stored Threshold lock at universal 4 plus Multi-Action", () => {
+  const a = action({ successThreshold: undefined, modifiers: { successThreshold: [{ id: "specific", label: "Specific deviation", value: -1 }] } });
+  delete a.successThreshold;
+  for (const count of [1, 2, 3]) {
+    const d = draft(Array.from({ length: count }, (_, i) => entry(String(i))));
+    const result = evaluateDeclaration(d, [a]);
+    assert.equal(result.canLock, true);
+    const locked = lockDeclaration(d, [a], {});
+    const saved = new DeclarationDataModel(locked, { strict: true }).toObject();
+    for (const e of saved.snapshot.entries) {
+      assert.equal(e.calculation.successThreshold.base, 4);
+      assert.equal(e.calculation.successThreshold.total, 3 + count - 1);
+      assert.equal(e.calculation.successThreshold.complete, true);
+      assert.deepEqual(e.calculation.successThreshold.modifiers.map(m => m.id), ["specific", "multi-action"]);
+    }
+  }
+});
+
+test("non-4 source data blocks required-roll locking without migration; historical snapshots remain unchanged", () => {
+  const a = action({ successThreshold: 8 });
+  assert.ok(codes(evaluateDeclaration(draft([entry("a")]), [a])).includes("threshold-review"));
+  assert.throws(() => lockDeclaration(draft([entry("a")]), [a], {}), /requires review/);
+  assert.equal(a.successThreshold, 8);
+  const historical = lockDeclaration(draft([entry("a")]), [action()], {});
+  historical.snapshot.entries[0].action.successThreshold = 8;
+  historical.snapshot.entries[0].calculation.successThreshold.base = 8;
+  historical.snapshot.entries[0].calculation.successThreshold.total = 8;
+  const model = new DeclarationDataModel(historical, { strict: true });
+  assert.equal(model.snapshot.entries[0].calculation.successThreshold.total, 8);
+  assert.equal(new DeclarationDataModel(JSON.parse(JSON.stringify(model.toObject()))).snapshot.entries[0].action.successThreshold, 8);
 });
 
 test("Actor persistence service rejects stale controls and touches only declaration", async () => {

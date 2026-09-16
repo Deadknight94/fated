@@ -6,8 +6,9 @@ const optionalNumber = () => new NumberField({ required: true, nullable: true, i
 const identifier = () => new StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() });
 
 export const STANCES = ["neutral", "offensive", "defensive", "ranged"];
+export const BASE_SUCCESS_THRESHOLD = 4;
 
-/** Configuration only: empty/null means unspecified, never a guessed rule value. */
+/** Unknown configuration remains unspecified; Success Threshold has a universal base. */
 export class ActionDataModel extends foundry.abstract.DataModel {
   static defineSchema() {
     const modifiers = () => new ArrayField(new SchemaField({
@@ -20,7 +21,8 @@ export class ActionDataModel extends foundry.abstract.DataModel {
       classification: choice(["main", "free", "power"]),
       rollRequirement: new StringField({ required: true, nullable: true, initial: null, choices: ["required", "none"] }),
       successDice: new SchemaField({ source: choice(["fixed", "heart", "body", "mind"]), base: optionalNumber() }),
-      successThreshold: optionalNumber(),
+      // Retained for lossless legacy review. Calculations never use this as their base.
+      successThreshold: new NumberField({ required: true, nullable: true, initial: BASE_SUCCESS_THRESHOLD, integer: true }),
       attackType: choice(["melee", "ranged"]),
       range: new SchemaField({ min: optionalNumber(), max: optionalNumber(), units: text() }),
       effect: text(),

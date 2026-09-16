@@ -49,7 +49,7 @@ Restart Foundry, create or edit a World, and select **Fated** as the game system
 
 Open a Fated Actor and press **Open mobile interface**. Alternatively select **Fated Mobile Sheet** in its sheet configuration. The desktop sheet remains the default; NPCs are unchanged. The mobile sheet fills phone viewports up to 600px wide and remains a resizable window on larger screens.
 
-Configure Actions on owned Items using **Add Action**. Fields save on change. Unspecified fields remain unknown; they do not imply zero or unrestricted use. Set each Action's roll requirement explicitly.
+Configure Actions on owned Items using **Add Action**. Fields save on change. Success Threshold always starts at 4; configure Action-specific deviations as named Threshold modifiers. Other unspecified fields remain unknown; they do not imply zero or unrestricted use. Set each Action's roll requirement explicitly. Preserved non-4 legacy thresholds show a review warning and block affected required-roll declarations until reviewed.
 
 The Companion Character view provides direct editing and touch-friendly −1/+1 controls for Endurance, Hope and Power. Load remains derived/read-only under the owned=carried assumption. All edits use the real Actor document and native ownership permissions. Hope is persistently corrected within ±(Mind + Heart) during the TypeDataModel pre-create/pre-update lifecycle, including when attributes shrink; increasing the limit later cannot restore discarded Hope. Preparation does not issue document updates.
 
