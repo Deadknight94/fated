@@ -1,4 +1,5 @@
 import { calculateAction } from "../actions/actions.mjs";
+import { healthLockIssue } from "../health.mjs";
 
 export const DECLARATION_VERSION = 1;
 export const DECLARATION_STANCES = ["neutral", "offensive", "defensive", "ranged"];
@@ -15,9 +16,11 @@ export function freshDeclaration(stance = "", revision = 0) {
 }
 
 /** Legality is separate from owned + enabled availability. No map or target inputs. */
-export function evaluateDeclaration(declaration, actions, attributes = {}, additionalModifiers = () => ({})) {
+export function evaluateDeclaration(declaration, actions, attributes = {}, additionalModifiers = () => ({}), actorState = null) {
   const issues = [];
   const issue = (code, message, entryId = null, incomplete = false) => issues.push({ code, message, entryId, incomplete });
+  const healthIssue = healthLockIssue(actorState);
+  if (healthIssue) issue("incapacitated", healthIssue);
   if (declaration.version !== DECLARATION_VERSION) issue("version", "Unsupported declaration version.");
   if (!DECLARATION_STANCES.includes(declaration.stance)) issue("stance", "Choose a stance before declaring Actions.", null, true);
   const entries = declaration.entries.map(entry => ({ ...entry,
@@ -63,9 +66,9 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
   return { entries, issues, mainCount, powerCount, movementCount, multiActionPenalty, canLock: issues.length === 0 };
 }
 
-export function lockDeclaration(declaration, actions, attributes, { userId = "", now = new Date().toISOString(), additionalModifiers } = {}) {
+export function lockDeclaration(declaration, actions, attributes, { userId = "", now = new Date().toISOString(), additionalModifiers, actorState } = {}) {
   if (declaration.status !== "editing") throw new Error("Declaration is already locked.");
-  const result = evaluateDeclaration(declaration, actions, attributes, additionalModifiers);
+  const result = evaluateDeclaration(declaration, actions, attributes, additionalModifiers, actorState);
   if (!result.canLock) throw new Error(result.issues.map(i => i.message).join("\n"));
   const snapshot = { version: DECLARATION_VERSION, stance: declaration.stance, lockedAt: now, lockedBy: userId,
     mainCount: result.mainCount, multiActionPenalty: result.multiActionPenalty,

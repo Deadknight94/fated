@@ -1,4 +1,5 @@
-import { calculateAction } from "../actions/actions.mjs";
+import { calculateActorAction, healthView } from "../health.mjs";
+import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
 import { adjustResource } from "../resources.mjs";
@@ -23,11 +24,11 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: { showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
-      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource }
+      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction }
   };
 
   static PARTS = { main: { template: "systems/fated/templates/actor/mobile-sheet.hbs",
-    templates: ["systems/fated/templates/actor/turn-planner.hbs"], scrollable: [".mobile-content"] } };
+    templates: ["systems/fated/templates/actor/turn-planner.hbs", "systems/fated/templates/actor/health-state.hbs"], scrollable: [".mobile-content"] } };
 
   section = "character";
 
@@ -49,7 +50,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const declaration = this.document.system.declaration.toObject();
     const evaluation = getDeclarationEvaluation(this.document);
     const actions = this.document.getAvailableActions().map(action => {
-      const calculation = calculateAction(action, this.document.system.attributes);
+      const calculation = calculateActorAction(this.document, action);
       const range = action.range.min === null && action.range.max === null ? "Unspecified"
         : `${action.range.min ?? "?"}–${action.range.max ?? "?"}${action.range.units ? ` ${action.range.units}` : " (units unspecified)"}`;
       return { ...action,
@@ -79,6 +80,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };
     return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner,
+      healthState: healthView(this.document, { isGM: game.user.isGM }),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === this.document.system.currentStance })),
       items: this.document.items.contents,
       sections: ["character", "turn", "actions", "items"].map(id => ({ id, label: label(id), active: id === this.section })),

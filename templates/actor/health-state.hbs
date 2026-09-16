@@ -1,0 +1,20 @@
+{{#with healthState as |health|}}
+<section class="panel health-state" aria-label="Health and conditions">
+  <h2>Health</h2>
+  <p><strong>Wounds: {{health.woundLabel}}</strong> · Severity {{health.severity}}</p>
+  <div class="health-controls">
+    <button type="button" data-action="health" data-health-operation="wound" data-delta="-1" aria-label="Decrease wound severity" {{disabled (or (not @root.editable) (not health.canDecreaseWound))}}>−1 Wound</button>
+    <button type="button" data-action="health" data-health-operation="wound" data-delta="1" aria-label="Increase wound severity" {{disabled (or (not @root.editable) (not health.canIncreaseWound))}}>+1 Wound</button>
+  </div>
+  {{#if health.conditions.length}}<ul class="health-conditions">{{#each health.conditions}}<li>{{this}}</li>{{/each}}</ul>{{else}}<p>No resource conditions.</p>{{/if}}
+  {{#if health.deathsDoor}}
+    <p><strong>Death's Door · {{#if health.stabilized}}Stabilized{{else}}Unstabilized{{/if}} · Incapacitated</strong></p>
+    <button type="button" data-action="health" data-health-operation="stabilize" {{disabled (not @root.editable)}}>{{#if health.stabilized}}Mark unstabilized{{else}}Mark stabilized{{/if}}</button>
+    {{#if health.stabilized}}<p>Stabilization stops Death's Door drain. Wound severity stays 3; Incapacitation remains.</p>
+    {{else}}<p>Unstabilized: lose 1 Endurance AND 1 Hope each combat round, or each hour outside combat. If already Exhausted, Endurance loss becomes another Hope loss (total −2 Hope). Apply manually; no timed drain is automated.</p>{{/if}}
+  {{/if}}
+  {{#if health.broken}}<p><strong>Broken:</strong> Incapacitated until no longer Despondent or no longer Exhausted. Broken itself causes no Death's Door drain. Lose 1 Power at each combat round's end (minimum 0). Continuously Broken for Body days causes death. Apply these rules manually; no timer, drain or duration death is automated.</p>{{/if}}
+  {{#if health.dead}}<p><strong>Dead.</strong> Reducing Wounds or changing resources does not clear recorded death.</p>{{/if}}
+  {{#if health.isGM}}<details><summary>GM administrative correction</summary><p>Correct the recorded death flag for bookkeeping/testing only. This is not healing or resurrection. Severity 4 still means Dead; lower severity separately before clearing a mistaken death record.</p><button type="button" data-action="health" data-health-operation="correct-death" {{disabled (not @root.editable)}}>{{#if health.recordedDead}}Clear recorded death (GM correction){{else}}Record death (GM correction){{/if}}</button></details>{{/if}}
+</section>
+{{/with}}
