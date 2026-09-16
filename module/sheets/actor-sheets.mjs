@@ -1,4 +1,5 @@
 import { openMobileSheet } from "./mobile-sheet.mjs";
+import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -27,7 +28,9 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       actor: this.document,
       system: this.document.system,
       items: this.document.items.contents,
-      editable: this.isEditable
+      editable: this.isEditable,
+      ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
+        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {})
     };
   }
 }

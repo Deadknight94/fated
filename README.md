@@ -51,6 +51,10 @@ Open a Fated Actor and press **Open mobile interface**. Alternatively select **F
 
 Configure Actions on owned Items using **Add Action**. Fields save on change. Unspecified fields remain unknown; they do not imply zero or unrestricted use. Set each Action's roll requirement explicitly.
 
+The Companion Character view provides direct editing and touch-friendly −1/+1 controls for Endurance, Hope and Power. Load remains derived/read-only under the owned=carried assumption. All edits use the real Actor document and native ownership permissions. Hope is persistently corrected within ±(Mind + Heart) during the TypeDataModel pre-create/pre-update lifecycle, including when attributes shrink; increasing the limit later cannot restore discarded Hope. Preparation does not issue document updates.
+
+Fated Actors store `system.currentStance` (Neutral by default; Offensive, Defensive or Ranged). Character and desktop sheets edit this persistent state. A fresh declaration begins from current stance; editing its proposed stance leaves current stance unchanged. Successful locking commits the proposed stance with the locked declaration in one Actor update. Clearing preserves current stance and initializes the next declaration from it. No combat-start reset or stance enforcement beyond existing Action restrictions is automated.
+
 Use **Turn** to choose a stance and order Main, Free and Power Actions plus one optional continuous Movement segment. A declared Power Action disables additional Main/Power choices; declared Main Actions disable Power choices. Movement and Free Actions remain available. Incomplete or illegal declarations cannot lock. Locking freezes Action text and calculations for physical-dice execution; ending the declaration clears it while preserving stance and resources. No digital rolling or combat resolution is included.
 
 See [Action architecture and smoke tests](docs/actions-mobile.md) for implementation details and verification steps.
