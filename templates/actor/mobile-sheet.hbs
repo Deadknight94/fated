@@ -23,6 +23,7 @@
       </div>
       <label class="mobile-current-stance">Current Stance <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
       <p class="mobile-note">Dice are rolled physically at the table.</p>
+      {{> "systems/fated/templates/actor/health-state.hbs"}}
     </section>
     {{/if}}
     {{#if turn}}
@@ -31,7 +32,7 @@
     {{#if actionsView}}
     <section aria-label="Actions">
       <h2>Actions <span class="mobile-count">{{actions.length}}</span></h2>
-      <p class="mobile-note">Enabled Item Actions. Stance and other situational restrictions are checked at the table. Values below include configured Action modifiers only.</p>
+      <p class="mobile-note">Enabled Item Actions. Values below include configured Action and current character-state modifiers. Stance and other situational restrictions are checked at the table.</p>
       <div class="mobile-action-list">
       {{#each actions as |action|}}
       <article class="mobile-action-card">
@@ -57,7 +58,7 @@
           <h4>Success Threshold</h4>
           <dl><div><dt>Base Threshold</dt><dd>{{action.threshold.base}}</dd></div>
           {{#each action.threshold.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
-          <div><dt>Total configured Threshold</dt><dd>{{action.threshold.total}}</dd></div></dl>
+          <div><dt>Final Threshold</dt><dd>{{action.threshold.total}}</dd></div></dl>
         </details>
         <button type="button" data-action="openItem" data-item-id="{{action.source.itemId}}">Open {{action.source.itemName}}</button>
       </article>

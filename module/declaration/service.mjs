@@ -1,9 +1,11 @@
 import { editDeclaration, evaluateDeclaration, lockDeclaration, powerActionAdditionIssue, freshDeclaration } from "./evaluate.mjs";
+import { actorStateModifiers, getActorHealth } from "../health.mjs";
 
 export function getDeclarationEvaluation(actor) {
   const declaration = actor.system.declaration.toObject();
   if (declaration.status === "locked") return { ...declaration.snapshot, locked: true, issues: [], canLock: false };
-  return { ...evaluateDeclaration(declaration, actor.getAvailableActions(), actor.system.attributes), locked: false };
+  return { ...evaluateDeclaration(declaration, actor.getAvailableActions(), actor.system.attributes,
+    () => actorStateModifiers(actor), getActorHealth(actor)), locked: false };
 }
 
 /** Revision checks reject stale rendered controls; Foundry handles ownership and persistence. */
@@ -12,7 +14,8 @@ export async function updateDeclaration(actor, revision, operation) {
   const current = actor.system.declaration.toObject();
   if (revision !== current.revision) throw new Error("This declaration changed. Review the refreshed turn and try again.");
   let next;
-  if (operation.type === "lock") next = lockDeclaration(current, actor.getAvailableActions(), actor.system.attributes, { userId: game.user.id });
+  if (operation.type === "lock") next = lockDeclaration(current, actor.getAvailableActions(), actor.system.attributes, {
+    userId: game.user.id, additionalModifiers: () => actorStateModifiers(actor), actorState: getActorHealth(actor) });
   else {
     if (operation.type === "add" && operation.kind === "action") {
       const actions = actor.getAvailableActions();

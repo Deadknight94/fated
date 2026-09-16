@@ -2,8 +2,10 @@ import { actionsField, migrateLegacyAction, STANCES } from "./actions/action-mod
 import { declarationField } from "./declaration/data-model.mjs";
 import { clampHope } from "./resources.mjs";
 import { freshDeclaration } from "./declaration/evaluate.mjs";
+import { deriveHealth, healthTransition, healthLockIssue } from "./health.mjs";
 
 const {
+  BooleanField,
   HTMLField,
   NumberField,
   SchemaField,
@@ -28,6 +30,11 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     return {
       biography: new HTMLField({ required: false, nullable: false, initial: "" }),
       currentStance: new StringField({ required: true, nullable: false, blank: false, initial: "neutral", choices: STANCES }),
+      health: new SchemaField({
+        woundSeverity: new NumberField({ required: true, nullable: false, integer: true, min: 0, max: 4, initial: 0 }),
+        stabilized: new BooleanField({ required: true, nullable: false, initial: false }),
+        dead: new BooleanField({ required: true, nullable: false, initial: false })
+      }),
       declaration: declarationField({ initial: source => freshDeclaration(source.currentStance ?? "neutral") }),
       attributes: new SchemaField({
         heart: int(0, 0),
@@ -47,6 +54,9 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     if (await super._preCreate(data, options, user) === false) return false;
     const source = this.toObject();
     this.parent.updateSource({ "system.resources.hope.value": clampHope(source.resources.hope.value, source.attributes) });
+    // No prior Incapacitation exists at creation: simultaneous first causes do not kill.
+    if (source.health) this.parent.updateSource({ "system.health.stabilized": false,
+      "system.health.dead": source.health.dead || source.health.woundSeverity >= 4 });
   }
 
   async _preUpdate(changes, options, user) {
@@ -61,6 +71,26 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     if (corrected !== source.resources.hope.value || expanded.system?.resources?.hope?.value !== undefined) {
       if (Object.hasOwn(changes, "system")) foundry.utils.setProperty(changes, "system.resources.hope.value", corrected);
       else changes["system.resources.hope.value"] = corrected;
+    }
+    const proposed = candidate.toObject();
+    proposed.resources.hope.value = corrected;
+    if (expanded.system?.health && Object.hasOwn(expanded.system.health, "dead")
+      && expanded.system.health.dead !== source.health.dead && !user?.isGM) {
+      throw new Error("Only a GM can administratively correct the recorded death state.");
+    }
+    const transition = healthTransition(source, proposed, {
+      administrativeCorrection: user?.isGM && expanded.system?.health?.dead === false && source.health.dead
+    });
+    for (const field of ["dead", "stabilized"]) {
+      if (transition[field] !== source.health[field] || expanded.system?.health?.[field] !== undefined) {
+        if (Object.hasOwn(changes, "system")) foundry.utils.setProperty(changes, `system.health.${field}`, transition[field]);
+        else changes[`system.health.${field}`] = transition[field];
+      }
+      proposed.health[field] = transition[field];
+    }
+    if (expanded.system?.declaration?.status === "locked" && source.declaration.status !== "locked") {
+      const issue = healthLockIssue(deriveHealth(proposed));
+      if (issue) throw new Error(issue);
     }
   }
 
