@@ -247,6 +247,84 @@ test("Fractional healingSuccesses rejected", async () => {
 
 // Non-numeric healingSuccesses rejected
 
+// ----- Death's Door Recovery Tests -----
+
+// Stabilized Death's Door + ordinary Short Rest recovers to Grievous
+
+test("Stabilized Death's Door + ordinary Short Rest recovers to Grievous", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 }, stabilized: true } });
+  const { res, updates } = await restAndCount(a, {});
+  assert.equal(res, true);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.stabilized, false);
+  assert.deepEqual(a.system.health.woundCare, { care: "none", daysRemaining: 0 });
+  assert.equal(updates, 1);
+});
+
+// Stabilized Death's Door + resource recovery same update
+
+test("Stabilized Death's Door + resource recovery same update", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 }, stabilized: true }, resources: { endurance: { value: 3 } } });
+  const { res, updates } = await restAndCount(a, { spendHope: true, extraRecovery: 1 });
+  assert.equal(res, true);
+  assert.equal(a.system.resources.endurance.value, 5); // 3 +1 base +1 extra
+  assert.equal(a.system.resources.hope.value, 4);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.stabilized, false);
+  assert.equal(updates, 1);
+  assert.deepEqual(a.updates[0], {
+    "system.resources.endurance.value": 5,
+    "system.resources.hope.value": 4,
+    "system.health.woundSeverity": 2,
+    "system.health.stabilized": false,
+    "system.health.woundCare": { care: "none", daysRemaining: 0 }
+  });
+});
+
+// Unstabilized Death's Door remains severity 3 and no stabilized flag
+
+test("Unstabilized Death's Door remains severity 3 and no stabilized flag", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 }, stabilized: false } });
+  const { res, updates } = await restAndCount(a, {});
+  assert.equal(res, true);
+  assert.equal(a.system.health.woundSeverity, 3);
+  assert.equal(a.system.health.stabilized, false);
+  // Endurance should still increase
+  assert.equal(a.system.resources.endurance.value, 4);
+  assert.equal(updates, 1);
+});
+
+// Dead actor does not recover severity
+
+test("Dead actor does not recover severity", async () => {
+  const a = actor({ health: { woundSeverity: 4, woundCare: { care: "none", daysRemaining: 0 }, stabilized: true } });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, {});
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+// Invalid Short Rest request causes no wound recovery or resource mutation
+
+test("Invalid Short Rest request causes no wound recovery or resource mutation", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 }, stabilized: true } });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { spendHope: true, extraRecovery: 0 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+// Bandaging request at Death's Door remains rejected
+
+test("Bandaging request at Death's Door remains rejected", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 }, stabilized: true } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
 test("Non-numeric healingSuccesses rejected", async () => {
   const a = actor();
   const { res, updates } = await restAndCount(a, { healingSuccesses: "1" } );

@@ -24,14 +24,17 @@ export async function shortRest(actor, { spendHope = false, extraRecovery = 0, h
   const hope = Number(resources.hope.value) || 0;
   const currentEndurance = Number(resources.endurance.value) || 0;
 
-  /* woundSeverity will be evaluated in validation block */
+  // Wound severity and stabilization status
+  const woundSeverity = Number(actor.system.health?.woundSeverity ?? 0);
+  const stabilized = !!actor.system.health?.stabilized;
+
+  // Terminal wound severities cannot rest
+  if (woundSeverity >= 4) return false;
 
   // Validate Healing successes if provided.
   if (healingSuccesses !== undefined) {
     // Must be a positive integer.
     if (!Number.isInteger(healingSuccesses) || healingSuccesses <= 0) return false;
-    // Determine wound severity.
-    const woundSeverity = Number(actor.system.health?.woundSeverity ?? 0);
     // Bandageable severities are 1 (Light) and 2 (Grievous).
     if (woundSeverity !== 1 && woundSeverity !== 2) return false;
   }
@@ -46,8 +49,16 @@ export async function shortRest(actor, { spendHope = false, extraRecovery = 0, h
   const totalRecovery = 1 + (spendHope ? extraRecovery : 0);
   const newEndurance = Math.min(currentEndurance + totalRecovery, enduranceMax);
 
-  // Commit both resources together; Actor lifecycle performs persistent Hope clamping.
+  // Death's Door stabilization recovery
+  const deathDoorRecovery = woundSeverity === 3 && stabilized;
+
+  // Commit both resources and wound changes together; Actor lifecycle performs persistent Hope clamping.
   const changes = {};
+  if (deathDoorRecovery) {
+    changes["system.health.woundSeverity"] = 2;
+    changes["system.health.stabilized"] = false;
+    changes["system.health.woundCare"] = { care: "none", daysRemaining: 0 };
+  }
   if (newEndurance !== currentEndurance) {
     changes["system.resources.endurance.value"] = newEndurance;
   }
