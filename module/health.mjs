@@ -1,4 +1,5 @@
 import { calculateAction } from "./actions/actions.mjs";
+import { normalizeWoundCare } from "./wound-care.mjs";
 import { clampHope } from "./resources.mjs";
 
 export const WOUND_LABELS = ["Healthy", "Light Wound", "Grievous Wound", "Death's Door", "Dead"];
@@ -46,6 +47,13 @@ export function actorStateModifiers(actor) {
   const add = (condition, label, value) => modifiers.push({ id: `actor-${condition}`, label, value,
     source: { type: "actor-state", actorId: actor.id ?? "", actorUuid: actor.uuid ?? "", condition } });
   if (state.severity === 1 || state.severity === 2) add("wounds", state.woundLabel, state.severity);
+  // Wound care modifiers
+  const woundSeverity = state.severity;
+  const { care } = normalizeWoundCare(woundSeverity, actor.system.health.woundCare || { care: "none" });
+  if (woundSeverity === 1 || woundSeverity === 2) {
+    if (care === "bandaged") add("bandaged", "Bandaged", -1);
+    if (care === "treated" && woundSeverity === 2) add("treated", "Treated", -2);
+  }
   if (state.overburdened) add("overburdened", "Overburdened", 1);
   if (state.exhausted) add("exhausted", "Exhausted", 1);
   if (state.inspired) add("inspired", "Inspired", -1);
