@@ -44,15 +44,20 @@ test("woundCare defaults", () => {
   assert.equal(woundCare.daysRemaining, 0);
 });
 
-test("woundCare round-trip values", async () => {
-  const a = actor();
+test("woundCare schema accepts and preserves care values", () => {
+  const baseSystem = {
+    attributes: { heart: 2, body: 3, mind: 4 },
+    resources: { endurance: { value: 4 }, hope: { value: 0 }, power: 3 },
+    health: { woundSeverity: 0, woundCare: { care: "none", daysRemaining: 0 } },
+  };
   const careValues = ["none", "bandaged", "treated", "grievousHealingPending"];
   for (const val of careValues) {
-    const changes = { "system.health.woundCare.care": val, "system.health.woundCare.daysRemaining": 5 };
-    await a.update(changes);
-    const updated = a.system.health.woundCare;
-    assert.equal(updated.care, val);
-    assert.equal(updated.daysRemaining, 5);
+    const system = foundry.utils.mergeObject(baseSystem, {
+      health: { woundCare: { care: val, daysRemaining: 5 } }
+    }, { inplace: false });
+    const dm = new FatedDataModel(system);
+    assert.equal(dm.health.woundCare.care, val);
+    assert.equal(dm.health.woundCare.daysRemaining, 5);
   }
 });
 

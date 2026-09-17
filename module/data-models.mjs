@@ -5,6 +5,7 @@ import { freshDeclaration } from "./declaration/evaluate.mjs";
 import { deriveHealth, healthTransition, healthLockIssue } from "./health.mjs";
 import { wornArmorIssue } from "./equipment.mjs";
 import { calculateDefense } from "./defense.mjs";
+import { normalizeWoundCare } from "./wound-care.mjs";
 
 const {
   BooleanField,
@@ -61,8 +62,15 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     const source = this.toObject();
     this.parent.updateSource({ "system.resources.hope.value": clampHope(source.resources.hope.value, source.attributes) });
     // No prior Incapacitation exists at creation: simultaneous first causes do not kill.
-    if (source.health) this.parent.updateSource({ "system.health.stabilized": false,
-      "system.health.dead": source.health.dead || source.health.woundSeverity >= 4 });
+    if (source.health) {
+      // Normalize woundCare on creation
+      const normalized = normalizeWoundCare(source.health.woundSeverity, source.health.woundCare);
+      if (normalized.care !== source.health.woundCare.care || normalized.daysRemaining !== source.health.woundCare.daysRemaining) {
+        this.parent.updateSource({ "system.health.woundCare.care": normalized.care, "system.health.woundCare.daysRemaining": normalized.daysRemaining });
+      }
+      this.parent.updateSource({ "system.health.stabilized": false,
+        "system.health.dead": source.health.dead || source.health.woundSeverity >= 4 });
+    }
   }
 
   async _preUpdate(changes, options, user) {
@@ -80,6 +88,16 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
     const proposed = candidate.toObject();
     proposed.resources.hope.value = corrected;
+    // Normalize woundCare on update
+    const normalized = normalizeWoundCare(proposed.health.woundSeverity, proposed.health.woundCare);
+    if (normalized.care !== proposed.health.woundCare.care || normalized.daysRemaining !== proposed.health.woundCare.daysRemaining) {
+      if (Object.hasOwn(changes, "system")) {
+        foundry.utils.setProperty(changes, "system.health.woundCare", normalized);
+      } else {
+        changes["system.health.woundCare"] = normalized;
+      }
+      proposed.health.woundCare = normalized;
+    }
     if (expanded.system?.health && Object.hasOwn(expanded.system.health, "dead")
       && expanded.system.health.dead !== source.health.dead && !user?.isGM) {
       throw new Error("Only a GM can administratively correct the recorded death state.");
