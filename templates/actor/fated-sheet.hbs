@@ -52,6 +52,7 @@
             <img src="{{item.img}}" alt="">
             <span>{{item.name}}</span>
             <small>{{item.type}}</small>
+            {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}Yes{{else}}No{{/if}}</button>{{/if}}
           </li>
         {{/each}}
       </ul>

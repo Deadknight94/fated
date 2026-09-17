@@ -139,9 +139,10 @@ test("Load derives only from physical owned Items, and is not an adjustable reso
   globalThis.Actor ??= class { prepareDerivedData() {} };
   globalThis.Item ??= class {};
   const { FatedActor } = await import("../module/documents.mjs");
-  const a = { type: "fated", system: { load: 999 }, items: ["weapon", "armor", "equipment", "feature", "weaponProficiency"].map(type => ({ type, system: { load: 2 } })) };
+  const a = { type: "fated", system: { load: 999, attributes: { body: 2, mind: 3 }, currentStance: "neutral" }, items: ["weapon", "armor", "equipment", "feature", "weaponProficiency"].map(type => ({ type, system: { load: 2 } })) };
   FatedActor.prototype.prepareDerivedData.call(a);
   assert.equal(a.system.load, 6);
+  assert.equal(a.system.defense, 5);
 });
 
 test("an illegal declaration cannot commit current stance or change resources", async () => {

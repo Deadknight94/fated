@@ -50,6 +50,9 @@ export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       diceSources: { "": "Unspecified", fixed: "Fixed base", heart: "Heart", body: "Body", mind: "Mind" },
       eligibilityOptions: { "": "Unspecified", true: "Yes", false: "No" },
       rollRequirements: { "": "Unspecified", required: "Requires Roll", none: "No Roll" },
+      isArmor: this.document.type === "armor",
+      hasEquipmentState: ["armor", "weapon", "equipment"].includes(this.document.type),
+      stateLabel: this.document.type === "armor" ? "Worn" : "Equipped",
       isWeapon: this.document.type === "weapon",
       hasLoad: ["weapon", "armor", "equipment", "feature"].includes(this.document.type),
       actions: this.document.system.actions.map((action, index) => ({

@@ -254,3 +254,7 @@
 .fated.damage-bookkeeping label { display: grid; gap: 4px; margin-bottom: 12px; }
 .fated.damage-bookkeeping select { width: 100%; }
 .fated.damage-bookkeeping dl > div { margin-bottom: 8px; }
+
+.fated .equipment-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fated .equipment-row .mobile-item { flex: 1 1 180px; }
+.fated .equipment-row button, .fated .inventory button, .fated .equipment-state label { min-height: 48px; }

@@ -1,3 +1,4 @@
+import { equipmentView, toggleEquipment } from "../equipment.mjs";
 import { calculateActorAction, healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
@@ -24,7 +25,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     position: { width: 760, height: 780 },
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
-    actions: { showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
+    actions: { toggleEquipment, showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
       planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction }
   };
 
@@ -87,7 +88,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       healthState: healthView(this.document, { isGM: game.user.isGM }),
       defense: calculateDefense(this.document),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === this.document.system.currentStance })),
-      items: this.document.items.contents,
+      items: this.document.items.contents.map(equipmentView),
       sections: ["character", "turn", "actions", "items"].map(id => ({ id, label: label(id), active: id === this.section })),
       character: this.section === "character", turn: this.section === "turn",
       actionsView: this.section === "actions", itemsView: this.section === "items" };
