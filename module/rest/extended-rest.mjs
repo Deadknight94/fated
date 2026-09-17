@@ -34,7 +34,7 @@ export async function completeExtendedRestDay(actor, { healingSuccesses } = {}) 
 export async function completeExtendedRestGrievousHealing(actor) {
   if (actor?.type !== "fated" || !actor.isOwner) return false;
   const { health } = actor.system;
-  if (health.woundSeverity !== 2 || health.woundCare.care !== "grievousHealingPending") return false;
+  if (health.woundSeverity !== 2 || health.woundCare.care !== "grievousHealingPending" || health.woundCare.daysRemaining !== 0) return false;
   await actor.update({ "system.health.woundSeverity": 0,
     "system.health.woundCare": { care: "none", daysRemaining: 0 } });
   return true;

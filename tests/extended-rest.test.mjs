@@ -121,6 +121,7 @@ test("Extended Rest beginning and two completed days have separate resource timi
 const { completeExtendedRestGrievousHealing } = await import('../module/rest/extended-rest.mjs');
 const none = { care: 'none', daysRemaining: 0 };
 const pending = { care: 'grievousHealingPending', daysRemaining: 1 };
+const { advanceWoundCareDay } = await import('../module/rest/wound-care-day.mjs');
 
 for (const care of ['none', 'bandaged']) {
   test(`Extended day automatically heals Light (${care}) atomically with resources`, async () => {
@@ -177,7 +178,7 @@ test('Unauthorized Extended scheduling preserves complete state',async()=>{
 });
 test('Explicit pending completion heals atomically and preserves persistent death and resources',async()=>{
   for(const dead of [false,true]){
-    const a=actor({health:{dead,woundCare:pending}});const before=a.system.toObject();
+    const a=actor({health:{dead,woundCare:{...pending,daysRemaining:0}}});const before=a.system.toObject();
     assert.equal(await completeExtendedRestGrievousHealing(a),true);
     assert.deepEqual(a.updates,[{'system.health.woundSeverity':0,'system.health.woundCare':none}]);
     assert.equal(a.system.health.woundSeverity,0);assert.deepEqual(a.system.health.woundCare,none);
@@ -210,13 +211,18 @@ test('Schedule, ordinary day, and explicit completion remain separate operations
   await completeExtendedRestDay(a,{healingSuccesses:3});assert.deepEqual(a.system.health.woundCare,pending);
   await completeExtendedRestDay(a);assert.deepEqual(a.system.health.woundCare,pending);assert.equal(a.system.health.woundSeverity,2);
   assert.equal(a.system.resources.endurance.value,5);assert.equal(a.system.resources.hope.value,0);
+  const waiting=a.system.toObject();const updates=a.updates.length;
+  assert.equal(await completeExtendedRestGrievousHealing(a),false);
+  assert.deepEqual(a.system.toObject(),waiting);assert.equal(a.updates.length,updates);
+  assert.equal(await advanceWoundCareDay(a),true);
+  assert.deepEqual(a.system.health.woundCare,{...pending,daysRemaining:0});assert.equal(a.system.health.woundSeverity,2);
   await completeExtendedRestGrievousHealing(a);assert.equal(a.system.health.woundSeverity,0);assert.deepEqual(a.system.health.woundCare,none);
-  assert.equal(a.updates.length,3);
+  assert.equal(a.updates.length,4);
   unchangedExcept(a,before,['resources.endurance.value','resources.hope.value','health.woundSeverity','health.woundCare']);
 });
 for(const operation of [a=>completeExtendedRestDay(a,{healingSuccesses:2}),completeExtendedRestGrievousHealing]){
   test(`Rejected ${operation.name||'scheduling'} update preserves resources and health`,async()=>{
-    const a=actor({health:{woundCare:pending}});const before=a.system.toObject();let calls=0;
+    const a=actor({health:{woundCare:{...pending,daysRemaining:0}}});const before=a.system.toObject();let calls=0;
     a.update=async()=>{calls++;throw Error('Rejected update')};
     await assert.rejects(operation(a),/Rejected update/);assert.equal(calls,1);assert.deepEqual(a.system.toObject(),before);
   });
