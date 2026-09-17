@@ -1,5 +1,57 @@
 # Fated — Codex Instructions
 
+## Windows Tooling Rules
+
+This repository is developed on Windows and paths may contain spaces.
+
+- Quote file and directory paths correctly.
+- Use `fd` only with directory search roots.
+- Never pass a file path as the search root to `fd`.
+- To search inside a known file, use `rg <pattern> <file>`.
+- To read a known file, use `Get-Content <file>` or the available file-read tool.
+- If a command fails because of an invalid path/tool invocation, correct the command rather than repeating it.
+- Prefer repository-relative paths when practical.
+
+### Known Pi Web tooling issue
+
+Pi Web may incorrectly invoke `fd` with a known file path as the search root.
+
+- If the exact file path is already known, do not use `fd` at all.
+- Read the file directly.
+- Use `rg <pattern> <file>` when searching within a known file.
+- If `fd` reports that the search path is not a directory, do not retry `fd` for that file; continue with a direct read.
+
+## Completion response
+
+After completing any task that uses tools, you MUST send a final assistant response to the user.
+
+A task is not complete when the last tool call finishes. After all tool calls and verification are complete, produce a normal chat response.
+
+The final response must contain:
+- what was changed or found;
+- files modified, if any;
+- verification actually performed and its result;
+- anything not verified or still uncertain.
+
+Do not end the turn immediately after a tool call.
+Do not use a shell command, file, or tool output as a substitute for the final assistant response.
+If the user specifies a report format, follow that format in the final assistant response.
+
+## Local Foundry Test Environment
+
+On the current Windows development machine:
+
+`FOUNDRY_APP_PATH=E:\Program Files\FoundryVTT\Foundry Virtual Tabletop\resources\app`
+
+Foundry-dependent Node tests require this environment variable.
+
+PowerShell example:
+
+```powershell
+$env:FOUNDRY_APP_PATH = "E:\Program Files\FoundryVTT\Foundry Virtual Tabletop\resources\app"
+node --test
+```
+
 ## Project
 
 Fated is a custom tabletop RPG system implemented as a native **Foundry VTT v14 game system**.
