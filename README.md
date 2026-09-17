@@ -25,6 +25,7 @@ This build implements the data-model baseline, Item Actions and mobile Turn Decl
 - Optional mobile Fated sheet with Character, Turn, Actions, and Items navigation
 - Target-agnostic declarations with stance selection, ordered Actions, one Movement segment, Multi-Action Threshold calculation, persistent locking and an execution checklist
 - Manual Wounds/stabilization bookkeeping, derived health conditions, traceable character-state Threshold modifiers and history-sensitive second-incapacitation death
+- Derived Defense (Body + Mind + current stance, minimum 1), physical attack damage previews and explicit simultaneous Wound application
 
 Not yet implemented:
 
@@ -33,7 +34,7 @@ Not yet implemented:
 - Critical success resource generation
 - Wound recovery and healing
 - Timed Broken / Death's Door effects
-- Additional stance mechanics beyond configured Action restrictions
+- Ranged stance Success Dice modifier and other deferred stance mechanics
 - range, LOS, and combat automation
 - world-level Shadow pool
 - rest automation
@@ -56,7 +57,9 @@ The Companion Character view provides direct editing and touch-friendly −1/+1 
 
 Fated Actors store `system.currentStance` (Neutral by default; Offensive, Defensive or Ranged). Character and desktop sheets edit this persistent state. A fresh declaration begins from current stance; editing its proposed stance leaves current stance unchanged. Successful locking commits the proposed stance with the locked declaration in one Actor update. Clearing preserves current stance and initializes the next declaration from it. No combat-start reset or stance enforcement beyond existing Action restrictions is automated.
 
-Use **Turn** to choose a stance and order Main, Free and Power Actions plus one optional continuous Movement segment. A declared Power Action disables additional Main/Power choices; declared Main Actions disable Power choices. Movement and Free Actions remain available. Incomplete or illegal declarations cannot lock. Locking freezes Action text and calculations for physical-dice execution; ending the declaration clears it while preserving stance and resources. No digital rolling or combat resolution is included.
+Use **Turn** to choose a stance and order Main, Free and Power Actions plus one optional continuous Movement segment. A declared Power Action disables additional Main/Power choices; declared Main Actions disable Power choices. Movement and Free Actions remain available. Incomplete or illegal declarations cannot lock. Locking freezes Action text and calculations for physical-dice execution; ending the declaration clears it while preserving stance and resources. Dice are rolled physically.
+
+The GM opens **Physical damage bookkeeping** on the target Fated desktop sheet. Select a visible attack Action and enter physical Successes, or enter manual final Damage. Preview shows calculation, current Defense and Wounds; **Apply Wounds** updates severity once. See [Defense and physical damage](docs/damage-bookkeeping.md). Equipment Defense remains deferred until worn/equipped semantics are defined.
 
 See [Action architecture and smoke tests](docs/actions-mobile.md) for implementation details and verification steps.
 

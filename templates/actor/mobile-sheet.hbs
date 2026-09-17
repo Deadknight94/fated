@@ -24,6 +24,7 @@
       <label class="mobile-current-stance">Current Stance <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
       <p class="mobile-note">Dice are rolled physically at the table.</p>
       {{> "systems/fated/templates/actor/health-state.hbs"}}
+      {{> "systems/fated/templates/actor/defense.hbs"}}
     </section>
     {{/if}}
     {{#if turn}}
@@ -38,6 +39,7 @@
       <article class="mobile-action-card">
         <header><p class="mobile-eyebrow">{{action.classificationLabel}}</p><h3>{{action.name}}</h3><p class="mobile-source">{{action.source.itemName}}</p></header>
         <p>{{action.rollRequirementLabel}}</p>
+        {{#if action.hasDamage}}<p><strong>Damage per Success: {{action.damagePerSuccess}}</strong> · Physical Successes × Damage, then final modifiers (minimum 0).</p>{{#each action.damageModifiers}}<p>{{label}}: {{value}} final Damage</p>{{/each}}{{/if}}
         {{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}
         <dl class="mobile-action-facts">
           <div><dt>Success Dice</dt><dd>{{action.dice.total}}</dd></div>
