@@ -35,7 +35,11 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
       health: new SchemaField({
         woundSeverity: new NumberField({ required: true, nullable: false, integer: true, min: 0, max: 4, initial: 0 }),
         stabilized: new BooleanField({ required: true, nullable: false, initial: false }),
-        dead: new BooleanField({ required: true, nullable: false, initial: false })
+        dead: new BooleanField({ required: true, nullable: false, initial: false }),
+        woundCare: new SchemaField({
+          care: new StringField({ required: true, nullable: false, blank: false, initial: "none", choices: ["none", "bandaged", "treated", "grievousHealingPending"] }),
+          daysRemaining: new NumberField({ required: true, nullable: false, integer: true, min: 0, initial: 0 })
+        })
       }),
       declaration: declarationField({ initial: source => freshDeclaration(source.currentStance ?? "neutral") }),
       attributes: new SchemaField({
