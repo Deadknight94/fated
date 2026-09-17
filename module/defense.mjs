@@ -1,8 +1,12 @@
-/** Equipment contributions remain deferred until worn/equipped semantics are defined. */
+/** Worn Armor and stance remain individually traceable; effective Defense has a floor of 1. */
 export function calculateDefense(actor, additionalModifiers = []) {
   const { body, mind } = actor.system.attributes;
   const stance = actor.system.currentStance;
-  const modifiers = additionalModifiers.map(modifier => ({ ...modifier }));
+  const armor = [...(actor.items ?? [])].filter(item => item.type === "armor" && item.system.equipped);
+  if (armor.length > 1) throw new Error("More than one Armor Item is Worn. Unwear the extra Armor before calculating Defense.");
+  const armorModifiers = armor.map(item => ({ label: `${item.name} (Worn Armor)`, value: item.system.armor,
+    source: { type: "item", itemId: item.id, itemUuid: item.uuid, itemName: item.name } }));
+  const modifiers = [...armorModifiers, ...additionalModifiers].map(modifier => ({ ...modifier }));
   if (modifiers.some(modifier => !modifier.label || !modifier.source)) throw new Error("Defense modifiers require a label and source.");
   if (stance === "offensive" || stance === "defensive") modifiers.unshift({
     label: `${stance === "offensive" ? "Offensive" : "Defensive"} stance`,

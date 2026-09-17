@@ -14,6 +14,13 @@
     </section>
   {{/if}}
 
+  {{#if hasEquipmentState}}
+    <section class="panel equipment-state">
+      <label><input type="checkbox" name="system.equipped" {{checked system.equipped}} {{disabled (not editable)}}> {{stateLabel}}</label>
+      {{#if isArmor}}<label>Armor <input type="number" name="system.armor" value="{{system.armor}}" min="0" step="1" {{disabled (not editable)}}></label>{{/if}}
+    </section>
+  {{/if}}
+
   {{#if isWeapon}}
     <section class="panel">
       <h2>Weapon</h2>

@@ -1,3 +1,4 @@
+import { equipmentView, toggleEquipment } from "../equipment.mjs";
 import { openMobileSheet } from "./mobile-sheet.mjs";
 import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
 import { healthView } from "../health.mjs";
@@ -31,7 +32,7 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       ...context,
       actor: this.document,
       system: this.document.system,
-      items: this.document.items.contents,
+      items: this.document.items.contents.map(equipmentView),
       editable: this.isEditable,
       healthState: healthView(this.document, { isGM: game.user.isGM }),
       ...(this.document.type === "fated" ? { defense: calculateDefense(this.document), isGM: game.user.isGM } : {}),
@@ -44,7 +45,7 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 export class FatedActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
-    actions: { openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
+    actions: { toggleEquipment, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
     classes: [...super.DEFAULT_OPTIONS.classes, "fated-actor"],
     window: {
       ...super.DEFAULT_OPTIONS.window,

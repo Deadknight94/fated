@@ -59,7 +59,7 @@ Fated Actors store `system.currentStance` (Neutral by default; Offensive, Defens
 
 Use **Turn** to choose a stance and order Main, Free and Power Actions plus one optional continuous Movement segment. A declared Power Action disables additional Main/Power choices; declared Main Actions disable Power choices. Movement and Free Actions remain available. Incomplete or illegal declarations cannot lock. Locking freezes Action text and calculations for physical-dice execution; ending the declaration clears it while preserving stance and resources. Dice are rolled physically.
 
-The GM opens **Physical damage bookkeeping** on the target Fated desktop sheet. Select a visible attack Action and enter physical Successes, or enter manual final Damage. Preview shows calculation, current Defense and Wounds; **Apply Wounds** updates severity once. See [Defense and physical damage](docs/damage-bookkeeping.md). Equipment Defense remains deferred until worn/equipped semantics are defined.
+The GM opens **Physical damage bookkeeping** on the target Fated desktop sheet. Select a visible attack Action and enter physical Successes, or enter manual final Damage. Preview shows calculation, current Defense and Wounds; **Apply Wounds** updates severity once. See [Defense and physical damage](docs/damage-bookkeeping.md). Only Worn Armor contributes its structured Armor value to Defense. A Fated may wear one Armor Item; explicitly unwear it before wearing another. Equipped state does not change Load.
 
 See [Action architecture and smoke tests](docs/actions-mobile.md) for implementation details and verification steps.
 

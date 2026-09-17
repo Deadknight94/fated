@@ -1,5 +1,7 @@
 import { getActorActions, getItemActions } from "./actions/actions.mjs";
 
+import { calculateDefense } from "./defense.mjs";
+
 export class FatedActor extends Actor {
   getAvailableActions() {
     return getActorActions(this);
@@ -19,6 +21,7 @@ export class FatedActor extends Actor {
     }, 0);
 
     this.system.load = Math.max(0, load);
+    this.system.defense = calculateDefense(this).total;
   }
 }
 

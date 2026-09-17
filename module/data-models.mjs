@@ -3,6 +3,7 @@ import { declarationField } from "./declaration/data-model.mjs";
 import { clampHope } from "./resources.mjs";
 import { freshDeclaration } from "./declaration/evaluate.mjs";
 import { deriveHealth, healthTransition, healthLockIssue } from "./health.mjs";
+import { wornArmorIssue } from "./equipment.mjs";
 import { calculateDefense } from "./defense.mjs";
 
 const {
@@ -154,14 +155,35 @@ export class WeaponDataModel extends BaseItemDataModel {
   static defineSchema() {
     return {
       ...super.defineSchema(),
+      equipped: new BooleanField({ required: true, nullable: false, initial: false }),
       proficiency: new StringField({ required: true, nullable: false, initial: "" }),
       damage: int(1, 0)
     };
   }
 }
 
-export class ArmorDataModel extends BaseItemDataModel {}
-export class EquipmentDataModel extends BaseItemDataModel {}
+export class EquipmentDataModel extends BaseItemDataModel {
+  static defineSchema() {
+    return { ...super.defineSchema(), equipped: new BooleanField({ required: true, nullable: false, initial: false }) };
+  }
+}
+
+export class ArmorDataModel extends EquipmentDataModel {
+  static defineSchema() { return { ...super.defineSchema(), armor: int(0, 0) }; }
+
+  async _preCreate(data, options, user) {
+    if (await super._preCreate(data, options, user) === false) return false;
+    const issue = wornArmorIssue(this.parent, this.equipped);
+    if (issue) throw new Error(issue);
+  }
+
+  async _preUpdate(changes, options, user) {
+    if (await super._preUpdate(changes, options, user) === false) return false;
+    const equipped = foundry.utils.expandObject(changes).system?.equipped;
+    const issue = wornArmorIssue(this.parent, equipped ?? this.equipped);
+    if (issue) throw new Error(issue);
+  }
+}
 
 export class WeaponProficiencyDataModel extends BaseItemDataModel {
   static defineSchema() {
