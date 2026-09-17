@@ -72,14 +72,26 @@ export function healthLockIssue(state) {
   return null;
 }
 
+/** Pure projection of one simultaneous wound instance, including treatment reopening. */
+export function projectWounds(health, wounds) {
+  if (!Number.isSafeInteger(wounds) || wounds < 0) throw new Error("Wounds must be a nonnegative whole number.");
+  const woundCare = normalizeWoundCare(health.woundSeverity, health.woundCare);
+  const treatmentReopened = wounds > 0 && health.dead !== true && health.woundSeverity === 2 && woundCare.care === "treated";
+  const woundSeverity = Math.min(4, health.woundSeverity + wounds - (treatmentReopened ? 1 : 0));
+  return { woundSeverity, treatmentReopened,
+    woundCare: normalizeWoundCare(woundSeverity, treatmentReopened ? { care: "none", daysRemaining: 0 } : woundCare) };
+}
+
 /** Apply one simultaneous damage instance through the existing document health lifecycle. */
 export async function applyWounds(actor, wounds) {
   if (actor.type !== "fated" || !actor.isOwner) throw new Error("You cannot update this Fated Actor.");
   if (!Number.isSafeInteger(wounds) || wounds < 0) throw new Error("Wounds must be a nonnegative whole number.");
   if (wounds === 0) return false;
-  const severity = Math.min(4, actor.system.health.woundSeverity + wounds);
-  if (severity === actor.system.health.woundSeverity) return false;
-  await actor.update({ "system.health.woundSeverity": severity });
+  const projection = projectWounds(actor.system.health, wounds);
+  if (projection.woundSeverity === actor.system.health.woundSeverity && !projection.treatmentReopened) return false;
+  const changes = { "system.health.woundSeverity": projection.woundSeverity };
+  if (projection.treatmentReopened) changes["system.health.woundCare"] = projection.woundCare;
+  await actor.update(changes);
   return true;
 }
 

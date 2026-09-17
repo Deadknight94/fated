@@ -1,5 +1,5 @@
 import { actionDamage, calculateDefense, stanceDamageModifiers } from "./defense.mjs";
-import { applyWounds, getActorHealth } from "./health.mjs";
+import { applyWounds, getActorHealth, projectWounds } from "./health.mjs";
 
 const nonnegative = (value, label) => {
   if (!Number.isFinite(value) || value < 0) throw new Error(`${label} must be a nonnegative number.`);
@@ -30,9 +30,12 @@ export function previewDamage({ attacker, action, item, target, successes, damag
   if (!Number.isFinite(total)) throw new Error("Damage total is not finite.");
   const wounds = Math.floor(total / defense.total);
   if (!Number.isSafeInteger(wounds)) throw new Error("Wound count is too large.");
+  const projection = projectWounds(target.system.health, wounds);
   return { manual, successes, damagePerSuccess, baseTotalDamage, finalDamageModifiers: modifiers,
     finalDamage: total, targetDefense: defense.total, defense, wounds, targetHealth: getActorHealth(target),
-    resultingWoundSeverity: Math.min(4, target.system.health.woundSeverity + wounds) };
+    targetWoundCare: projectWounds(target.system.health, 0).woundCare,
+    treatmentReopened: projection.treatmentReopened, resultingWoundCare: projection.woundCare,
+    resultingWoundSeverity: projection.woundSeverity };
 }
 
 /** Recalculate from current documents; never trust a caller-supplied wound preview. */
