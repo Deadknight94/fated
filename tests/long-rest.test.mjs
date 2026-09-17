@@ -118,3 +118,248 @@ test("Unsupported actor type rejected", async () => {
   const res = await longRest(a);
   assert.equal(res, false);
 });
+
+// --- Wound Healing Tests ---
+
+// No Healing input
+
+test("Long Rest preserves Light wound and its valid wound care", async () => {
+  const a = actor({
+    health: { woundSeverity: 1, woundCare: { care: "bandaged", daysRemaining: 3 } }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: undefined });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 1);
+  assert.equal(a.system.health.woundCare.care, "bandaged");
+  assert.equal(a.system.health.woundCare.daysRemaining, 3);
+});
+
+test("Long Rest preserves Grievous wound and its valid wound care", async () => {
+  const a = actor({
+    health: { woundSeverity: 2, woundCare: { care: "treated", daysRemaining: 2 } }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: undefined });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.woundCare.care, "treated");
+  assert.equal(a.system.health.woundCare.daysRemaining, 2);
+});
+
+// Light wound healing
+
+test("Light wound + healingSuccesses 1 -> severity 0, none/0", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 0);
+  assert.equal(a.system.health.woundCare.care, "none");
+  assert.equal(a.system.health.woundCare.daysRemaining, 0);
+});
+
+test("Light wound + several successes -> same Healthy result", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 5 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 0);
+  assert.equal(a.system.health.woundCare.care, "none");
+  assert.equal(a.system.health.woundCare.daysRemaining, 0);
+});
+
+test("Existing bandaged Light -> Healthy, none/0", async () => {
+  const a = actor({
+    health: { woundSeverity: 1, woundCare: { care: "bandaged", daysRemaining: 2 } }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 0);
+  assert.equal(a.system.health.woundCare.care, "none");
+  assert.equal(a.system.health.woundCare.daysRemaining, 0);
+});
+
+// Grievous wound treatment
+
+test("Grievous wound + healingSuccesses 1 -> severity 2, treated/1", async () => {
+  const a = actor({
+    health: { woundSeverity: 2 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.woundCare.care, "treated");
+  assert.equal(a.system.health.woundCare.daysRemaining, 1);
+});
+
+test("Grievous wound + several successes -> treated/exact successes", async () => {
+  const a = actor({
+    health: { woundSeverity: 2 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 4 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.woundCare.care, "treated");
+  assert.equal(a.system.health.woundCare.daysRemaining, 4);
+});
+
+test("Existing bandaged Grievous is replaced by treated", async () => {
+  const a = actor({
+    health: { woundSeverity: 2, woundCare: { care: "bandaged", daysRemaining: 3 } }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 2 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.woundCare.care, "treated");
+  assert.equal(a.system.health.woundCare.daysRemaining, 2);
+});
+
+test("Existing treated duration is replaced by the new success count", async () => {
+  const a = actor({
+    health: { woundSeverity: 2, woundCare: { care: "treated", daysRemaining: 2 } }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 5 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.equal(a.system.health.woundSeverity, 2);
+  assert.equal(a.system.health.woundCare.care, "treated");
+  assert.equal(a.system.health.woundCare.daysRemaining, 5);
+});
+
+// Invalid Healing requests
+
+test("Healthy + explicit Healing -> false, zero updates, complete state unchanged", async () => {
+  const a = actor({
+    health: { woundSeverity: 0 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("Death's Door + explicit Healing -> false, zero updates, complete state unchanged", async () => {
+  const a = actor({
+    health: { woundSeverity: 4 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("explicit healingSuccesses 0 -> rejected", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 0 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("negative healingSuccesses -> rejected", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: -1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("fractional healingSuccesses -> rejected", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1.5 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("nonnumeric healingSuccesses -> rejected", async () => {
+  const a = actor({
+    health: { woundSeverity: 1 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: "2" });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+test("unauthorized Actor -> rejected", async () => {
+  const a = actor();
+  a.isOwner = false;
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+});
+
+// Atomicity
+
+test("valid resources + Light healing occur in exactly ONE Actor update", async () => {
+  const a = actor({
+    resources: { endurance: { value: 3 }, hope: { value: 5 }, power: 2 },
+    health: { woundSeverity: 1 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.deepEqual(a.updates[0], {
+    "system.resources.endurance.value": 5,
+    "system.resources.hope.value": 6,
+    "system.resources.power": 0,
+    "system.health.woundSeverity": 0,
+    "system.health.woundCare": { care: "none", daysRemaining: 0 }
+  });
+});
+
+test("valid resources + Grievous treatment occur in exactly ONE Actor update", async () => {
+  const a = actor({
+    resources: { endurance: { value: 3 }, hope: { value: 5 }, power: 2 },
+    health: { woundSeverity: 2 }
+  });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 3 });
+  assert.equal(res, true);
+  assert.equal(updates, 1);
+  assert.deepEqual(a.updates[0], {
+    "system.resources.endurance.value": 5,
+    "system.resources.hope.value": 6,
+    "system.resources.power": 0,
+    "system.health.woundCare": { care: "treated", daysRemaining: 3 }
+  });
+});
+
+test("invalid Healing input must prevent ALL Long Rest changes", async () => {
+  const a = actor({
+    resources: { endurance: { value: 3 }, hope: { value: 5 }, power: 2 },
+    health: { woundSeverity: 1 }
+  });
+  const before = a.system.toObject();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 0 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
+  // Ensure no resources were changed either
+  assert.equal(a.system.resources.endurance.value, 3);
+  assert.equal(a.system.resources.hope.value, 5);
+  assert.equal(a.system.resources.power, 2);
+});
