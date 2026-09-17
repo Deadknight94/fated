@@ -40,6 +40,7 @@
         <label>Minimum range <input type="number" step="1" name="system.actions.{{action.index}}.range.min" value="{{action.range.min}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
         <label>Maximum range <input type="number" step="1" name="system.actions.{{action.index}}.range.max" value="{{action.range.max}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
         <label>Range units <input name="system.actions.{{action.index}}.range.units" value="{{action.range.units}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
+        <label>Damage per Success (attack Actions only) <input type="number" min="0" step="any" name="system.actions.{{action.index}}.damage" value="{{action.damage}}" placeholder="Weapon Damage, or unspecified" {{disabled (not @root.editable)}}></label>
       </div>
       <fieldset class="stance-options">
         <legend>Allowed stances (none checked = unspecified)</legend>

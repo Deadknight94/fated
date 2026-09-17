@@ -1,0 +1,24 @@
+<section class="panel">
+  <h2>Damage against {{targetName}}</h2>
+  <p>Enter physical roll results. Preview changes no Actor data.</p>
+  <label>Attack source <select data-damage-field="attack"><option value="">Manual final Damage</option>{{#each attacks}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+  <label>Physical Successes (attack mode) <input type="number" min="0" step="1" data-damage-field="successes" value="{{values.successes}}"></label>
+  <label>Final Damage (manual mode) <input type="number" min="0" step="any" data-damage-field="finalDamage" value="{{values.finalDamage}}"></label>
+  <p>Manual Damage is already final; no attacker stance adjustment is added.</p>
+  <button type="button" data-action="preview">Preview damage</button>
+  {{#if message}}<p role="status">{{message}}</p>{{/if}}
+  {{#if result}}
+  <dl>
+    {{#unless result.manual}}<div><dt>Successes × Damage per Success</dt><dd>{{result.successes}} × {{result.damagePerSuccess}} = {{result.baseTotalDamage}}</dd></div>{{/unless}}
+    {{#each result.finalDamageModifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+    <div><dt>Final Damage (minimum 0)</dt><dd>{{result.finalDamage}}</dd></div>
+    <div><dt>Defense · Body + Mind</dt><dd>{{result.defense.body}} + {{result.defense.mind}} = {{result.defense.base}}</dd></div>
+    {{#each result.defense.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+    <div><dt>Raw Defense</dt><dd>{{result.defense.raw}}</dd></div>
+    <div><dt>Effective Defense (minimum 1)</dt><dd>{{result.targetDefense}}</dd></div>
+    <div><dt>Wounds inflicted</dt><dd>{{result.wounds}}</dd></div>
+    <div><dt>Resulting wound severity</dt><dd>{{result.resultingWoundSeverity}}</dd></div>
+  </dl>
+  {{/if}}
+  <button type="button" data-action="apply" {{disabled (not canApply)}}>Apply Wounds</button>
+</section>

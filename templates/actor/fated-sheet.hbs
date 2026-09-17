@@ -40,6 +40,8 @@
   </section>
 
   {{> "systems/fated/templates/actor/health-state.hbs"}}
+  {{> "systems/fated/templates/actor/defense.hbs"}}
+  {{#if isGM}}<button type="button" data-action="openDamage">Physical damage bookkeeping</button>{{/if}}
 
   <section class="panel inventory">
     <h2>Items</h2>

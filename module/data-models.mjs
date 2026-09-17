@@ -3,6 +3,7 @@ import { declarationField } from "./declaration/data-model.mjs";
 import { clampHope } from "./resources.mjs";
 import { freshDeclaration } from "./declaration/evaluate.mjs";
 import { deriveHealth, healthTransition, healthLockIssue } from "./health.mjs";
+import { calculateDefense } from "./defense.mjs";
 
 const {
   BooleanField,
@@ -111,6 +112,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     );
 
     this.resources.hope.value = clampHope(this.resources.hope.value, this.attributes);
+    this.defense = calculateDefense({ system: this, uuid: this.parent?.uuid }).total;
   }
 }
 

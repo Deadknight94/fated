@@ -9,6 +9,7 @@ export function readActionForm(submitted, current) {
       modifiers: { ...action.modifiers } };
     const number = value => value === "" || value === null || value === undefined ? null : Number(value);
     merged.successDice.base = number(merged.successDice.base);
+    merged.damage = number(merged.damage);
     // This legacy field is not editable; unrelated form edits must preserve it.
     merged.successThreshold = action.successThreshold;
     merged.rollRequirement = merged.rollRequirement || null;

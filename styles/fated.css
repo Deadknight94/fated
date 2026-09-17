@@ -247,3 +247,10 @@
     grid-template-columns: 64px minmax(0, 1fr);
   }
 }
+.fated.damage-bookkeeping button,
+.fated.damage-bookkeeping input,
+.fated.damage-bookkeeping select,
+.fated [aria-label="Defense"] summary { min-height: 48px; }
+.fated.damage-bookkeeping label { display: grid; gap: 4px; margin-bottom: 12px; }
+.fated.damage-bookkeeping select { width: 100%; }
+.fated.damage-bookkeeping dl > div { margin-bottom: 8px; }

@@ -64,7 +64,18 @@ export function healthLockIssue(state) {
   return null;
 }
 
-/** Manual bookkeeping only; no damage, recovery, timed drain or resurrection. */
+/** Apply one simultaneous damage instance through the existing document health lifecycle. */
+export async function applyWounds(actor, wounds) {
+  if (actor.type !== "fated" || !actor.isOwner) throw new Error("You cannot update this Fated Actor.");
+  if (!Number.isSafeInteger(wounds) || wounds < 0) throw new Error("Wounds must be a nonnegative whole number.");
+  if (wounds === 0) return false;
+  const severity = Math.min(4, actor.system.health.woundSeverity + wounds);
+  if (severity === actor.system.health.woundSeverity) return false;
+  await actor.update({ "system.health.woundSeverity": severity });
+  return true;
+}
+
+/** Manual bookkeeping only; no recovery, timed drain or resurrection. */
 export async function updateHealth(actor, operation, { isGM = false } = {}) {
   if (actor.type !== "fated" || !actor.isOwner) return false;
   const health = actor.system.health;

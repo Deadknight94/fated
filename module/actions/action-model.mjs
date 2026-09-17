@@ -24,6 +24,7 @@ export class ActionDataModel extends foundry.abstract.DataModel {
       // Retained for lossless legacy review. Calculations never use this as their base.
       successThreshold: new NumberField({ required: true, nullable: true, initial: BASE_SUCCESS_THRESHOLD, integer: true }),
       attackType: choice(["melee", "ranged"]),
+      damage: new NumberField({ required: true, nullable: true, initial: null, min: 0 }),
       range: new SchemaField({ min: optionalNumber(), max: optionalNumber(), units: text() }),
       effect: text(),
       rules: text(),
