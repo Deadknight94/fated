@@ -98,9 +98,11 @@ test("Hope capped at positive limit", async () => {
 
 test("Terminal wound severity prevents Long Rest", async () => {
   const a = actor({ health: { woundSeverity: 4 } });
+  const before = a.system.toObject();
   const { res, updates } = await restAndCount(a);
   assert.equal(res, false);
   assert.equal(updates, 0);
+  assert.deepEqual(a.system.toObject(), before);
 });
 
 test("Read-only actor cannot mutate", async () => {
@@ -250,7 +252,7 @@ test("Healthy + explicit Healing -> false, zero updates, complete state unchange
 
 test("Death's Door + explicit Healing -> false, zero updates, complete state unchanged", async () => {
   const a = actor({
-    health: { woundSeverity: 4 }
+    health: { woundSeverity: 3 }
   });
   const before = a.system.toObject();
   const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
@@ -362,4 +364,32 @@ test("invalid Healing input must prevent ALL Long Rest changes", async () => {
   assert.equal(a.system.resources.endurance.value, 3);
   assert.equal(a.system.resources.hope.value, 5);
   assert.equal(a.system.resources.power, 2);
+});
+
+test("rejected Long Rest update cannot partially commit resources or Grievous treatment", async () => {
+  const a = actor({ health: { woundSeverity: 2 } });
+  const before = a.system.toObject();
+  const attempts = [];
+  a.update = async changes => { attempts.push(structuredClone(changes)); throw new Error("Update rejected"); };
+  await assert.rejects(longRest(a, { healingSuccesses: 3 }), /Update rejected/);
+  assert.deepEqual(attempts, [{
+    "system.resources.endurance.value": 5,
+    "system.resources.hope.value": 6,
+    "system.resources.power": 0,
+    "system.health.woundCare": { care: "treated", daysRemaining: 3 }
+  }]);
+  assert.deepEqual(a.system.toObject(), before);
+  assert.equal(a.updates.length, 0);
+});
+
+test("Long Rest Light healing preserves recorded death and unrelated character state", async () => {
+  const a = actor({ health: { woundSeverity: 1, dead: true, woundCare: { care: "bandaged", daysRemaining: 2 } } });
+  const before = a.system.toObject();
+  assert.equal(await longRest(a, { healingSuccesses: 1 }), true);
+  assert.equal(a.updates.length, 1);
+  assert.equal(a.system.health.woundSeverity, 0);
+  assert.equal(a.system.health.dead, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "none", daysRemaining: 0 });
+  assert.equal(a.system.currentStance, before.currentStance);
+  assert.deepEqual(a.system.toObject().declaration, before.declaration);
 });
