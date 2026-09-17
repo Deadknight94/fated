@@ -101,6 +101,16 @@ test("read-only actor cannot mutate", async () => {
   assert.deepEqual(a.system.toObject(), before);
 });
 
+test("non-boolean Hope spend requests are rejected without resource mutation", async () => {
+  for (const spendHope of ["false", "true", 1, 0, null, {}]) {
+    const a = actor();
+    const before = a.system.toObject();
+    assert.equal(await shortRest(a, { spendHope, extraRecovery: 1 }), false);
+    assert.equal(a.updates.length, 0);
+    assert.deepEqual(a.system.toObject(), before);
+  }
+});
+
 test("Hope cost stays exactly 1 even when Endurance is already capped", async () => {
   const a = actor({ resources: { endurance: { value: 5 } } });
   await shortRest(a, { spendHope: true, extraRecovery: 2 });
@@ -126,4 +136,159 @@ test("rejected Actor update leaves both resources and unrelated state unchanged"
   await assert.rejects(shortRest(a, { spendHope: true, extraRecovery: 2 }), /Update rejected/);
   assert.deepEqual(attempts, [{ "system.resources.endurance.value": 5, "system.resources.hope.value": 4 }]);
   assert.deepEqual(a.system.toObject(), before);
+});
+
+// Bandaging tests
+
+test("Light wound + 1 success bands for 1 day", async () => {
+  const a = actor({ health: { woundSeverity: 1, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 1 });
+  assert.equal(updates, 1);
+});
+
+// Light wound + 3 successes bands for 3 days
+
+test("Light wound + 3 successes bands for 3 days", async () => {
+  const a = actor({ health: { woundSeverity: 1, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 3 });
+  assert.equal(res, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 3 });
+  assert.equal(updates, 1);
+});
+
+// Grievous wound + 2 successes bands for 2 days
+
+test("Grievous wound + 2 successes bands for 2 days", async () => {
+  const a = actor({ health: { woundSeverity: 2, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 2 });
+  assert.equal(res, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 2 });
+  assert.equal(updates, 1);
+});
+
+// Existing treated grievous wound is replaced by bandaged
+
+test("Existing treated grievous wound is replaced by bandaged", async () => {
+  const a = actor({ health: { woundSeverity: 2, woundCare: { care: "treated", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 1 });
+  assert.equal(updates, 1);
+});
+
+// Existing bandaged wound days are replaced by new count
+
+test("Existing bandaged wound days are replaced by new count", async () => {
+  const a = actor({ health: { woundSeverity: 1, woundCare: { care: "bandaged", daysRemaining: 5 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 2 });
+  assert.equal(res, true);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 2 });
+  assert.equal(updates, 1);
+});
+
+// Healthy actor with healingSuccesses rejected
+
+test("Healthy actor with healingSuccesses rejected", async () => {
+  const a = actor({ health: { woundSeverity: 0, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.deepEqual(a.system.health.woundCare, { care: "none", daysRemaining: 0 });
+  assert.equal(updates, 0);
+});
+
+// Death's Door wound with healingSuccesses rejected
+
+test("Death's Door wound with healingSuccesses rejected", async () => {
+  const a = actor({ health: { woundSeverity: 3, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.deepEqual(a.system.health.woundCare, { care: "none", daysRemaining: 0 });
+  assert.equal(updates, 0);
+});
+
+// Dead actor with healingSuccesses rejected
+
+test("Dead actor with healingSuccesses rejected", async () => {
+  const a = actor({ health: { woundSeverity: 4, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.deepEqual(a.system.health.woundCare, { care: "none", daysRemaining: 0 });
+  assert.equal(updates, 0);
+});
+
+// Explicit healingSuccesses 0 rejected
+
+test("Explicit healingSuccesses 0 rejected", async () => {
+  const a = actor();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 0 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
+// Negative healingSuccesses rejected
+
+test("Negative healingSuccesses rejected", async () => {
+  const a = actor();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: -1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
+// Fractional healingSuccesses rejected
+
+test("Fractional healingSuccesses rejected", async () => {
+  const a = actor();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1.5 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
+// Non-numeric healingSuccesses rejected
+
+test("Non-numeric healingSuccesses rejected", async () => {
+  const a = actor();
+  const { res, updates } = await restAndCount(a, { healingSuccesses: "1" } );
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
+// Unauthorized actor cannot mutate with healingSuccesses
+
+test("Unauthorized actor cannot mutate with healingSuccesses", async () => {
+  const a = actor();
+  a.isOwner = false;
+  const { res, updates } = await restAndCount(a, { healingSuccesses: 1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+});
+
+// Combining valid Hope recovery and bandaging in single update
+
+test("Combining valid Hope recovery and bandaging in single update", async () => {
+  const a = actor({ resources: { hope: { value: 5 }, endurance: { value: 3 } }, health: { woundSeverity: 1, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { spendHope: true, extraRecovery: 1, healingSuccesses: 2 });
+  assert.equal(res, true);
+  assert.equal(a.system.resources.hope.value, 4);
+  assert.equal(a.system.resources.endurance.value, 5);
+  assert.deepEqual(a.system.health.woundCare, { care: "bandaged", daysRemaining: 2 });
+  assert.equal(updates, 1);
+  // Verify single update contains both keys
+  assert.deepEqual(a.updates[0], {
+    "system.resources.endurance.value": 5,
+    "system.resources.hope.value": 4,
+    "system.health.woundCare": { care: "bandaged", daysRemaining: 2 }
+  });
+});
+
+// Rejected bandaging request does not partially apply Hope or Endurance
+
+test("Rejected bandaging request does not partially apply Hope or Endurance", async () => {
+  const a = actor({ resources: { hope: { value: 5 }, endurance: { value: 3 } }, health: { woundSeverity: 1, woundCare: { care: "none", daysRemaining: 0 } } });
+  const { res, updates } = await restAndCount(a, { spendHope: true, extraRecovery: 1, healingSuccesses: -1 });
+  assert.equal(res, false);
+  assert.equal(updates, 0);
+  assert.equal(a.system.resources.hope.value, 5);
+  assert.equal(a.system.resources.endurance.value, 3);
 });

@@ -70,7 +70,7 @@ test("creation preserves compatible wound care", async () => {
     toObject: () => source,
     parent: { updateSource: patch => patches.push(patch) }
   }, {}, {}, {});
-  const woundPatch = patches.find(p => "system.health.woundCare" in p);
+  const woundPatch = patches.find(p => Object.keys(p).some(key => key.startsWith("system.health.woundCare")));
   assert.ok(!woundPatch, "woundCare patch should not be present for compatible care");
   // Ensure source woundCare remains unchanged
   assert.equal(source.health.woundCare.care, "bandaged");
@@ -121,8 +121,40 @@ test("incompatible direct care update normalizes to none/0", async () => {
 
 test("unrelated update preserves wound care", async () => {
   const a = actor({ health: { woundSeverity: 2, woundCare: { care: "treated", daysRemaining: 3 } } });
-  await a.update({ load: 5 });
+  await a.update({ "system.resources.power": 5 });
   const w = a.system.health.woundCare;
   assert.equal(w.care, "treated");
   assert.equal(w.daysRemaining, 3);
+  assert.equal(a.system.resources.power, 5);
+});
+
+test("flat and nested severity/care updates normalize proposed state without changing current source", async () => {
+  for (const nested of [false, true]) {
+    const a = actor({ health: { woundSeverity: 2, woundCare: { care: "treated", daysRemaining: 3 } } });
+    const before = a.system.toObject();
+    const changes = nested ? { system: { health: { woundSeverity: 1, woundCare: { daysRemaining: 2 } } } }
+      : { "system.health.woundSeverity": 1, "system.health.woundCare.daysRemaining": 2 };
+    await a.system._preUpdate(changes, {}, a.user);
+    assert.deepEqual(a.system.toObject(), before);
+    const proposed = foundry.utils.expandObject(changes).system;
+    assert.equal(proposed.health.woundSeverity, 1);
+    assert.deepEqual(proposed.health.woundCare, { care: "none", daysRemaining: 0 });
+    a.system.updateSource(proposed);
+    assert.deepEqual(a.system.toObject().health.woundCare, { care: "none", daysRemaining: 0 });
+    assert.deepEqual(a.system.toObject().resources, before.resources);
+    assert.equal(a.system.health.dead, false);
+  }
+});
+
+test("atomic Short Rest preserves compatible wound care and recorded death", async () => {
+  const { shortRest } = await import("../module/rest/short-rest.mjs");
+  const a = actor({ health: { woundSeverity: 2, dead: true, woundCare: { care: "treated", daysRemaining: 3 } } });
+  const before = a.system.toObject();
+  assert.equal(await shortRest(a, { spendHope: true, extraRecovery: 1 }), true);
+  assert.equal(a.updates.length, 1);
+  assert.equal(a.system.resources.endurance.value, 5);
+  assert.equal(a.system.resources.hope.value, -1);
+  assert.deepEqual(a.system.toObject().health, before.health);
+  assert.equal(a.system.resources.power, before.resources.power);
+  assert.deepEqual(a.system.toObject().declaration, before.declaration);
 });

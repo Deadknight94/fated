@@ -5,11 +5,13 @@
  * @param {object} [options] - Options for the rest.
  * @param {boolean} [options.spendHope=false] - Whether to spend 1 Hope for extra Endurance.
  * @param {number} [options.extraRecovery=0] - Extra Endurance to recover when spending Hope.
+ * @param {number} [options.healingSuccesses] - Positive integer successes from a Healing check.
  * @returns {Promise<boolean>} - true if the rest succeeded, otherwise false.
  */
-export async function shortRest(actor, { spendHope = false, extraRecovery = 0 } = {}) {
+export async function shortRest(actor, { spendHope = false, extraRecovery = 0, healingSuccesses } = {}) {
   // Validate actor type and ownership.
   if (actor.type !== "fated" || !actor.isOwner) return false;
+  if (typeof spendHope !== "boolean") return false;
 
   const { attributes, resources } = actor.system;
   const heart = Number(attributes.heart) || 0;
@@ -21,6 +23,18 @@ export async function shortRest(actor, { spendHope = false, extraRecovery = 0 } 
 
   const hope = Number(resources.hope.value) || 0;
   const currentEndurance = Number(resources.endurance.value) || 0;
+
+  /* woundSeverity will be evaluated in validation block */
+
+  // Validate Healing successes if provided.
+  if (healingSuccesses !== undefined) {
+    // Must be a positive integer.
+    if (!Number.isInteger(healingSuccesses) || healingSuccesses <= 0) return false;
+    // Determine wound severity.
+    const woundSeverity = Number(actor.system.health?.woundSeverity ?? 0);
+    // Bandageable severities are 1 (Light) and 2 (Grievous).
+    if (woundSeverity !== 1 && woundSeverity !== 2) return false;
+  }
 
   // Validate Hope spend eligibility.
   if (spendHope) {
@@ -40,6 +54,11 @@ export async function shortRest(actor, { spendHope = false, extraRecovery = 0 } 
   if (spendHope) {
     changes["system.resources.hope.value"] = hope - 1;
   }
+  if (healingSuccesses > 0) {
+    // Apply bandaging; replace existing care with bandaged.
+    changes["system.health.woundCare"] = { care: "bandaged", daysRemaining: healingSuccesses };
+  }
+
   if (Object.keys(changes).length) await actor.update(changes);
 
   return true;
