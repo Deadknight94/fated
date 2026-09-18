@@ -5,6 +5,7 @@ import { healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { calculateDefense } from "../defense.mjs";
 import { openDamageBookkeeping } from "./damage-bookkeeping.mjs";
+import { openRestApp } from "../apps/rest-app.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -45,7 +46,7 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 export class FatedActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
-    actions: { toggleEquipment, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
+    actions: { toggleEquipment, openRest: function () { return openRestApp(this.document); }, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
     classes: [...super.DEFAULT_OPTIONS.classes, "fated-actor"],
     window: {
       ...super.DEFAULT_OPTIONS.window,
