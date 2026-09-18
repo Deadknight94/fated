@@ -28,6 +28,11 @@ export async function updateDeclaration(actor, revision, operation) {
       : editDeclaration(current, operation, { id: foundry.utils.randomID() });
   }
   next.revision = current.revision + 1;
+  // Snapshot calculations above use the intact bandage. Commit its break with
+  // the lock, without re-evaluating the historical snapshot afterward.
+  const breaksBandage = operation.type === "lock" && next.snapshot.multiActionPenalty > 0
+    && actor.system.health.woundSeverity === 2 && actor.system.health.woundCare.care === "bandaged";
   await actor.update({ "system.declaration": next,
-    ...(operation.type === "lock" ? { "system.currentStance": next.stance } : {}) });
+    ...(operation.type === "lock" ? { "system.currentStance": next.stance } : {}),
+    ...(breaksBandage ? { "system.health.woundCare": { care: "none", daysRemaining: 0 } } : {}) });
 }
