@@ -35,6 +35,11 @@
 .fated .action-editor input[type="checkbox"] { width: 24px; height: 24px; flex: 0 0 24px; }
 .fated.sheet.item { max-width: 100vw; min-width: 0; }
 
+.fated.sheet.standard-form .window-content {
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
 /* Purpose-built player shell. Desktop and NPC layouts keep their existing styles. */
 .fated-mobile .turn-planner { display: grid; gap: 0.8rem; }
 .fated-mobile .turn-stance-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
@@ -270,3 +275,4 @@
 .rest-app button { white-space: normal; height: auto; }
 .rest-app label:has(input[type="checkbox"]) { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; }
 .rest-app input[type="checkbox"] { min-height: 24px; width: 24px; height: 24px; flex: 0 0 24px; }
+\n.fated-mobile.sheet.item .window-content {\noverflow-y: auto;\noverflow-x: hidden;\n}\n
