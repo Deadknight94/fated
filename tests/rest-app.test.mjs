@@ -58,6 +58,8 @@ test("RestApp exposes correct context", async () => {
   assert.equal(ctx.hope.current, -2);
   assert.equal(ctx.hope.limit, 4); // mind+heart
   assert.equal(ctx.power.current, 3);
+  // Verify power maximum
+  assert.equal(ctx.power.max, 8, "Power max derived from heart+body+mind");
   assert.equal(ctx.wound.severity, 2);
   assert.equal(ctx.woundCare.care, "treated");
   assert.equal(ctx.woundCare.daysRemaining, 1);

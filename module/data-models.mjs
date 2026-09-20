@@ -62,6 +62,13 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     const source = this.toObject();
     this.parent.updateSource({ "system.resources.hope.value": clampHope(source.resources.hope.value, source.attributes) });
     // No prior Incapacitation exists at creation: simultaneous first causes do not kill.
+    // Clamp initial Power to derived maximum (Heart + Body + Mind)
+    const powerLimit = (source.attributes.heart ?? 0) + (source.attributes.body ?? 0) + (source.attributes.mind ?? 0);
+    const rawPower = source.resources.power ?? 0; // guard against undefined
+    const correctedPower = Math.max(0, Math.min(rawPower, powerLimit));
+    if (correctedPower !== rawPower) {
+      this.parent.updateSource({ "system.resources.power": correctedPower });
+    }
     if (source.health) {
       // Normalize woundCare on creation
       const normalized = normalizeWoundCare(source.health.woundSeverity, source.health.woundCare);
@@ -115,6 +122,23 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     if (expanded.system?.declaration?.status === "locked" && source.declaration.status !== "locked") {
       const issue = healthLockIssue(deriveHealth(proposed));
       if (issue) throw new Error(issue);
+    }
+    // Clamp Power to derived maximum based on proposed attributes
+    const powerLimit = candidate.attributes.heart + candidate.attributes.body + candidate.attributes.mind;
+    // Guard against missing power on the candidate – treat as 0 for clamping logic
+    const rawPower = candidate.resources.power ?? 0;
+    const correctedPower = Math.max(0, Math.min(rawPower, powerLimit));
+    if (correctedPower !== candidate.resources.power) {
+      if (Object.hasOwn(changes, "system") || expanded.system?.resources?.power !== undefined ||
+          expanded.system?.attributes?.heart !== undefined || expanded.system?.attributes?.body !== undefined ||
+          expanded.system?.attributes?.mind !== undefined) {
+        if (Object.hasOwn(changes, "system")) {
+          foundry.utils.setProperty(changes, "system.resources.power", correctedPower);
+        } else {
+          changes["system.resources.power"] = correctedPower;
+        }
+      }
+      candidate.resources.power = correctedPower;
     }
   }
 

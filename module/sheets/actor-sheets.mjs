@@ -38,7 +38,8 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       healthState: healthView(this.document, { isGM: game.user.isGM }),
       ...(this.document.type === "fated" ? { defense: calculateDefense(this.document), isGM: game.user.isGM } : {}),
       ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
-        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {})
+        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {}),
+      ...(this.document.type === "fated" ? { powerMax: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind } : {})
     };
   }
 }

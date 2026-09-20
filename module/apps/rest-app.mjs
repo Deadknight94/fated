@@ -74,7 +74,13 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
         && health.woundCare.care === "grievousHealingPending" && health.woundCare.daysRemaining === 0,
       endurance: { current: resources.endurance.value, max: resources.endurance.max },
       hope: { current: resources.hope.value, limit: resources.hope.max },
-      power: { current: resources.power }, wound: healthView(this.document),
+      // Power maximum derived from Heart + Body + Mind
+      power: {
+        current: resources.power,
+        // The power maximum is derived from the actor's attributes
+        max: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind,
+      },
+      wound: healthView(this.document),
       woundCare: this.document.system.health.woundCare };
   }
 }
