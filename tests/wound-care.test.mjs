@@ -74,3 +74,15 @@ test("woundCare daysRemaining cleans to a nonnegative integer", () => {
   assert.equal(field.clean(-1), 0);
   assert.equal(field.clean(1.5), 2);
 });
+
+// Test that normalizeWoundCare does NOT mutate its input object.
+test("normalizeWoundCare is pure and does not mutate input", async () => {
+  const { normalizeWoundCare } = await import("../module/wound-care.mjs");
+  const input = { care: "treated", daysRemaining: 5 };
+  const copy = JSON.parse(JSON.stringify(input));
+  const result = normalizeWoundCare(2, input);
+  // The input should remain unchanged.
+  assert.deepEqual(input, copy);
+  // The result should be a new object with the same values.
+  assert.deepEqual(result, { care: "treated", daysRemaining: 5 });
+});
