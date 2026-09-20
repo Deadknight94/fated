@@ -239,3 +239,51 @@ test("Treatment reopening is restricted to severity 2", async () => {
     assert.equal(p.woundSeverity, Math.min(4, severity + 1));
   }
 });
+
+/* ------------------------------------------------------------ */
+/*   Bandaged / grievousHealingPending – non‑treated grief
+/* ------------------------------------------------------------ */
+
+// Helper to create a target with given care type
+function targetWithCare(care) {
+  return actor({ health: { woundSeverity: 2, woundCare: { care, daysRemaining: 3 } } });
+}
+
+test("Bandaged Grievous severity 2 + 1 wound: preview and apply", async () => {
+  const target = targetWithCare("bandaged");
+  const input = { target, finalDamage: 5 }; // 1 wound (defense 5)
+  const preview = previewDamage(input);
+  assert.equal(preview.wounds, 1);
+  assert.equal(preview.resultingWoundSeverity, 3);
+  assert.deepEqual(preview.resultingWoundCare, { care: "none", daysRemaining: 0 });
+  const result = await applyDamage(input);
+  assert.deepEqual(result, preview);
+  assert.equal(target.system.health.woundSeverity, 3);
+  assert.deepEqual(target.system.health.woundCare, { care: "none", daysRemaining: 0 });
+});
+
+test("grievousHealingPending Grievous severity 2 + 1 wound: preview and apply", async () => {
+  const target = targetWithCare("grievousHealingPending");
+  const input = { target, finalDamage: 5 }; // 1 wound
+  const preview = previewDamage(input);
+  assert.equal(preview.wounds, 1);
+  assert.equal(preview.resultingWoundSeverity, 3);
+  assert.deepEqual(preview.resultingWoundCare, { care: "none", daysRemaining: 0 });
+  const result = await applyDamage(input);
+  assert.deepEqual(result, preview);
+  assert.equal(target.system.health.woundSeverity, 3);
+  assert.deepEqual(target.system.health.woundCare, { care: "none", daysRemaining: 0 });
+});
+
+test("Bandaged Grievous severity 2 + 2 wounds: preview and apply", async () => {
+  const target = targetWithCare("bandaged");
+  const input = { target, finalDamage: 10 }; // 2 wounds (defense 5)
+  const preview = previewDamage(input);
+  assert.equal(preview.wounds, 2);
+  assert.equal(preview.resultingWoundSeverity, 4); // 2 + 2
+  assert.deepEqual(preview.resultingWoundCare, { care: "none", daysRemaining: 0 });
+  const result = await applyDamage(input);
+  assert.deepEqual(result, preview);
+  assert.equal(target.system.health.woundSeverity, 4);
+  assert.deepEqual(target.system.health.woundCare, { care: "none", daysRemaining: 0 });
+});
