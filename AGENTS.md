@@ -62,6 +62,25 @@ The purpose of this repository is to implement the existing game design faithful
 
 \---
 
+## Rules Authority
+
+The human-authoritative Fated rules are maintained in the Google Doc
+“FatedTTRPG Core System Summary”.
+
+A repository snapshot is stored at:
+
+docs/FATED_RULES_CANON.md
+
+For implementation and code review:
+
+- Read `docs/FATED_RULES_CANON.md` when game rules are relevant.
+- Do not invent, reinterpret, or silently complete rules.
+- Rules marked TBD are not implementation requirements unless the task explicitly says otherwise.
+- A task prompt may restate a narrow subset of the rules for the current change.
+- If the task prompt conflicts with `docs/FATED_RULES_CANON.md`, stop and report the conflict.
+- If required behavior is absent or genuinely ambiguous, report the ambiguity instead of choosing a rule.
+- The Google Doc remains the human master copy; `docs/FATED_RULES_CANON.md` is the coding-agent snapshot.
+
 ## Source of Truth
 
 Game rules are defined outside the codebase.
