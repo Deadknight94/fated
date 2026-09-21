@@ -5,6 +5,7 @@ import { getDeclarationEvaluation, updateDeclaration } from "../declaration/serv
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
 import { adjustResource } from "../resources.mjs";
 import { calculateDefense, actionDamage, stanceDamageModifiers } from "../defense.mjs";
+import { openRestApp } from "../apps/rest-app.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -26,7 +27,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: { toggleEquipment, showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
-      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction }
+      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction, openRest: FatedMobileSheet.openRest }
   };
 
   static PARTS = { main: { template: "systems/fated/templates/actor/mobile-sheet.hbs",
@@ -104,6 +105,10 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   static openItem(event, button) {
     this.document.items.get(button.dataset.itemId)?.sheet.render({ force: true });
+  }
+
+  static async openRest(event, button) {
+    return openRestApp(this.document);
   }
 
   static async adjustResource(event, button) {

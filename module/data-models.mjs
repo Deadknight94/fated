@@ -5,6 +5,7 @@ import { freshDeclaration } from "./declaration/evaluate.mjs";
 import { deriveHealth, healthTransition, healthLockIssue } from "./health.mjs";
 import { wornArmorIssue } from "./equipment.mjs";
 import { calculateDefense } from "./defense.mjs";
+import { normalizeWoundCare } from "./wound-care.mjs";
 
 const {
   BooleanField,
@@ -35,7 +36,11 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
       health: new SchemaField({
         woundSeverity: new NumberField({ required: true, nullable: false, integer: true, min: 0, max: 4, initial: 0 }),
         stabilized: new BooleanField({ required: true, nullable: false, initial: false }),
-        dead: new BooleanField({ required: true, nullable: false, initial: false })
+        dead: new BooleanField({ required: true, nullable: false, initial: false }),
+        woundCare: new SchemaField({
+          care: new StringField({ required: true, nullable: false, blank: false, initial: "none", choices: ["none", "bandaged", "treated", "grievousHealingPending"] }),
+          daysRemaining: new NumberField({ required: true, nullable: false, integer: true, min: 0, initial: 0 })
+        })
       }),
       declaration: declarationField({ initial: source => freshDeclaration(source.currentStance ?? "neutral") }),
       attributes: new SchemaField({
@@ -57,8 +62,22 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     const source = this.toObject();
     this.parent.updateSource({ "system.resources.hope.value": clampHope(source.resources.hope.value, source.attributes) });
     // No prior Incapacitation exists at creation: simultaneous first causes do not kill.
-    if (source.health) this.parent.updateSource({ "system.health.stabilized": false,
-      "system.health.dead": source.health.dead || source.health.woundSeverity >= 4 });
+    // Clamp initial Power to derived maximum (Heart + Body + Mind)
+    const powerLimit = (source.attributes.heart ?? 0) + (source.attributes.body ?? 0) + (source.attributes.mind ?? 0);
+    const rawPower = source.resources.power ?? 0; // guard against undefined
+    const correctedPower = Math.max(0, Math.min(rawPower, powerLimit));
+    if (correctedPower !== rawPower) {
+      this.parent.updateSource({ "system.resources.power": correctedPower });
+    }
+    if (source.health) {
+      // Normalize woundCare on creation
+      const normalized = normalizeWoundCare(source.health.woundSeverity, source.health.woundCare);
+      if (normalized.care !== source.health.woundCare.care || normalized.daysRemaining !== source.health.woundCare.daysRemaining) {
+        this.parent.updateSource({ "system.health.woundCare.care": normalized.care, "system.health.woundCare.daysRemaining": normalized.daysRemaining });
+      }
+      this.parent.updateSource({ "system.health.stabilized": false,
+        "system.health.dead": source.health.dead || source.health.woundSeverity >= 4 });
+    }
   }
 
   async _preUpdate(changes, options, user) {
@@ -76,6 +95,16 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
     const proposed = candidate.toObject();
     proposed.resources.hope.value = corrected;
+    // Normalize woundCare on update
+    const normalized = normalizeWoundCare(proposed.health.woundSeverity, proposed.health.woundCare);
+    if (normalized.care !== proposed.health.woundCare.care || normalized.daysRemaining !== proposed.health.woundCare.daysRemaining) {
+      if (Object.hasOwn(changes, "system")) {
+        foundry.utils.setProperty(changes, "system.health.woundCare", normalized);
+      } else {
+        changes["system.health.woundCare"] = normalized;
+      }
+      proposed.health.woundCare = normalized;
+    }
     if (expanded.system?.health && Object.hasOwn(expanded.system.health, "dead")
       && expanded.system.health.dead !== source.health.dead && !user?.isGM) {
       throw new Error("Only a GM can administratively correct the recorded death state.");
@@ -93,6 +122,23 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     if (expanded.system?.declaration?.status === "locked" && source.declaration.status !== "locked") {
       const issue = healthLockIssue(deriveHealth(proposed));
       if (issue) throw new Error(issue);
+    }
+    // Clamp Power to derived maximum based on proposed attributes
+    const powerLimit = candidate.attributes.heart + candidate.attributes.body + candidate.attributes.mind;
+    // Guard against missing power on the candidate – treat as 0 for clamping logic
+    const rawPower = candidate.resources.power ?? 0;
+    const correctedPower = Math.max(0, Math.min(rawPower, powerLimit));
+    if (correctedPower !== candidate.resources.power) {
+      if (Object.hasOwn(changes, "system") || expanded.system?.resources?.power !== undefined ||
+          expanded.system?.attributes?.heart !== undefined || expanded.system?.attributes?.body !== undefined ||
+          expanded.system?.attributes?.mind !== undefined) {
+        if (Object.hasOwn(changes, "system")) {
+          foundry.utils.setProperty(changes, "system.resources.power", correctedPower);
+        } else {
+          changes["system.resources.power"] = correctedPower;
+        }
+      }
+      candidate.resources.power = correctedPower;
     }
   }
 

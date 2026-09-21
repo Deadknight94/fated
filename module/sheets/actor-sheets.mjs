@@ -5,6 +5,7 @@ import { healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { calculateDefense } from "../defense.mjs";
 import { openDamageBookkeeping } from "./damage-bookkeeping.mjs";
+import { openRestApp } from "../apps/rest-app.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -37,7 +38,8 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       healthState: healthView(this.document, { isGM: game.user.isGM }),
       ...(this.document.type === "fated" ? { defense: calculateDefense(this.document), isGM: game.user.isGM } : {}),
       ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
-        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {})
+        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {}),
+      ...(this.document.type === "fated" ? { powerMax: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind } : {})
     };
   }
 }
@@ -45,7 +47,7 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 export class FatedActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
-    actions: { toggleEquipment, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
+    actions: { toggleEquipment, openRest: function () { return openRestApp(this.document); }, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
     classes: [...super.DEFAULT_OPTIONS.classes, "fated-actor"],
     window: {
       ...super.DEFAULT_OPTIONS.window,

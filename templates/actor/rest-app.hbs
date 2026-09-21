@@ -1,0 +1,36 @@
+<div class="rest-content">
+  <h1>Rest · {{actor.name}}</h1>
+  <section class="rest-resources">
+    <p>Endurance: {{endurance.current}} / {{endurance.max}}</p>
+    <p>Hope: {{hope.current}} / ±{{hope.limit}}</p>
+    <p>Power: {{power.current}} / {{power.max}}</p>
+    <p>{{wound.woundLabel}} · Wound care: {{woundCare.care}} · {{woundCare.daysRemaining}} days remaining</p>
+  </section>
+  <section><h2>Short Rest</h2><p>Recover +1 Endurance. Optionally spend exactly 1 Hope for additional recovery. Enter a physical Healing result to Bandage Light or Grievous wounds.</p>
+    <fieldset {{disabled (not editable)}}>
+      <label><input type="checkbox" data-rest-field="spendHope" {{checked spendHope}}> Spend 1 Hope</label>
+      {{#if spendHope}}<label>Additional Endurance <select data-rest-field="extraRecovery">{{#each extraChoices}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>{{/each}}</select></label>{{/if}}
+      <label>Short Rest Healing Successes (optional) <input type="number" step="1" data-rest-field="shortHealing" value="{{values.shortHealing}}" inputmode="numeric"></label>
+      <button type="button" data-action="shortRest">Execute Short Rest</button>
+    </fieldset>
+  </section>
+  <section><h2>Long Rest</h2><p>Recover Body Endurance and +1 Hope, capped at their limits. Reset Power to 0. Optional physical Healing heals Light wounds or treats Grievous wounds.</p>
+    <fieldset {{disabled (not editable)}}>
+      <label>Long Rest Healing Successes (optional) <input type="number" step="1" data-rest-field="longHealing" value="{{values.longHealing}}" inputmode="numeric"></label>
+      <button type="button" data-action="longRest">Execute Long Rest</button>
+    </fieldset>
+  </section>
+  <section><h2>Extended Rest</h2><p>An Extended Rest lasts at least 24 fictional hours. Invoke each operation explicitly; none advances time or triggers another operation.</p>
+    <fieldset {{disabled (not editable)}}>
+      <p>Beginning resets Power immediately, leaving Endurance and Hope unchanged.</p>
+      <button type="button" data-action="beginExtended">Begin Extended Rest</button>
+      <p>Each completed day fills Endurance and adds +1 Hope. Light heals automatically; optional physical Healing schedules Grievous healing for 24 hours later.</p>
+      <label>Extended Rest Healing Successes (optional) <input type="number" step="1" data-rest-field="extendedHealing" value="{{values.extendedHealing}}" inputmode="numeric"></label>
+      <button type="button" data-action="completeExtendedDay">Complete One Extended Rest Day</button>
+      <p>When one fictional day has passed, advance wound-care duration separately. This gives no rest recovery and does not heal.</p>
+      <button type="button" data-action="advanceCareDay">Advance One Fictional Wound-Care Day</button>
+      <p>Pending Grievous healing needs 0 days remaining before explicit completion.</p>
+      <button type="button" data-action="completeGrievousHealing" {{disabled (not canCompletePending)}}>Complete Pending Grievous Healing</button>
+    </fieldset>
+  </section>
+</div>

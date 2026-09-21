@@ -16,10 +16,7 @@
     "fated.mjs"
   ],
   "styles": [
-    {
-      "src": "styles/fated.css",
-      "layer": "system"
-    }
+  "styles/fated.css"
   ],
   "languages": [
     {
