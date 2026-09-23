@@ -150,7 +150,7 @@ The Fate Die is rolled as part of every Dice Roll made by a Fated, including rol
 
 ## Attacks and Damage
 
-When rolling an attack, the attacker uses the Skill or Proficiency defined by the attacking Equipment Action to determine its Success Dice.
+When rolling an attack, if the attacking Equipment defines a Proficiency, the attacker uses that Proficiency to determine the Action's Success Dice. If the Equipment defines no Proficiency, the attacking Equipment Action may instead specify a Skill. Equipment Actions do not directly use Attributes as their roll source.
 For each success, the attacker scores Damage equal to that Equipment Action's fixed Damage value. Total Damage from the attack is therefore the number of successes multiplied by the Action's Damage.
 (i.e 3 successes with a Damage 4 weapon is equal to 12 damage).
 If the Damage is lower than the defender’s Defense score, the defender suffers no Wounds. Otherwise, the number of Wounds inflicted is equal to the number of full multiples of Defense contained in the Damage: Damage equal to Defense inflicts 1 Wound, Damage equal to twice Defense inflicts 2 Wounds, and so on. All Wounds caused by the same damage instance are applied simultaneously. Add them to the defender’s current wound severity to determine the result: 1 is a Light Wound, 2 is a Grievous Wound, 3 is Incapacitated / Death’s Door, and 4 or more means the defender dies outright.
