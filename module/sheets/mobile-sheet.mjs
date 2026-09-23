@@ -28,7 +28,10 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: { toggleEquipment, showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
-      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction, openRest: FatedMobileSheet.openRest }
+      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction, openRest: FatedMobileSheet.openRest,
+      // Proficiency mutation actions
+      addProficiency: FatedMobileSheet.addProficiency,
+      removeProficiency: FatedMobileSheet.removeProficiency }
   };
 
   static PARTS = { main: { template: "systems/fated/templates/actor/mobile-sheet.hbs",
@@ -136,6 +139,39 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       this.plannerPending = false;
       await this.render({ force: true });
     }
+  }
+  static async addProficiency() {
+    if (!this.isEditable) return;
+
+    await this.submit();
+
+    const profs = this.document.system.proficiencies ?? [];
+    const newProf = {
+      key: `proficiency-${foundry.utils.randomID()}`,
+      displayName: "New Proficiency",
+      attribute: "body",
+      level: 0
+    };
+
+    await this.document.update({
+      "system.proficiencies": [...profs, newProf]
+    });
+  }
+
+  static async removeProficiency(event, button) {
+    if (!this.isEditable) return;
+
+    await this.submit();
+
+    const key = button.dataset.proficiencyKey;
+    if (!key) return;
+
+    const profs = this.document.system.proficiencies ?? [];
+    const updated = profs.filter(prof => prof.key !== key);
+
+    await this.document.update({
+      "system.proficiencies": updated
+    });
   }
 }
 

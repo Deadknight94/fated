@@ -52,7 +52,16 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 export class FatedActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
-    actions: { toggleEquipment, openRest: function () { return openRestApp(this.document); }, openMobile: function () { return openMobileSheet(this.document); }, health: healthAction, openDamage: openDamageBookkeeping },
+    actions: {
+      toggleEquipment,
+      openRest: function () { return openRestApp(this.document); },
+      openMobile: function () { return openMobileSheet(this.document); },
+      health: healthAction,
+      openDamage: openDamageBookkeeping,
+      // Proficiency mutation actions
+      addProficiency: FatedActorSheet.addProficiency,
+      removeProficiency: FatedActorSheet.removeProficiency
+    },
     classes: [...super.DEFAULT_OPTIONS.classes, "fated-actor"],
     window: {
       ...super.DEFAULT_OPTIONS.window,
@@ -68,6 +77,50 @@ export class FatedActorSheet extends BaseFatedActorSheet {
       templates: ["systems/fated/templates/actor/health-state.hbs", "systems/fated/templates/actor/defense.hbs"]
     }
   };
+
+  /* ---------- Proficiency mutation helpers ---------- */
+  /**
+   * Add a new proficiency entry with a unique technical key.
+   * The entry is added to the actor's system.proficiencies array.
+   * No UI is directly edited; the form submit will persist the new entry.
+   */
+  static async addProficiency() {
+  if (!this.isEditable) return;
+
+  await this.submit();
+
+  const newProf = {
+    key: `proficiency-${foundry.utils.randomID()}`,
+    displayName: "New Proficiency",
+    attribute: "body",
+    level: 0
+  };
+
+  const profs = this.document.system.proficiencies ?? [];
+  await this.document.update({
+    "system.proficiencies": [...profs, newProf]
+  });
+}
+
+  /**
+   * Remove a proficiency identified by its stable key.
+   * The `event` is expected to originate from a button with `data-proficiency-key`.
+   */
+  static async removeProficiency(event, button) {
+  if (!this.isEditable) return;
+
+  await this.submit();
+
+  const key = button.dataset.proficiencyKey;
+  if (!key) return;
+
+  const profs = this.document.system.proficiencies ?? [];
+  const updated = profs.filter(prof => prof.key !== key);
+
+  await this.document.update({
+    "system.proficiencies": updated
+  });
+ }
 }
 
 export class NpcActorSheet extends BaseFatedActorSheet {

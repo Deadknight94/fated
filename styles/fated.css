@@ -287,6 +287,56 @@
   align-items: start;
 }
 
+/* Proficiency list styling – mirrors the skills layout */
+.fated .proficiencies-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.fated .proficiency-list {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.fated .proficiency-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: 0.25rem;
+  align-items: center;
+  border: 1px solid var(--fated-border);
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+/* Mobile‑specific proficiency layout */
+.mobile-proficiencies-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+.mobile-proficiency-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: 0.25rem;
+  align-items: center;
+  border: 1px solid var(--fated-border);
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+
+
+/* Mobile proficiency layout – single‑column on narrow screens */
+@media (max-width: 600px) {
+  .mobile-proficiencies-grid {
+    grid-template-columns: 1fr;
+  }
+  .mobile-proficiency-row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
 .fated .skill-group,
 .fated .mobile-skill-group {
   min-width: 0;

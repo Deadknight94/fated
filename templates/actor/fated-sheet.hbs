@@ -66,6 +66,49 @@
     </div>
   </section>
 
+  <section class="panel">
+    <h2>Proficiencies</h2>
+    <div class="proficiencies-grid">
+      {{#if system.proficiencies.length}}
+        <ul class="proficiency-list">
+          {{#each system.proficiencies as |prof index|}}
+            <li class="proficiency-row" data-proficiency-key="{{prof.key}}">
+              <label>
+                <span>Display</span>
+                <input type="text" name="system.proficiencies.{{index}}.displayName" value="{{prof.displayName}}" {{disabled (not @root.editable)}} />
+              </label>
+              <label>
+                <span>Key</span>
+                <input
+                  type="text"
+                  name="system.proficiencies.{{index}}.key"
+                  value="{{prof.key}}"
+                  readonly
+                >
+              </label>
+              <label>
+                <span>Attribute</span>
+                <select name="system.proficiencies.{{index}}.attribute" {{disabled (not @root.editable)}}>
+                  <option value="heart" {{#if (eq prof.attribute "heart")}}selected{{/if}}>Heart</option>
+                  <option value="body" {{#if (eq prof.attribute "body")}}selected{{/if}}>Body</option>
+                  <option value="mind" {{#if (eq prof.attribute "mind")}}selected{{/if}}>Mind</option>
+                </select>
+              </label>
+              <label>
+                <span>Level</span>
+                <input type="number" name="system.proficiencies.{{index}}.level" value="{{prof.level}}" min="0" {{disabled (not @root.editable)}} />
+              </label>
+              <button type="button" data-action="removeProficiency" data-proficiency-key="{{prof.key}}" {{disabled (not @root.editable)}}>Remove</button>
+            </li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p class="muted">No proficiencies yet.</p>
+      {{/if}}
+      <button type="button" data-action="addProficiency" {{disabled (not editable)}}>Add Proficiency</button>
+    </div>
+  </section>
+
   {{> "systems/fated/templates/actor/health-state.hbs"}}
   {{> "systems/fated/templates/actor/defense.hbs"}}
   {{#if isGM}}<button type="button" data-action="openDamage">Physical damage bookkeeping</button>{{/if}}
