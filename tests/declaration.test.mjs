@@ -38,6 +38,168 @@ test("one/two/three Main Actions add only 0/1/2 Threshold and recalculate on rem
   }
 });
 
+test("stances apply the canonical attack roll modifiers", () => {
+  const cases = [
+    {
+      stance: "neutral",
+      attackType: "melee",
+      expectedDice: 4,
+      expectedThreshold: 4
+    },
+    {
+      stance: "offensive",
+      attackType: "melee",
+      expectedDice: 4,
+      expectedThreshold: 3
+    },
+    {
+      stance: "offensive",
+      attackType: "ranged",
+      expectedDice: 4,
+      expectedThreshold: 3
+    },
+    {
+      stance: "defensive",
+      attackType: "melee",
+      expectedDice: 3,
+      expectedThreshold: 4
+    },
+    {
+      stance: "defensive",
+      attackType: "ranged",
+      expectedDice: 3,
+      expectedThreshold: 4
+    },
+    {
+      stance: "ranged",
+      attackType: "ranged",
+      expectedDice: 5,
+      expectedThreshold: 4
+    },
+    {
+      stance: "ranged",
+      attackType: "melee",
+      expectedDice: 4,
+      expectedThreshold: 4
+    }
+  ];
+
+  for (const { stance, attackType, expectedDice, expectedThreshold } of cases) {
+    const a = action({
+      attackType,
+      allowedStances: ["neutral", "offensive", "defensive", "ranged"]
+    });
+
+    const declaration = {
+      ...freshDeclaration(stance),
+      entries: [entry(`${stance}-${attackType}`)]
+    };
+
+    const result = evaluateDeclaration(declaration, [a]);
+
+    assert.equal(result.canLock, true, `${stance} ${attackType} should be legal`);
+    assert.equal(
+      result.entries[0].calculation.successDice.total,
+      expectedDice,
+      `${stance} ${attackType} Success Dice`
+    );
+    assert.equal(
+      result.entries[0].calculation.successThreshold.total,
+      expectedThreshold,
+      `${stance} ${attackType} Success Threshold`
+    );
+  }
+});
+
+test("stance roll modifiers are traceable and only apply to attacks", () => {
+  const offensive = evaluateDeclaration(
+    {
+      ...freshDeclaration("offensive"),
+      entries: [entry("offensive")]
+    },
+    [
+      action({
+        attackType: "melee",
+        allowedStances: ["offensive"]
+      })
+    ]
+  );
+
+  const offensiveThreshold =
+    offensive.entries[0].calculation.successThreshold.modifiers.find(
+      modifier => modifier.source?.type === "stance"
+    );
+
+  assert.equal(offensiveThreshold.value, -1);
+  assert.equal(offensiveThreshold.source.stance, "offensive");
+
+  const defensive = evaluateDeclaration(
+    {
+      ...freshDeclaration("defensive"),
+      entries: [entry("defensive")]
+    },
+    [
+      action({
+        attackType: "melee",
+        allowedStances: ["defensive"]
+      })
+    ]
+  );
+
+  const defensiveDie =
+    defensive.entries[0].calculation.successDice.modifiers.find(
+      modifier => modifier.source?.type === "stance"
+    );
+
+  assert.equal(defensiveDie.value, -1);
+  assert.equal(defensiveDie.source.stance, "defensive");
+
+  const nonAttack = evaluateDeclaration(
+    {
+      ...freshDeclaration("offensive"),
+      entries: [entry("non-attack")]
+    },
+    [
+      action({
+        attackType: null,
+        allowedStances: ["offensive"]
+      })
+    ]
+  );
+
+  assert.equal(
+    nonAttack.entries[0].calculation.successDice.modifiers.some(
+      modifier => modifier.source?.type === "stance"
+    ),
+    false
+  );
+
+  assert.equal(
+    nonAttack.entries[0].calculation.successThreshold.modifiers.some(
+      modifier => modifier.source?.type === "stance"
+    ),
+    false
+  );
+});
+
+test("Defensive stance cannot reduce a valid Success Die pool below 1", () => {
+  const a = action({
+    attackType: "melee",
+    successDice: { source: "fixed", base: 1 },
+    allowedStances: ["defensive"]
+  });
+
+  const declaration = {
+    ...freshDeclaration("defensive"),
+    entries: [entry("defensive-floor")]
+  };
+
+  const result = evaluateDeclaration(declaration, [a]);
+
+  assert.equal(result.canLock, true);
+  assert.equal(result.entries[0].calculation.successDice.total, 1);
+});
+
 test("Free Actions and Movement preserve order without increasing Main count", () => {
   const free = action({ id: "free", classification: "free", rollRequirement: "none" });
   const d = draft([entry("a"), move, entry("f", "free"), entry("b")]);

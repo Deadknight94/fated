@@ -1,4 +1,4 @@
-import { actionDamage, calculateDefense, stanceDamageModifiers } from "./defense.mjs";
+import { actionDamage, calculateDefense } from "./defense.mjs";
 import { applyWounds, getActorHealth, projectWounds } from "./health.mjs";
 
 const nonnegative = (value, label) => {
@@ -6,7 +6,7 @@ const nonnegative = (value, label) => {
   return value;
 };
 
-/** Pure physical-result preview. Manual final Damage bypasses attack/stance calculations. */
+/** Pure physical-result preview. Manual final Damage bypasses Action-based Damage calculation. */
 export function previewDamage({ attacker, action, item, target, successes, damagePerSuccess,
   finalDamage, finalDamageModifiers = [] }) {
   if (target?.type !== "fated") throw new Error("Wound bookkeeping requires a Fated target.");
@@ -23,7 +23,7 @@ export function previewDamage({ attacker, action, item, target, successes, damag
     damagePerSuccess = damagePerSuccess ?? actionDamage(action, item);
     nonnegative(damagePerSuccess, "Damage per Success");
     baseTotalDamage = successes * damagePerSuccess;
-    modifiers = [...stanceDamageModifiers(attacker), ...finalDamageModifiers.map(m => ({ ...m }))];
+    modifiers = finalDamageModifiers.map(m => ({ ...m }));
     if (modifiers.some(m => !Number.isFinite(m.value) || !m.label || !m.source)) throw new Error("Final-damage modifiers require a value, label and source.");
   }
   const total = Math.max(0, baseTotalDamage + modifiers.reduce((sum, m) => sum + m.value, 0));

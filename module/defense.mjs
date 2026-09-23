@@ -18,14 +18,6 @@ export function calculateDefense(actor, additionalModifiers = []) {
   return { body, mind, base, modifiers, raw, total: Math.max(1, raw) };
 }
 
-export function stanceDamageModifiers(attacker) {
-  if (attacker?.type !== "fated") return [];
-  const stance = attacker.system.currentStance;
-  return ["offensive", "defensive"].includes(stance) ? [{
-    label: `${stance === "offensive" ? "Offensive" : "Defensive"} stance`,
-    value: stance === "offensive" ? 1 : -1, source: { type: "stance", actorUuid: attacker.uuid, stance }
-  }] : [];
-}
 
 /** Explicit Action override; weapon Damage is reused only for explicitly melee/ranged Actions. */
 export function actionDamage(action, item) {

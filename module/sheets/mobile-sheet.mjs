@@ -4,7 +4,7 @@ import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
 import { adjustResource } from "../resources.mjs";
-import { calculateDefense, actionDamage, stanceDamageModifiers } from "../defense.mjs";
+import { calculateDefense, actionDamage } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -59,7 +59,6 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       return { ...action,
         damagePerSuccess: actionDamage(action, this.document.items.get(action.source.itemId)),
         hasDamage: actionDamage(action, this.document.items.get(action.source.itemId)) !== null,
-        damageModifiers: stanceDamageModifiers(this.document),
         additionIssue: evaluation.locked ? null : powerActionAdditionIssue(action, evaluation),
         name: action.name || "Unnamed Action",
         rollRequirementLabel: action.rollRequirement === "required" ? "Requires Roll" : action.rollRequirement === "none" ? "No Roll" : "Roll requirement unspecified",

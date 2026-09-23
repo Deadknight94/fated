@@ -4,6 +4,42 @@ import { healthLockIssue } from "../health.mjs";
 export const DECLARATION_VERSION = 1;
 export const DECLARATION_STANCES = ["neutral", "offensive", "defensive", "ranged"];
 
+export function stanceActionModifiers(action, stance) {
+  const successDice = [];
+  const successThreshold = [];
+
+  if (!["melee", "ranged"].includes(action?.attackType)) {
+    return { successDice, successThreshold };
+  }
+
+  const source = { type: "stance", stance };
+
+  if (stance === "offensive") {
+    successThreshold.push({
+      id: "offensive-stance",
+      label: "Offensive stance",
+      value: -1,
+      source
+    });
+  } else if (stance === "defensive") {
+    successDice.push({
+      id: "defensive-stance",
+      label: "Defensive stance",
+      value: -1,
+      source
+    });
+  } else if (stance === "ranged" && action.attackType === "ranged") {
+    successDice.push({
+      id: "ranged-stance",
+      label: "Ranged stance",
+      value: 1,
+      source
+    });
+  }
+
+  return { successDice, successThreshold };
+}
+
 /** Addition prevention only; existing invalid entries remain for evaluator review. */
 export function powerActionAdditionIssue(action, { mainCount, powerCount }) {
   if (powerCount && ["main", "power"].includes(action.classification)) return "A Power Action is already declared; Main and additional Power Actions are unavailable.";
@@ -50,11 +86,41 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
       issue("roll-unknown", `${name}: set Requires Roll or No Roll on the Item Action.`, entry.id, true);
     }
     if (action.rollRequirement === "required") {
-      const extra = additionalModifiers(action, declaration, entry) ?? {};
-      const threshold = [...(extra.successThreshold ?? [])];
-      if (action.classification === "main") threshold.push({ id: "multi-action", label: "Multi-Action",
-        value: multiActionPenalty, source: { type: "declaration", mainCount, stance: declaration.stance } });
-      entry.calculation = calculateActionFromActorData(action, attributes, { ...extra, successThreshold: threshold });
+  const extra = additionalModifiers(action, declaration, entry) ?? {};
+  const stanceModifiers = stanceActionModifiers(action, declaration.stance);
+
+  const successDice = [
+    ...(extra.successDice ?? []),
+    ...stanceModifiers.successDice
+  ];
+
+  const threshold = [
+    ...(extra.successThreshold ?? []),
+    ...stanceModifiers.successThreshold
+  ];
+
+  if (action.classification === "main") {
+    threshold.push({
+      id: "multi-action",
+      label: "Multi-Action",
+      value: multiActionPenalty,
+      source: {
+        type: "declaration",
+        mainCount,
+        stance: declaration.stance
+      }
+    });
+  }
+
+  entry.calculation = calculateActionFromActorData(
+    action,
+    attributes,
+    {
+      ...extra,
+      successDice,
+      successThreshold: threshold
+    }
+  );
       if (entry.calculation.successThreshold.reviewIssue) {
         issue("threshold-review", `${name}: ${entry.calculation.successThreshold.reviewIssue}`, entry.id, true);
       }

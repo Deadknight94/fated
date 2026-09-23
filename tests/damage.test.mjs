@@ -66,18 +66,48 @@ test("optional Action Damage round trips, reuses Weapon Damage and preserves dir
   assert.equal(new ActionDataModel({ damage: -1 }).damage, 0);
 });
 
-test("physical Successes multiply Damage before individual final modifiers; minimum final Damage 0", () => {
+test("physical Successes multiply Action Damage; stance does not modify Damage", () => {
   const target = actor();
-  for (const [stance, total] of [["neutral", 6], ["offensive", 7], ["defensive", 5], ["ranged", 6]]) {
-    const result = previewDamage({ attacker: actor({ currentStance: stance }), target, successes: 3, damagePerSuccess: 2 });
-    assert.equal(result.successes, 3); assert.equal(result.damagePerSuccess, 2);
-    assert.equal(result.baseTotalDamage, 6); assert.equal(result.finalDamage, total);
-    if (["offensive", "defensive"].includes(stance)) assert.equal(result.finalDamageModifiers[0].source.type, "stance");
+
+  for (const stance of ["neutral", "offensive", "defensive", "ranged"]) {
+    const result = previewDamage({
+      attacker: actor({ currentStance: stance }),
+      target,
+      successes: 3,
+      damagePerSuccess: 2
+    });
+
+    assert.equal(result.successes, 3);
+    assert.equal(result.damagePerSuccess, 2);
+    assert.equal(result.baseTotalDamage, 6);
+    assert.equal(result.finalDamage, 6);
+    assert.deepEqual(result.finalDamageModifiers, []);
   }
-  const result = previewDamage({ attacker: actor({ currentStance: "defensive" }), target, successes: 0, damagePerSuccess: 3 });
-  assert.equal(result.finalDamage, 0);
-  const modifier = { label: "Ad-hoc established adjustment", value: 2, source: { type: "manual" } };
-  assert.equal(previewDamage({ target, successes: 2, damagePerSuccess: 3, finalDamageModifiers: [modifier] }).finalDamage, 8);
+
+  const zero = previewDamage({
+    attacker: actor({ currentStance: "defensive" }),
+    target,
+    successes: 0,
+    damagePerSuccess: 3
+  });
+
+  assert.equal(zero.finalDamage, 0);
+
+  const modifier = {
+    label: "Ad-hoc established adjustment",
+    value: 2,
+    source: { type: "manual" }
+  };
+
+  assert.equal(
+    previewDamage({
+      target,
+      successes: 2,
+      damagePerSuccess: 3,
+      finalDamageModifiers: [modifier]
+    }).finalDamage,
+    8
+  );
 });
 
 test("Damage/Defense boundaries yield 0/1/2/3 Wounds; manual Damage bypasses attacker stance", () => {
