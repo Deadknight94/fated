@@ -20,7 +20,10 @@ export class ActionDataModel extends foundry.abstract.DataModel {
       name: text(),
       classification: choice(["main", "free", "power"]),
       rollRequirement: new StringField({ required: true, nullable: true, initial: null, choices: ["required", "none"] }),
+      // Base Success Dice source is either an attribute name or "fixed" for a literal value.
       successDice: new SchemaField({ source: choice(["fixed", "heart", "body", "mind"]), base: optionalNumber() }),
+      // Optional skill key that overrides attribute-based dice when the owning item has no proficiency.
+      skill: new StringField({ required: false, nullable: true, initial: null }),
       // Retained for lossless legacy review. Calculations never use this as their base.
       successThreshold: new NumberField({ required: true, nullable: true, initial: BASE_SUCCESS_THRESHOLD, integer: true }),
       attackType: choice(["melee", "ranged"]),

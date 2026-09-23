@@ -17,15 +17,39 @@ export function calculateValue(base, modifiers = []) {
 
 export function calculateAction(action, attributes = {}, additionalModifiers = {}) {
   const source = action.successDice.source;
-  const baseDice = source === "fixed" ? action.successDice.base : attributes[source] ?? null;
-  return {
-    successDice: calculateValue(baseDice, [...action.modifiers.successDice, ...(additionalModifiers.successDice ?? [])]),
-    successThreshold: { ...calculateValue(BASE_SUCCESS_THRESHOLD,
-      [...action.modifiers.successThreshold, ...(additionalModifiers.successThreshold ?? [])]),
-      reviewIssue: legacyThresholdIssue(action) }
-  };
-}
+  const baseDice = source === "fixed"
+    ? action.successDice.base
+    : attributes[source] ?? null;
 
+  const result = {
+    successDice: calculateValue(
+      baseDice,
+      [
+        ...action.modifiers.successDice,
+        ...(additionalModifiers.successDice ?? [])
+      ]
+    ),
+    successThreshold: {
+      ...calculateValue(
+        BASE_SUCCESS_THRESHOLD,
+        [
+          ...action.modifiers.successThreshold,
+          ...(additionalModifiers.successThreshold ?? [])
+        ]
+      ),
+      reviewIssue: legacyThresholdIssue(action)
+    }
+  };
+
+  if (
+    result.successDice.complete &&
+    Number.isFinite(result.successDice.total)
+  ) {
+    result.successDice.total = Math.max(1, result.successDice.total);
+  }
+  return result;
+}
+  
 /** Source provenance is derived, so copying an Item never retains another owner's UUID. */
 export function getItemActions(item) {
   return (item.system.actions ?? []).filter(action => action.enabled).map(action => {
