@@ -1,4 +1,6 @@
 import { actionsField, migrateLegacyAction, STANCES } from "./actions/action-model.mjs";
+// ArrayField is needed for the proficiencies array
+import { SKILL_ATTRIBUTE_MAP } from "./skills.mjs";
 import { declarationField } from "./declaration/data-model.mjs";
 import { clampHope } from "./resources.mjs";
 import { freshDeclaration } from "./declaration/evaluate.mjs";
@@ -8,6 +10,7 @@ import { calculateDefense } from "./defense.mjs";
 import { normalizeWoundCare } from "./wound-care.mjs";
 
 const {
+  ArrayField,
   BooleanField,
   HTMLField,
   NumberField,
@@ -48,6 +51,21 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
         body: int(0, 0),
         mind: int(0, 0)
       }),
+      // Canonical skills – one entry per skill key, default level 1
+      skills: new SchemaField(
+        Object.fromEntries(
+          Object.entries(SKILL_ATTRIBUTE_MAP).map(([k]) => [k, int(1, 0)])
+        )
+      ),
+      // Generalized proficiencies – arbitrary entries
+      proficiencies: new ArrayField(
+        new SchemaField({
+          key: new StringField({ required: true, nullable: false, blank: false, initial: "" }),
+          displayName: new StringField({ required: true, nullable: false, blank: false, initial: "" }),
+          attribute: new StringField({ required: true, nullable: false, initial: "", choices: ["heart", "body", "mind"] }),
+          level: int(0, 0)
+        })
+      ),
       resources: new SchemaField({
         endurance: resourceField(),
         hope: resourceField({ allowNegative: true }),
