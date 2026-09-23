@@ -200,31 +200,6 @@ After spending all 40 points, determine the derived statistics:
 
 ---
 
-###
-
-### **Sample Archetype: The Champion (Unified Investment)**
-
-*Note: This archetype represents an 18-point deduction from the 40-point pool, leaving the player with 22 flexible points.*
-
-The Champion is a warrior of high endurance and martial skill, pre-optimized to keep its core combat training inexpensive to improve.
-
-**Archetype Investment (16 Points):**
-
-* **Attribute Increases (10 pts):** \+1 Body (3), \+1 Heart (3).
-* **Skill & Proficiency Package (8 pts):**
-  * **Swords Proficiency: Level 3 (Costs 3 pts from Proficiency 0; all three ranks are Normal Cost due to Body 3).**
-  * **Battle:** Level 2 (Costs 1 pt).
-  * **Athletics:** Level 2 (Costs 1 pt).
-  * **Awe:** Level 2 (Costs 1 pt).
-  * **Shields Proficiency: Level 2 (Costs 2 pts from Proficiency 0).**
-
-**Remaining Flexible Points: 22 (Can be spent to further increase Attributes for 5 pts or improve Skills or Proficiencies for 1–2 pts per level).**
-
-**Archetype Mechanical Outcomes:**
-
-* **Maximum Power: 8 (Body 3 \+ Heart 3 \+ Mind 2); current Power begins at 0\.**
-* **Starting Defense:** 5 \+ Armor (Body 3 \+ Mind 2).
-* **Efficiency: Because of the Body 3 and Heart 3 starting values, the player can buy associated Skills or Proficiencies up to Level 3 at the Normal Cost of 1 point per level.**
 
 # Separated Points
 
@@ -269,36 +244,6 @@ Once the Attribute spread is assigned and Skill Points are spent, determine the 
 * **Maximum Power: Body \+ Heart \+ Mind. Current Power starts at 0\.**
 
 ---
-
-###
-
-### **Sample Archetype: The Champion**
-
-*Note: This archetype is based on our conversation history and provides a balanced starting point for front-line combatants.*
-
-The Champion is a warrior of high endurance and martial skill, designed to lead from the front and hold the line against the Shadow.
-
-**Attribute Grant (+2):**
-
-* **Body:** 3 (+1)
-* **Heart:** 3 (+1)
-* **Mind:** 2 (Base)
-* *Floating Points Remaining:* 2 (To be spent by the player)
-
-**Skill & Proficiency Grant (8 Points):**
-
-* **Swords Proficiency: Level 3 (Body-based; costs 3 points from Proficiency 0\)**
-* **Leadership: Level 2 (Heart-based; costs 1 point)**
-* **Athletics:** Level 2 (Body-based; costs 1 point)
-* **Awe:** Level 2 (Body-based; costs 1 point)
-* **Shields Proficiency: Level 2 (Body-based; costs 2 points from Proficiency 0\)**
-* *Flexible Points Remaining: 6 (To be spent by the player)*
-
-**Archetype Mechanical Outcomes:**
-
-* **Starting Endurance:** 6 (Can manage moderate **Load** from armor/weapons).
-* **Starting Defense:** 5 \+ Armor (Reliable protection against Damage 1–3 weapons).
-* **Combat Focus:** Can raise *Swords* to level 3 at a cost of only 1 point per level due to their high Body attribute.
 
 # Combat
 
