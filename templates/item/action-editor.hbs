@@ -23,14 +23,32 @@
             {{selectOptions @root.attackTypes selected=action.attackType}}
           </select>
         </label>
-        <label>Success Dice source
-          <select name="system.actions.{{action.index}}.successDice.source" {{disabled (not @root.editable)}}>
-            {{selectOptions @root.diceSources selected=action.successDice.source}}
+        <!-- Legacy dice source fields hidden for canonical equipment actions -->
+        <div class="legacy-section" style="display:none;">
+          <label>Success Dice source
+            <select name="system.actions.{{action.index}}.successDice.source" {{disabled (not @root.editable)}}>
+              {{selectOptions @root.diceSources selected=action.successDice.source}}
+            </select>
+          </label>
+          <label>Fixed base Success Dice
+            <input type="number" step="1" name="system.actions.{{action.index}}.successDice.base" value="{{action.successDice.base}}" placeholder="Unspecified" {{disabled (not @root.editable)}}>
+          </label>
+        </div>
+        <!-- Canonical Skill selector for Equipment Actions -->
+        <label>Skill
+          <select name="system.actions.{{action.index}}.skill" {{disabled (not @root.editable)}}>
+            <option value="">Unspecified</option>
+            {{#each @root.skills as |skill|}}
+              <option value="{{skill.key}}" {{#if (eq action.skill skill.key)}}selected{{/if}}>{{skill.label}}</option>
+            {{/each}}
           </select>
         </label>
-        <label>Fixed base Success Dice
-          <input type="number" step="1" name="system.actions.{{action.index}}.successDice.base" value="{{action.successDice.base}}" placeholder="Unspecified" {{disabled (not @root.editable)}}>
-        </label>
+        {{#if @root.system.proficiency}}
+          <p class="muted">
+           Equipment Proficiency <strong>{{@root.system.proficiency}}</strong>
+           takes precedence over this Action Skill.
+         </p>
+        {{/if}}
         <div>Base Success Threshold <strong>4</strong><p class="muted">Universal base. Configure deviations as Threshold modifiers.</p>{{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}</div>
         <label>Multi-Action eligible
           <select name="system.actions.{{action.index}}.multiActionEligible" {{disabled (not @root.editable)}}>

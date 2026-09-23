@@ -22,15 +22,31 @@
   {{/if}}
 
   {{#if isWeapon}}
-    <section class="panel">
-      <h2>Weapon</h2>
-      <div class="stat-grid two">
-        <label>Proficiency <input type="text" name="system.proficiency" value="{{system.proficiency}}" {{disabled (not editable)}}></label>
-        <label>Damage <input type="number" name="system.damage" value="{{system.damage}}" min="0" {{disabled (not editable)}}></label>
-      </div>
-    </section>
+      <section class="panel">
+        <h2>Weapon</h2>
+        <div class="stat-grid two">
+          <label>Damage <input type="number" name="system.damage" value="{{system.damage}}" min="0" {{disabled (not editable)}}></label>
+        </div>
   {{/if}}
 
+  {{#if hasProficiency}}
+  <section class="panel">
+    <h2>Proficiency</h2>
+    <label>
+      Proficiency Key
+      <input
+        type="text"
+        name="system.proficiency"
+        value="{{system.proficiency}}"
+        placeholder="e.g. longSwords"
+        {{disabled (not editable)}}
+      >
+    </label>
+    <p class="hint">
+      Stable proficiency key used to look up the character's proficiency level.
+    </p>
+  </section>
+  {{/if}}
   {{#if isProficiency}}
     <section class="panel">
       <label>Proficiency Key <input type="text" name="system.key" value="{{system.key}}" {{disabled (not editable)}}></label>

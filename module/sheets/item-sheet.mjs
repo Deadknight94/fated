@@ -1,6 +1,7 @@
 import { ActionDataModel, STANCES } from "../actions/action-model.mjs";
 import { readActionForm } from "./action-form.mjs";
 import { legacyThresholdIssue } from "../actions/actions.mjs";
+import { SKILL_KEYS, SKILL_LABELS } from "../skills.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -54,20 +55,37 @@ export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       hasEquipmentState: ["armor", "weapon", "equipment"].includes(this.document.type),
       stateLabel: this.document.type === "armor" ? "Worn" : "Equipped",
       isWeapon: this.document.type === "weapon",
+      hasProficiency: ["weapon", "armor", "equipment"].includes(this.document.type),
       hasLoad: ["weapon", "armor", "equipment", "feature"].includes(this.document.type),
-      actions: this.document.system.actions.map((action, index) => ({
-        ...action.toObject(), index,
+          actions: this.document.system.actions.map((action, index) => ({
+        ...action.toObject(),
+        index,
         thresholdReviewIssue: legacyThresholdIssue(action),
         eligibility: action.multiActionEligible === null ? "" : String(action.multiActionEligible),
-        stances: STANCES.map(value => ({ value, checked: action.allowedStances.includes(value) })),
+        stances: STANCES.map(value => ({
+          value,
+          checked: action.allowedStances.includes(value)
+        })),
         modifierGroups: [
-          { kind: "successDice", label: "Success Dice modifiers", entries: action.modifiers.successDice },
-          { kind: "successThreshold", label: "Success Threshold modifiers", entries: action.modifiers.successThreshold }
+          {
+            kind: "successDice",
+            label: "Success Dice modifiers",
+            entries: action.modifiers.successDice
+          },
+          {
+            kind: "successThreshold",
+            label: "Success Threshold modifiers",
+            entries: action.modifiers.successThreshold
+          }
         ]
       })),
-      isProficiency: this.document.type === "weaponProficiency"
-    };
-  }
+      isProficiency: this.document.type === "weaponProficiency",
+      skills: SKILL_KEYS.map(key => ({
+        key,
+        label: SKILL_LABELS[key]
+    }))
+  };
+}
 
   _processFormData(event, form, formData) {
     const data = super._processFormData(event, form, formData);
