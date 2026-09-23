@@ -1,4 +1,5 @@
 import { equipmentView, toggleEquipment } from "../equipment.mjs";
+import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { openMobileSheet } from "./mobile-sheet.mjs";
 import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
 import { healthView } from "../health.mjs";
@@ -85,22 +86,56 @@ export class FatedActorSheet extends BaseFatedActorSheet {
    * No UI is directly edited; the form submit will persist the new entry.
    */
   static async addProficiency() {
-  if (!this.isEditable) return;
+    if (!this.isEditable) return;
+    await this.submit();
+    const data = await foundry.applications.api.DialogV2.input({
+     window: { title: "Add Proficiency" },
+     content: `
+       <div class="form-group">
+         <label>Display Name</label>
+         <div class="form-fields">
+           <input type="text" name="name" required autofocus>
+         </div>
+       </div>
+     `,
+     ok: {
+       label: "Add Proficiency"
+     }
+   });
 
-  await this.submit();
+   if (!data) return;
 
-  const newProf = {
-    key: `proficiency-${foundry.utils.randomID()}`,
-    displayName: "New Proficiency",
-    attribute: "body",
-    level: 0
-  };
+   const name = String(data.name ?? "").trim();
+   if (!name) return;
 
-  const profs = this.document.system.proficiencies ?? [];
-  await this.document.update({
-    "system.proficiencies": [...profs, newProf]
-  });
-}
+   const key = normalizeProficiencyKey(name);
+
+   if (!key) {
+     ui.notifications.warn("Invalid proficiency name.");
+     return;
+   }
+
+   const profs = this.document.system.proficiencies ?? [];
+
+   if (hasDuplicateKey(profs, key)) {
+     ui.notifications.warn(`Proficiency ${key} already exists.`);
+     return;
+   }
+
+   const newProf = {
+     key,
+     displayName: name,
+     attribute: "body",
+     level: 0
+   };
+
+   await this.document.update({
+     "system.proficiencies": [...profs, newProf]
+   });
+
+   // Await the dialog promise to keep the async flow consistent
+    await dialog;
+  }
 
   /**
    * Remove a proficiency identified by its stable key.

@@ -1,4 +1,5 @@
 import { equipmentView, toggleEquipment } from "../equipment.mjs";
+import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { calculateActorAction, healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
@@ -142,13 +143,44 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
   static async addProficiency() {
     if (!this.isEditable) return;
-
     await this.submit();
+    const data = await foundry.applications.api.DialogV2.input({
+      window: { title: "Add Proficiency" },
+      content: `
+        <div class="form-group">
+          <label>Display Name</label>
+          <div class="form-fields">
+            <input type="text" name="name" required autofocus>
+          </div>
+        </div>
+      `,
+      ok: {
+        label: "Add Proficiency"
+      }
+    });
+
+    if (!data) return;
+
+    const name = String(data.name ?? "").trim();
+    if (!name) return;
+
+    const key = normalizeProficiencyKey(name);
+
+    if (!key) {
+      ui.notifications.warn("Invalid proficiency name.");
+      return;
+    }
 
     const profs = this.document.system.proficiencies ?? [];
+
+    if (hasDuplicateKey(profs, key)) {
+      ui.notifications.warn(`Proficiency ${key} already exists.`);
+      return;
+    }
+
     const newProf = {
-      key: `proficiency-${foundry.utils.randomID()}`,
-      displayName: "New Proficiency",
+      key,
+      displayName: name,
       attribute: "body",
       level: 0
     };
@@ -156,6 +188,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     await this.document.update({
       "system.proficiencies": [...profs, newProf]
     });
+    await dialog;
   }
 
   static async removeProficiency(event, button) {
