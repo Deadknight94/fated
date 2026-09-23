@@ -228,7 +228,19 @@ export class WeaponDataModel extends BaseItemDataModel {
 
 export class EquipmentDataModel extends BaseItemDataModel {
   static defineSchema() {
-    return { ...super.defineSchema(), equipped: new BooleanField({ required: true, nullable: false, initial: false }) };
+    return {
+      ...super.defineSchema(),
+      equipped: new BooleanField({
+        required: true,
+        nullable: false,
+        initial: false
+      }),
+      proficiency: new StringField({
+        required: false,
+        nullable: false,
+        initial: ""
+      })
+    };
   }
 }
 
