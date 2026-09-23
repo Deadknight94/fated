@@ -1,4 +1,4 @@
-import { calculateAction } from "../actions/actions.mjs";
+import { calculateActionFromActorData } from "../actions/actions.mjs";
 import { healthLockIssue } from "../health.mjs";
 
 export const DECLARATION_VERSION = 1;
@@ -54,7 +54,7 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
       const threshold = [...(extra.successThreshold ?? [])];
       if (action.classification === "main") threshold.push({ id: "multi-action", label: "Multi-Action",
         value: multiActionPenalty, source: { type: "declaration", mainCount, stance: declaration.stance } });
-      entry.calculation = calculateAction(action, attributes, { ...extra, successThreshold: threshold });
+      entry.calculation = calculateActionFromActorData(action, attributes, { ...extra, successThreshold: threshold });
       if (entry.calculation.successThreshold.reviewIssue) {
         issue("threshold-review", `${name}: ${entry.calculation.successThreshold.reviewIssue}`, entry.id, true);
       }

@@ -1,4 +1,4 @@
-import { calculateAction } from "./actions/actions.mjs";
+import { calculateActionFromActorData } from "./actions/actions.mjs";
 import { normalizeWoundCare } from "./wound-care.mjs";
 import { clampHope } from "./resources.mjs";
 
@@ -62,7 +62,7 @@ export function actorStateModifiers(actor) {
 }
 
 export function calculateActorAction(actor, action, additionalModifiers = {}) {
-  return calculateAction(action, actor.system.attributes, { ...additionalModifiers,
+  return calculateActionFromActorData(action, actor.system, { ...additionalModifiers,
     successThreshold: [...actorStateModifiers(actor).successThreshold, ...(additionalModifiers.successThreshold ?? [])] });
 }
 

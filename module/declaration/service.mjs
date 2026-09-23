@@ -4,7 +4,7 @@ import { actorStateModifiers, getActorHealth } from "../health.mjs";
 export function getDeclarationEvaluation(actor) {
   const declaration = actor.system.declaration.toObject();
   if (declaration.status === "locked") return { ...declaration.snapshot, locked: true, issues: [], canLock: false };
-  return { ...evaluateDeclaration(declaration, actor.getAvailableActions(), actor.system.attributes,
+  return { ...evaluateDeclaration(declaration, actor.getAvailableActions(), actor.system,
     () => actorStateModifiers(actor), getActorHealth(actor)), locked: false };
 }
 
@@ -14,14 +14,14 @@ export async function updateDeclaration(actor, revision, operation) {
   const current = actor.system.declaration.toObject();
   if (revision !== current.revision) throw new Error("This declaration changed. Review the refreshed turn and try again.");
   let next;
-  if (operation.type === "lock") next = lockDeclaration(current, actor.getAvailableActions(), actor.system.attributes, {
+  if (operation.type === "lock") next = lockDeclaration(current, actor.getAvailableActions(), actor.system, {
     userId: game.user.id, additionalModifiers: () => actorStateModifiers(actor), actorState: getActorHealth(actor) });
   else {
     if (operation.type === "add" && operation.kind === "action") {
       const actions = actor.getAvailableActions();
       const action = actions.find(a => a.id === operation.actionId && a.source.itemId === operation.itemId);
       if (!action) throw new Error("Action is no longer owned and enabled.");
-      const issue = powerActionAdditionIssue(action, evaluateDeclaration(current, actions, actor.system.attributes));
+      const issue = powerActionAdditionIssue(action, evaluateDeclaration(current, actions, actor.system));
       if (issue) throw new Error(issue);
     }
     next = operation.type === "clear" ? freshDeclaration(actor.system.currentStance, current.revision)

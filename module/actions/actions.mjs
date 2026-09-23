@@ -49,15 +49,86 @@ export function calculateAction(action, attributes = {}, additionalModifiers = {
   }
   return result;
 }
-  
+
+/**
+ * Resolve an Action's success dice using Actor system data.
+ * Supports proficiency, skill, or legacy attribute sources.
+ * @param {object} action - Action data with source.proficiency optional.
+ * @param {object} actorData - Actor.system-like data containing attributes, skills, proficiencies.
+ * @param {object} additionalModifiers - Additional modifier arrays.
+ * @returns {object} calculation result same shape as calculateAction.
+ */
+export function calculateActionFromActorData(action, actorData = {}, additionalModifiers = {}) {
+  const proficiencyKey = action?.source?.proficiency ?? "";
+  const actorAttributes = actorData.attributes ?? actorData;
+  const actorSkills = actorData.skills ?? {};
+  const actorProficiencies = actorData.proficiencies ?? [];
+  const calculateWithBase = base => calculateAction(
+  {
+    ...action,
+    successDice: {
+      ...action.successDice,
+      source: "fixed",
+      base
+    }
+  },
+  actorAttributes,
+  additionalModifiers
+);
+  if (proficiencyKey) {
+    const prof = actorProficiencies.find(p => p.key === proficiencyKey);
+
+    if (!prof) {
+      return calculateWithBase(null);
+    }
+
+    const level = prof.level;
+
+    if (!Number.isFinite(level) || level < 0) {
+      return calculateWithBase(null);
+    }
+
+    const result = calculateWithBase(level === 0 ? 1 : level);
+
+    if (level === 0) {
+      result.successDice.untrained = true;
+    }
+
+    return result;
+  }
+
+  if (action?.skill) {
+    const skillLevel = actorSkills[action.skill];
+
+    if (!Number.isFinite(skillLevel)) {
+      return calculateWithBase(null);
+    }
+
+    return calculateWithBase(skillLevel);
+  }
+
+  // Legacy compatibility path for Actions with neither proficiency nor skill.
+  return calculateAction(action, actorAttributes, additionalModifiers);
+}
 /** Source provenance is derived, so copying an Item never retains another owner's UUID. */
 export function getItemActions(item) {
   return (item.system.actions ?? []).filter(action => action.enabled).map(action => {
     const data = typeof action.toObject === "function" ? action.toObject() : structuredClone(action);
-    const source = { itemId: item.id, itemUuid: item.uuid, itemName: item.name, itemType: item.type };
+    const source = {
+      itemId: item.id,
+      itemUuid: item.uuid,
+      itemName: item.name,
+      itemType: item.type,
+      proficiency: item.system.proficiency ?? ""
+    };
     const modifiers = Object.fromEntries(["successDice", "successThreshold"].map(kind => [kind,
       data.modifiers[kind].map(modifier => ({ ...modifier, source: { ...source, actionId: data.id } }))]));
-    return { ...data, key: `${item.uuid}#${data.id}`, source, modifiers };
+    return {
+      ...data,
+      key: `${item.uuid}#${data.id}`,
+      source,
+      modifiers
+    };
   });
 }
 
