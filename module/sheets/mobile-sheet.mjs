@@ -28,12 +28,30 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     position: { width: 760, height: 780 },
     window: { resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
-    actions: { toggleEquipment, showSection: FatedMobileSheet.showSection, openItem: FatedMobileSheet.openItem,
-      planner: FatedMobileSheet.planner, adjustResource: FatedMobileSheet.adjustResource, health: healthAction, openRest: FatedMobileSheet.openRest,
-      // Proficiency mutation actions
+    actions: {
+      toggleEquipment,
+      showSection: FatedMobileSheet.showSection,
+      openItem: FatedMobileSheet.openItem,
+      planner: FatedMobileSheet.planner,
+      adjustResource: FatedMobileSheet.adjustResource,
+      health: healthAction,
+      openRest: FatedMobileSheet.openRest,
       addProficiency: FatedMobileSheet.addProficiency,
-      removeProficiency: FatedMobileSheet.removeProficiency }
+      removeProficiency: FatedMobileSheet.removeProficiency,
+      removeItem: FatedMobileSheet.removeItem
+    }
   };
+
+  static async removeItem(event, button) {
+    if (!this.isEditable) return;
+
+    await this.submit();
+
+    const id = button.dataset.itemId;
+    if (!id) return;
+
+    await this.document.deleteEmbeddedDocuments("Item", [id]);
+  }
 
   static PARTS = { main: { template: "systems/fated/templates/actor/mobile-sheet.hbs",
     templates: ["systems/fated/templates/actor/turn-planner.hbs", "systems/fated/templates/actor/health-state.hbs", "systems/fated/templates/actor/defense.hbs"], scrollable: [".mobile-content"] } };
@@ -41,6 +59,9 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   section = "character";
 
   async _preRender(context, options) {
+    // Preserve scroll position
+    this._scrollPosition = this.element?.querySelector(".mobile-content")?.scrollTop ?? 0;
+    // Preserve planner detail open state
     this.openPlannerDetails = new Set([...(this.element?.querySelectorAll("details[open][data-planner-detail]") ?? [])]
       .map(element => element.dataset.plannerDetail));
     await super._preRender(context, options);
@@ -50,6 +71,9 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     await super._onRender(context, options);
     for (const element of this.element.querySelectorAll("details[data-planner-detail]")) {
       element.open = this.openPlannerDetails?.has(element.dataset.plannerDetail) ?? false;
+    }
+    if (this._scrollPosition !== undefined && this.element) {
+      this.element.querySelector(".mobile-content")?.scrollTo({ top: this._scrollPosition });
     }
   }
 
@@ -102,7 +126,11 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static async showSection(event, button) {
     const section = button.dataset.section;
     if (!["character", "turn", "actions", "items"].includes(section) || section === this.section) return;
+
     if (this.isEditable) await this.submit();
+
+
+    this._scrollPosition = 0;
     this.section = section;
     await this.render({ force: true });
   }

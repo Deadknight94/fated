@@ -61,7 +61,8 @@ export class FatedActorSheet extends BaseFatedActorSheet {
       openDamage: openDamageBookkeeping,
       // Proficiency mutation actions
       addProficiency: FatedActorSheet.addProficiency,
-      removeProficiency: FatedActorSheet.removeProficiency
+      removeProficiency: FatedActorSheet.removeProficiency,
+      removeItem: FatedActorSheet.removeItem
     },
     classes: [...super.DEFAULT_OPTIONS.classes, "fated-actor"],
     window: {
@@ -69,6 +70,28 @@ export class FatedActorSheet extends BaseFatedActorSheet {
       title: "FATED.Sheets.Fated"
     }
   };
+
+  /**
+   * Preserve scroll position across renders.
+   * Capture before the sheet renders, then restore after rendering.
+   */
+  async _preRender(context, options) {
+  this._scrollPosition =
+    this.element?.querySelector(".window-content")?.scrollTop ?? 0;
+
+    await super._preRender(context, options);
+  }
+
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+
+    const scrollContainer = this.element?.querySelector(".window-content");
+    if (!scrollContainer || this._scrollPosition === undefined) return;
+
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = this._scrollPosition;
+    });
+  }
 
   static PARTS = {
     main: {
@@ -152,12 +175,26 @@ export class FatedActorSheet extends BaseFatedActorSheet {
   const profs = this.document.system.proficiencies ?? [];
   const updated = profs.filter(prof => prof.key !== key);
 
-  await this.document.update({
-    "system.proficiencies": updated
-  });
- }
-}
+    await this.document.update({
+      "system.proficiencies": updated
+    });
+  }
 
+  /**
+   * Remove an owned Item from the Actor.
+   * Uses the stable document id from the data-item-id attribute.
+   * Only deletes the embedded document; world items remain untouched.
+   * Respect this.isEditable.
+   */
+  static async removeItem(event, button) {
+    if (!this.isEditable) return;
+    await this.submit();
+    const id = button.dataset.itemId;
+    if (!id) return;
+    // deleteEmbeddedDocuments expects an array of ids
+    await this.document.deleteEmbeddedDocuments("Item", [id]);
+  }
+}
 export class NpcActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,

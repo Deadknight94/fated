@@ -136,6 +136,14 @@
       <div class="mobile-item-list">
       {{#each items as |item|}}
       <div class="equipment-row"><button class="mobile-item" type="button" data-action="openItem" data-item-id="{{item.id}}"><img src="{{item.img}}" alt="" width="40" height="40"><span>{{item.name}}<small>{{item.type}}</small></span><span aria-hidden="true">›</span></button>
+        <button
+          type="button"
+          data-action="removeItem"
+          data-item-id="{{item.id}}"
+          {{disabled (not @root.editable)}}
+        >
+          Remove
+        </button>
       {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}Yes{{else}}No{{/if}}</button>{{/if}}</div>
       {{else}}<p>No owned Items yet. Ask the GM to add your equipment and features.</p>{{/each}}
       </div>

@@ -123,6 +123,7 @@
             <span>{{item.name}}</span>
             <small>{{item.type}}</small>
             {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}Yes{{else}}No{{/if}}</button>{{/if}}
+            <button type="button" data-action="removeItem" data-item-id="{{item.id}}" {{disabled (not @root.editable)}}>Remove</button>
           </li>
         {{/each}}
       </ul>
