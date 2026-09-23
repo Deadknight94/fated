@@ -6,6 +6,7 @@ import { healthAction } from "./health-controls.mjs";
 import { calculateDefense } from "../defense.mjs";
 import { openDamageBookkeeping } from "./damage-bookkeeping.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
+import { buildSkillGroups } from "../skills.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -29,6 +30,9 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
+    const skills = this.document.type === "fated"
+  ? buildSkillGroups(this.document.system.skills)
+  : [];
     return {
       ...context,
       actor: this.document,
@@ -36,6 +40,7 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       items: this.document.items.contents.map(equipmentView),
       editable: this.isEditable,
       healthState: healthView(this.document, { isGM: game.user.isGM }),
+      skills,
       ...(this.document.type === "fated" ? { defense: calculateDefense(this.document), isGM: game.user.isGM } : {}),
       ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
         label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {}),

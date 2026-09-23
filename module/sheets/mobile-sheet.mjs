@@ -6,6 +6,7 @@ import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/ev
 import { adjustResource } from "../resources.mjs";
 import { calculateDefense, actionDamage } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
+import { buildSkillGroups } from "../skills.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -84,7 +85,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         rangeLabel: entry.action ? `${entry.action.range.min ?? "?"}–${entry.action.range.max ?? "?"} ${entry.action.range.units || "(units unspecified)"}` : "",
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };
-    return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner,
+    return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: buildSkillGroups(this.document.system.skills),
       healthState: healthView(this.document, { isGM: game.user.isGM }),
       defense: calculateDefense(this.document),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === this.document.system.currentStance })),

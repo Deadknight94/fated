@@ -12,6 +12,31 @@
         <label>Body <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" {{disabled (not editable)}}></label>
         <label>Mind <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" {{disabled (not editable)}}></label>
       </div>
+      <div class="mobile-skills">
+        <h3>Skills</h3>
+
+        <div class="mobile-skills-grid">
+          {{#each skills as |group|}}
+            <div class="mobile-skill-group">
+              <h4>{{group.label}}</h4>
+
+              {{#each group.skills as |skill|}}
+                <label>
+                  <span>{{skill.label}}</span>
+                  <input
+                    type="number"
+                    name="system.skills.{{skill.key}}"
+                    value="{{skill.value}}"
+                    min="0"
+                    step="1"
+                    {{disabled (not @root.editable)}}
+                  >
+                </label>
+              {{/each}}
+            </div>
+          {{/each}}
+        </div>
+      </div>
       <div class="mobile-resources">
         <div><label>Endurance <span class="mobile-resource-value"><input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}><span>/ {{system.resources.endurance.max}}</span></span></label>
           <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="-1" aria-label="Decrease Endurance by 1" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="1" aria-label="Increase Endurance by 1" {{disabled (not editable)}}>+1</button></div></div>

@@ -20,6 +20,32 @@
   </section>
 
   <section class="panel">
+  <h2>Skills</h2>
+
+  <div class="skills-grid">
+    {{#each skills as |group|}}
+      <div class="skill-group">
+        <h3>{{group.label}}</h3>
+
+        {{#each group.skills as |skill|}}
+          <label>
+            {{skill.label}}
+            <input
+              type="number"
+              name="system.skills.{{skill.key}}"
+              value="{{skill.value}}"
+              min="0"
+              step="1"
+              {{disabled (not @root.editable)}}
+            >
+          </label>
+        {{/each}}
+      </div>
+    {{/each}}
+  </div>
+</section>
+
+  <section class="panel">
     <h2>Resources</h2>
     <div class="resource-grid">
       <label>Endurance
