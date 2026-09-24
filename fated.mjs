@@ -69,3 +69,6 @@ Hooks.once("init", () => {
     makeDefault: true
   });
 });
+
+// Import the combat hooks after system initialisation.
+import "./module/combat/hooks.mjs";
