@@ -5,10 +5,7 @@ import { resolve } from "node:path";
 
 // Load Foundry before importing system modules.
 const app = process.env.FOUNDRY_APP_PATH
-  ?? resolve(
-    process.env.LOCALAPPDATA ?? ".",
-    "Programs/Foundry Virtual Tabletop/resources/app"
-  );
+  ?? resolve(process.env.LOCALAPPDATA ?? ".", "Programs/Foundry Virtual Tabletop/resources/app");
 
 await import(pathToFileURL(resolve(app, "common/server.mjs")));
 
@@ -27,7 +24,6 @@ function makeAction(opts = {}) {
     ...opts
   };
 }
-
 
 test("proficiency level 3 gives base 3 and no untrained flag", () => {
   const action = makeAction({ source: { proficiency: "swords" } });
@@ -89,3 +85,82 @@ test("legacy attribute source used when no proficiency or skill", () => {
   assert.equal(result.successDice.total, 5);
 });
 
+// --- Provenance assertions
+test("proficiency provenance contains correct fields", () => {
+  const action = makeAction({ source: { proficiency: "swords" } });
+  const result = calculateActionFromActorData(action, { proficiencies: [{ key: "swords", level: 3 }] });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "proficiency",
+    key: "swords",
+    level: 3,
+    displayName: undefined,
+    untrained: false
+  });
+});
+
+test("level-0 proficiency provenance marks untrained", () => {
+  const action = makeAction({ source: { proficiency: "swords" } });
+  const result = calculateActionFromActorData(action, { proficiencies: [{ key: "swords", level: 0 }] });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "proficiency",
+    key: "swords",
+    level: 0,
+    displayName: undefined,
+    untrained: true
+  });
+});
+
+test("missing proficiency produces missing provenance", () => {
+  const action = makeAction({ source: { proficiency: "swords" } });
+  const result = calculateActionFromActorData(action, { proficiencies: [] });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "missing",
+    type: "proficiency",
+    key: "swords"
+  });
+});
+
+test("skill provenance contains correct fields", () => {
+  const action = makeAction({ skill: "stealth" });
+  const result = calculateActionFromActorData(action, { skills: { stealth: 4 } });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "skill",
+    key: "stealth",
+    level: 4
+  });
+});
+
+test("missing skill produces missing provenance", () => {
+  const action = makeAction({ skill: "stealth" });
+  const result = calculateActionFromActorData(action, { skills: {} });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "missing",
+    type: "skill",
+    key: "stealth"
+  });
+});
+
+test("proficiency precedence over skill in provenance", () => {
+  const action = makeAction({ source: { proficiency: "swords" }, skill: "stealth" });
+  const result = calculateActionFromActorData(action, {
+    proficiencies: [{ key: "swords", level: 2 }],
+    skills: { stealth: 5 }
+  });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "proficiency",
+    key: "swords",
+    level: 2,
+    displayName: undefined,
+    untrained: false
+  });
+});
+
+test("legacy provenance uses base value, not modified total", () => {
+  const action = makeAction({ successDice: { source: "body", base: null } });
+  const result = calculateActionFromActorData(action, { attributes: { body: 5 } });
+  assert.deepEqual(result.sourceProvenance, {
+    kind: "legacy",
+    key: "body",
+    value: 5
+  });
+});

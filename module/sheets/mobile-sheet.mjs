@@ -1,6 +1,7 @@
 import { equipmentView, toggleEquipment } from "../equipment.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { calculateActorAction, healthView } from "../health.mjs";
+import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
@@ -94,7 +95,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         classificationLabel: label(action.classification), attackLabel: label(action.attackType), rangeLabel: range,
         stanceLabel: action.allowedStances.length ? action.allowedStances.map(label).join(", ") : "Unspecified",
         eligibilityLabel: action.multiActionEligible === null ? "Unspecified" : action.multiActionEligible ? "Yes" : "No",
-        diceSourceLabel: label(action.successDice.source),
+        diceSourceLabel: formatDiceSourceLabel(action, calculation, this.document),
         dice: breakdownView(calculation.successDice), threshold: breakdownView(calculation.successThreshold),
         thresholdReviewIssue: calculation.successThreshold.reviewIssue
       };
@@ -109,7 +110,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
         requiresRoll: entry.action?.rollRequirement === "required", noRoll: entry.action?.rollRequirement === "none",
         dice: entry.calculation ? breakdownView(entry.calculation.successDice) : null,
         threshold: entry.calculation ? breakdownView(entry.calculation.successThreshold) : null,
-        diceSourceLabel: label(entry.action?.successDice?.source),
+        diceSourceLabel: formatDiceSourceLabel(entry.action, entry.calculation, this.document),
         rangeLabel: entry.action ? `${entry.action.range.min ?? "?"}–${entry.action.range.max ?? "?"} ${entry.action.range.units || "(units unspecified)"}` : "",
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };

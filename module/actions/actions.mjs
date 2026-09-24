@@ -77,15 +77,26 @@ export function calculateActionFromActorData(action, actorData = {}, additionalM
 );
   if (proficiencyKey) {
     const prof = actorProficiencies.find(p => p.key === proficiencyKey);
-
     if (!prof) {
-      return calculateWithBase(null);
+      const result = calculateWithBase(null);
+      result.sourceProvenance = {
+        kind: "missing",
+        type: "proficiency",
+        key: proficiencyKey
+      };
+      return result;
     }
 
     const level = prof.level;
 
     if (!Number.isFinite(level) || level < 0) {
-      return calculateWithBase(null);
+      const result = calculateWithBase(null);
+      result.sourceProvenance = {
+        kind: "missing",
+        type: "proficiency",
+        key: proficiencyKey
+      };
+      return result;
     }
 
     const result = calculateWithBase(level === 0 ? 1 : level);
@@ -94,21 +105,47 @@ export function calculateActionFromActorData(action, actorData = {}, additionalM
       result.successDice.untrained = true;
     }
 
+    // Attach provenance for source label formatting.
+    result.sourceProvenance = {
+      kind: "proficiency",
+      key: proficiencyKey,
+      level: level,
+      displayName: prof.displayName,
+      untrained: level === 0
+    };
     return result;
   }
 
   if (action?.skill) {
     const skillLevel = actorSkills[action.skill];
-
     if (!Number.isFinite(skillLevel)) {
-      return calculateWithBase(null);
+      const result = calculateWithBase(null);
+      result.sourceProvenance = {
+        kind: "missing",
+        type: "skill",
+        key: action.skill
+      };
+      return result;
     }
 
-    return calculateWithBase(skillLevel);
+    // Attach provenance for skill source.
+    const result = calculateWithBase(skillLevel);
+    result.sourceProvenance = {
+      kind: "skill",
+      key: action.skill,
+      level: skillLevel
+    };
+    return result;
   }
 
   // Legacy compatibility path for Actions with neither proficiency nor skill.
-  return calculateAction(action, actorAttributes, additionalModifiers);
+  const result = calculateAction(action, actorAttributes, additionalModifiers);
+  result.sourceProvenance = {
+    kind: "legacy",
+    key: action?.successDice?.source,
+    value: result.successDice.base
+  };
+  return result;
 }
 /** Source provenance is derived, so copying an Item never retains another owner's UUID. */
 export function getItemActions(item) {
