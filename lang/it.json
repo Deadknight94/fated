@@ -1,0 +1,85 @@
+{
+  "FATED": {
+    "Sheets": {
+      "Fated": "Scheda Fated",
+      "Mobile": "Scheda Mobile Fated",
+      "Npc": "Scheda NPC / Avversario",
+      "Item": "Scheda Oggetto Fated"
+    },
+    "Attribute": {
+      "Body": "Corpo",
+      "Mind": "Mente",
+      "Heart": "Cuore"
+    },
+    "Resource": {
+      "Endurance": "Resistenza",
+      "Hope": "Speranza",
+      "Power": "Potere",
+      "Load": "Carico"
+    },
+    "Roll": {
+      "SuccessDie": "Dado Successo",
+      "SuccessDice": "Dadi Successo",
+      "SuccessThreshold": "Soglia di Successo",
+      "Success": "Successo",
+      "Successes": "Successi",
+      "Untrained": "Non addestrato"
+    },
+    "Stance": {
+      "Offensive": "Offensiva",
+      "Neutral": "Neutrale",
+      "Defensive": "Difensiva",
+      "Ranged": "Distanza"
+    },
+    "Action": {
+      "Main": "Azione Principale",
+      "Free": "Azione Gratuita",
+      "Power": "Azione di Potere",
+      "Movement": "Movimento"
+    },
+    "Health": {
+      "Healthy": "Sano",
+      "Light": "Lieve",
+      "Grievous": "Grave",
+      "DeathsDoor": "Soglia della Morte",
+      "Dead": "Morto",
+      "Bandaged": "Bendato",
+      "Treated": "Trattato"
+    },
+    "Combat": {
+      "Defense": "Difesa",
+      "Damage": "Danno",
+      "Wound": "Ferita",
+      "Wounds": "Ferite"
+    },
+    "Common": {
+      "Roll": "Tira",
+      "Remove": "Rimuovi",
+      "Equip": "Equipaggia",
+      "Unequip": "Rimuovi equipaggiamento",
+      "Wear": "Indossa",
+      "Rest": "Riposo"
+    },
+    "Skill": {
+      "Awe": "Maestosità",
+      "Athletics": "Atletica",
+      "HuntingForaging": "Caccia / Raccolta",
+      "Travel": "Viaggiare",
+      "Craft": "Artigianato",
+      "Finesse": "Destrezza",
+      "Persuade": "Persuasione",
+      "Stealth": "Furtività",
+      "Perception": "Percezione",
+      "Explore": "Esplorazione",
+      "Reason": "Ragionamento",
+      "Lore": "Conoscenza",
+      "Enhearten": "Rincuorare",
+      "Leadership": "Comando",
+      "Insight": "Intuito",
+      "Healing": "Cura",
+      "Diplomacy": "Diplomazia",
+      "Deceive": "Inganno"
+    }
+    
+  }
+}

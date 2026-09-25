@@ -5,6 +5,80 @@
       "Mobile": "Fated Mobile Sheet",
       "Npc": "NPC / Adversary Sheet",
       "Item": "Fated Item Sheet"
+    },
+    "Attribute": {
+      "Body": "Body",
+      "Mind": "Mind",
+      "Heart": "Heart"
+    },
+    "Resource": {
+      "Endurance": "Endurance",
+      "Hope": "Hope",
+      "Power": "Power",
+      "Load": "Load"
+    },
+    "Roll": {
+      "SuccessDie": "Success Die",
+      "SuccessDice": "Success Dice",
+      "SuccessThreshold": "Success Threshold",
+      "Success": "Success",
+      "Successes": "Successes",
+      "Untrained": "Untrained"
+    },
+    "Stance": {
+      "Offensive": "Offensive",
+      "Neutral": "Neutral",
+      "Defensive": "Defensive",
+      "Ranged": "Ranged"
+    },
+    "Action": {
+      "Main": "Main Action",
+      "Free": "Free Action",
+      "Power": "Power Action",
+      "Movement": "Movement"
+    },
+    "Health": {
+      "Healthy": "Healthy",
+      "Light": "Light",
+      "Grievous": "Grievous",
+      "DeathsDoor": "Death's Door",
+      "Dead": "Dead",
+      "Bandaged": "Bandaged",
+      "Treated": "Treated"
+    },
+    "Combat": {
+      "Defense": "Defense",
+      "Damage": "Damage",
+      "Wound": "Wound",
+      "Wounds": "Wounds"
+    },
+    "Common": {
+      "Roll": "Roll",
+      "Remove": "Remove",
+      "Equip": "Equip",
+      "Unequip": "Unequip",
+      "Wear": "Wear",
+      "Rest": "Rest"
+    },
+    "Skill": {
+      "Awe": "Awe",
+      "Athletics": "Athletics",
+      "HuntingForaging": "Hunting / Foraging",
+      "Travel": "Travel",
+      "Craft": "Craft",
+      "Finesse": "Finesse",
+      "Persuade": "Persuade",
+      "Stealth": "Stealth",
+      "Perception": "Perception",
+      "Explore": "Explore",
+      "Reason": "Reason",
+      "Lore": "Lore",
+      "Enhearten": "Enhearten",
+      "Leadership": "Leadership",
+      "Insight": "Insight",
+      "Healing": "Healing",
+      "Diplomacy": "Diplomacy",
+      "Deceive": "Deceive"
     }
   }
 }
