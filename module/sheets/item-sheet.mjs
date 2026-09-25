@@ -61,7 +61,7 @@ export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMix
       isWeapon: this.document.type === "weapon",
       hasProficiency: ["weapon", "armor", "equipment"].includes(this.document.type),
       hasLoad: ["weapon", "armor", "equipment", "feature"].includes(this.document.type),
-          actions: this.document.system.actions.map((action, index) => ({
+        actions: this.document.system.actions.map((action, index) => ({
         ...action.toObject(),
         index,
         thresholdReviewIssue: systemMessage(legacyThresholdIssue(action)),
@@ -100,18 +100,36 @@ export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMix
   }
 
   async _preRender(context, options) {
-    this.openActions = new Set([...this.element?.querySelectorAll("details[open][data-action-id]") ?? []]
-      .map(element => element.dataset.actionId));
+    this._scrollPosition =
+      this.element?.querySelector(".window-content")?.scrollTop ?? 0;
+
+    this.openActions = new Set(
+      [...this.element?.querySelectorAll("details[open][data-action-id]") ?? []]
+        .map(element => element.dataset.actionId)
+    );
+
     await super._preRender(context, options);
   }
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+
     for (const element of this.element.querySelectorAll("details[data-action-id]")) {
-      element.open = this.openActions?.has(element.dataset.actionId) || element.dataset.actionId === this.newActionId;
+      element.open =
+        this.openActions?.has(element.dataset.actionId) ||
+        element.dataset.actionId === this.newActionId;
     }
+
     this.newActionId = null;
+
+    const scrollContainer = this.element?.querySelector(".window-content");
+    if (!scrollContainer || this._scrollPosition === undefined) return;
+
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = this._scrollPosition;
+    });
   }
+
 
   async editActions(edit) {
     if (!this.isEditable) return;

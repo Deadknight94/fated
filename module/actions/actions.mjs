@@ -171,5 +171,11 @@ export function getItemActions(item) {
 
 /** Available here means enabled on an owned Item; future stance/condition legality is not evaluated. */
 export function getActorActions(actor) {
-  return Array.from(actor.items).flatMap(item => item.getAvailableActions());
+  return Array.from(actor.items).flatMap(item => {
+    const requiresEquipped = ["weapon", "armor", "equipment"].includes(item.type);
+
+    if (requiresEquipped && !item.system.equipped) return [];
+
+    return item.getAvailableActions();
+  });
 }
