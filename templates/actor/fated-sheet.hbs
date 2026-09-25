@@ -2,7 +2,7 @@
   <button type="button" data-action="openMobile">{{localize "FATED.Sheet.OpenMobile"}}</button>
   <button type="button" data-action="openRest">{{localize "FATED.Sheet.Rest"}}</button>
   <header class="fated-sheet-header">
-    <img class="portrait" src="{{actor.img}}" alt="{{actor.name}}">
+    <img class="portrait" src="{{actor.img}}" alt="{{actor.name}}" data-action="editImage" data-edit="img">
     <div class="identity">
       <label>{{localize "FATED.Sheet.Name"}}</label>
       <input type="text" name="name" value="{{actor.name}}" {{disabled (not editable)}}>
