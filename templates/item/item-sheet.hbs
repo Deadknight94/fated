@@ -2,61 +2,61 @@
   <header class="fated-sheet-header compact">
     <img class="portrait" src="{{item.img}}" alt="{{item.name}}">
     <div class="identity">
-      <label>Name</label>
+      <label>{{localize "FATED.Sheet.Name"}}</label>
       <input type="text" name="name" value="{{item.name}}" {{disabled (not editable)}}>
-      <span class="actor-type">{{item.type}}</span>
+      <span class="actor-type">{{typeLabel}}</span>
     </div>
   </header>
 
   {{#if hasLoad}}
     <section class="panel">
-      <label>Load <input type="number" name="system.load" value="{{system.load}}" min="0" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Resource.Load"}} <input type="number" name="system.load" value="{{system.load}}" min="0" {{disabled (not editable)}}></label>
     </section>
   {{/if}}
 
   {{#if hasEquipmentState}}
     <section class="panel equipment-state">
       <label><input type="checkbox" name="system.equipped" {{checked system.equipped}} {{disabled (not editable)}}> {{stateLabel}}</label>
-      {{#if isArmor}}<label>Armor <input type="number" name="system.armor" value="{{system.armor}}" min="0" step="1" {{disabled (not editable)}}></label>{{/if}}
+      {{#if isArmor}}<label>{{localize "FATED.ItemType.Armor"}} <input type="number" name="system.armor" value="{{system.armor}}" min="0" step="1" {{disabled (not editable)}}></label>{{/if}}
     </section>
   {{/if}}
 
   {{#if isWeapon}}
       <section class="panel">
-        <h2>Weapon</h2>
+        <h2>{{localize "FATED.ItemType.Weapon"}}</h2>
         <div class="stat-grid two">
-          <label>Damage <input type="number" name="system.damage" value="{{system.damage}}" min="0" {{disabled (not editable)}}></label>
+          <label>{{localize "FATED.Combat.Damage"}} <input type="number" name="system.damage" value="{{system.damage}}" min="0" {{disabled (not editable)}}></label>
         </div>
   {{/if}}
 
   {{#if hasProficiency}}
   <section class="panel">
-    <h2>Proficiency</h2>
+    <h2>{{localize "FATED.Common.Proficiency"}}</h2>
     <label>
-      Proficiency Key
+      {{localize "FATED.Item.ProficiencyKey"}}
       <input
         type="text"
         name="system.proficiency"
         value="{{system.proficiency}}"
-        placeholder="e.g. longSwords"
+        placeholder="{{localize "FATED.Item.ProficiencyExample"}}"
         {{disabled (not editable)}}
       >
     </label>
     <p class="hint">
-      Stable proficiency key used to look up the character's proficiency level.
+      {{localize "FATED.Item.ProficiencyHint"}}
     </p>
   </section>
   {{/if}}
   {{#if isProficiency}}
     <section class="panel">
-      <label>Proficiency Key <input type="text" name="system.key" value="{{system.key}}" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Item.ProficiencyKey"}} <input type="text" name="system.key" value="{{system.key}}" {{disabled (not editable)}}></label>
     </section>
   {{/if}}
 
   {{> "systems/fated/templates/item/action-editor.hbs"}}
 
   <section class="panel">
-    <h2>Description</h2>
+    <h2>{{localize "FATED.Common.Description"}}</h2>
     <textarea name="system.description" rows="10" {{disabled (not editable)}}>{{system.description}}</textarea>
   </section>
 </div>

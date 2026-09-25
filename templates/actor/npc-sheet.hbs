@@ -2,45 +2,45 @@
   <header class="fated-sheet-header">
     <img class="portrait" src="{{actor.img}}" alt="{{actor.name}}">
     <div class="identity">
-      <label>Name</label>
+      <label>{{localize "FATED.Sheet.Name"}}</label>
       <input type="text" name="name" value="{{actor.name}}" {{disabled (not editable)}}>
-      <span class="actor-type">NPC / Adversary</span>
+      <span class="actor-type">{{localize "FATED.Npc.Type"}}</span>
     </div>
   </header>
 
   <section class="panel">
-    <h2>Adversary Resources</h2>
+    <h2>{{localize "FATED.Npc.Resources"}}</h2>
     <div class="resource-grid">
-      <label>Resilience
+      <label>{{localize "FATED.Resource.Resilience"}}
         <span class="resource-pair">
           <input type="number" name="system.resilience.value" value="{{system.resilience.value}}" min="0" max="{{system.resilience.max}}" {{disabled (not editable)}}>
           <span>/</span>
           <input type="number" name="system.resilience.max" value="{{system.resilience.max}}" min="0" {{disabled (not editable)}}>
         </span>
       </label>
-      <label>Shadow <input type="number" name="system.shadow" value="{{system.shadow}}" min="0" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Resource.Shadow"}} <input type="number" name="system.shadow" value="{{system.shadow}}" min="0" {{disabled (not editable)}}></label>
     </div>
   </section>
 
   <section class="panel inventory">
-    <h2>Items / Actions</h2>
+    <h2>{{localize "FATED.Npc.ItemsActions"}}</h2>
     {{#if items.length}}
       <ul class="item-list">
         {{#each items as |item|}}
           <li class="item-row draggable" data-item-id="{{item.id}}">
             <img src="{{item.img}}" alt="">
             <span>{{item.name}}</span>
-            <small>{{item.type}}</small>
+            <small>{{item.typeLabel}}</small>
           </li>
         {{/each}}
       </ul>
     {{else}}
-      <p class="muted">No items yet.</p>
+      <p class="muted">{{localize "FATED.Sheet.NoItems"}}</p>
     {{/if}}
   </section>
 
   <section class="panel">
-    <h2>Description / GM Notes</h2>
+    <h2>{{localize "FATED.Npc.Notes"}}</h2>
     <textarea name="system.description" rows="10" {{disabled (not editable)}}>{{system.description}}</textarea>
   </section>
 </div>

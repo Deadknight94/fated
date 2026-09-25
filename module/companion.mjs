@@ -1,3 +1,4 @@
+import { uiText, systemMessage } from "./presentation/text.mjs";
 import { FatedMobileSheet } from "./sheets/mobile-sheet.mjs";
 import { shouldActivateCompanion, companionCharacterState } from "./companion-state.mjs";
 
@@ -16,7 +17,7 @@ class CompanionSheet extends FatedMobileSheet {
 class CompanionFallback extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = { classes: ["fated", "fated-mobile", "fated-companion"], window: { frame: false, positioned: false } };
   static PARTS = { main: { template: "systems/fated/templates/companion-fallback.hbs" } };
-  async _prepareContext() { return companionCharacterState(game.user); }
+  async _prepareContext() { const state = companionCharacterState(game.user); return { ...state, message: systemMessage(state.message) }; }
   async close(options = {}) {
     if (options.companionDispose) return super.close(options);
     return this;
@@ -31,7 +32,7 @@ export function initializeCompanionMode() {
   let pending = Promise.resolve();
   const menu = document.createElement("details");
   menu.className = "fated-companion-menu";
-  menu.innerHTML = '<summary>Companion menu</summary><button type="button" data-companion="return">Open character interface</button><button type="button" data-companion="refresh">Refresh / reconnect</button><button type="button" data-companion="logout">Log out</button>';
+  menu.innerHTML = `<summary>${uiText("Companion menu")}</summary><button type="button" data-companion="return">${uiText("Open character interface")}</button><button type="button" data-companion="refresh">${uiText("Refresh / reconnect")}</button><button type="button" data-companion="logout">${uiText("Log out")}</button>`;
 
   async function synchronize() {
     if (game.user.isGM) {
@@ -59,7 +60,7 @@ export function initializeCompanionMode() {
   function refresh() {
     pending = pending.then(synchronize).catch(error => {
       console.error("Fated | Companion Mode", error);
-      ui.notifications.error("Companion Mode could not open. Use Refresh / reconnect in the Companion menu.");
+      ui.notifications.error(uiText("Companion Mode could not open. Use Refresh / reconnect in the Companion menu."));
     });
   }
   menu.addEventListener("click", async event => {

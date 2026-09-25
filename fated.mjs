@@ -21,6 +21,13 @@ Hooks.once("init", () => {
   CONFIG.Actor.documentClass = FatedActor;
   CONFIG.Item.documentClass = FatedItem;
 
+  // Foundry uses these presentation keys in creation dialogs and sheet titles.
+  Object.assign(CONFIG.Actor.typeLabels, { fated: "FATED.ActorType.Fated", npc: "FATED.Npc.Type" });
+  Object.assign(CONFIG.Item.typeLabels, {
+    weapon: "FATED.ItemType.Weapon", armor: "FATED.ItemType.Armor", equipment: "FATED.ItemType.Equipment",
+    weaponProficiency: "FATED.ItemType.WeaponProficiency", feature: "FATED.ItemType.Feature"
+  });
+
   CONFIG.Actor.dataModels = {
     fated: FatedDataModel,
     npc: NpcDataModel

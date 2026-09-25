@@ -1,3 +1,5 @@
+import { uiText, systemMessage } from "../presentation/text.mjs";
+import { displayLabel, localizedHealth } from "../presentation/labels.mjs";
 import { healthView } from "../health.mjs";
 import { shortRest } from "../rest/short-rest.mjs";
 import { longRest } from "../rest/long-rest.mjs";
@@ -13,7 +15,7 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
   static DEFAULT_OPTIONS = {
     classes: ["fated", "rest-app"], tag: "div",
-    position: { width: 480, height: 720 }, window: { title: "Rest", resizable: true },
+    position: { width: 480, height: 720 }, window: { title: "FATED.Common.Rest", resizable: true },
     actions: { shortRest: function () { return this.perform(shortRest, this.shortOptions()); },
       longRest: function () { return this.perform(longRest, this.healingOptions("longHealing")); },
       beginExtended: function () { return this.perform(beginExtendedRest); },
@@ -50,14 +52,14 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
   async perform(service, options) {
     if (this.pending) return false;
-    if (!this.document.isOwner) { ui.notifications.warn("You cannot update this Actor."); return false; }
+    if (!this.document.isOwner) { ui.notifications.warn(uiText("You cannot update this Actor.")); return false; }
     this.pending = true;
     try {
       await this.render({ force: true });
-      if (!await service(this.document, options)) { ui.notifications.warn("Rest request rejected. Check the entered values and wound state."); return false; }
+      if (!await service(this.document, options)) { ui.notifications.warn(uiText("Rest request rejected. Check the entered values and wound state.")); return false; }
       return true;
     } catch (error) {
-      ui.notifications.warn(error.message);
+      ui.notifications.warn(systemMessage(error.message));
       return false;
     } finally {
       this.pending = false;
@@ -80,8 +82,9 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
         // The power maximum is derived from the actor's attributes
         max: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind,
       },
-      wound: healthView(this.document),
-      woundCare: this.document.system.health.woundCare };
+      wound: localizedHealth(healthView(this.document)),
+      woundCare: this.document.system.health.woundCare,
+      careLabel: displayLabel("care", this.document.system.health.woundCare.care) };
   }
 }
 export async function openRestApp(actor) {

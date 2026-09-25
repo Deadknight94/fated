@@ -1,43 +1,43 @@
 <section class="panel action-editor">
-  <h2>Actions</h2>
-  <p class="muted">Leave unknown rules values blank. Only enabled Actions appear on the character.</p>
+  <h2>{{localize "FATED.Common.Actions"}}</h2>
+  <p class="muted">{{localize "FATED.Item.ActionHint"}}</p>
   {{#each actions as |action|}}
   <details data-action-id="{{action.id}}">
-    <summary>{{#if action.name}}{{action.name}}{{else}}Unnamed Action{{/if}}</summary>
+    <summary>{{#if action.name}}{{action.name}}{{else}}{{localize "FATED.Action.Unnamed"}}{{/if}}</summary>
     <div class="action-fields">
-      <label class="checkbox-line"><input type="checkbox" name="system.actions.{{action.index}}.enabled" {{checked action.enabled}} {{disabled (not @root.editable)}}> Enabled</label>
-      <label>Action name <input name="system.actions.{{action.index}}.name" value="{{action.name}}" {{disabled (not @root.editable)}}></label>
+      <label class="checkbox-line"><input type="checkbox" name="system.actions.{{action.index}}.enabled" {{checked action.enabled}} {{disabled (not @root.editable)}}> {{localize "FATED.Common.Enabled"}}</label>
+      <label>{{localize "FATED.Item.ActionName"}} <input name="system.actions.{{action.index}}.name" value="{{action.name}}" {{disabled (not @root.editable)}}></label>
       <div class="stat-grid two">
-        <label>Roll requirement
+        <label>{{localize "FATED.Action.RollRequirement"}}
           <select name="system.actions.{{action.index}}.rollRequirement" {{disabled (not @root.editable)}}>
             {{selectOptions @root.rollRequirements selected=action.rollRequirement}}
           </select>
         </label>
-        <label>Classification
+        <label>{{localize "FATED.Action.Classification"}}
           <select name="system.actions.{{action.index}}.classification" {{disabled (not @root.editable)}}>
             {{selectOptions @root.classifications selected=action.classification}}
           </select>
         </label>
-        <label>Melee / ranged
+        <label>{{localize "FATED.Item.AttackType"}}
           <select name="system.actions.{{action.index}}.attackType" {{disabled (not @root.editable)}}>
             {{selectOptions @root.attackTypes selected=action.attackType}}
           </select>
         </label>
         <!-- Legacy dice source fields hidden for canonical equipment actions -->
         <div class="legacy-section" style="display:none;">
-          <label>Success Dice source
+          <label>{{localize "FATED.Item.DiceSource"}}
             <select name="system.actions.{{action.index}}.successDice.source" {{disabled (not @root.editable)}}>
               {{selectOptions @root.diceSources selected=action.successDice.source}}
             </select>
           </label>
-          <label>Fixed base Success Dice
-            <input type="number" step="1" name="system.actions.{{action.index}}.successDice.base" value="{{action.successDice.base}}" placeholder="Unspecified" {{disabled (not @root.editable)}}>
+          <label>{{localize "FATED.Item.FixedDice"}}
+            <input type="number" step="1" name="system.actions.{{action.index}}.successDice.base" value="{{action.successDice.base}}" placeholder="{{localize "FATED.Common.Unspecified"}}" {{disabled (not @root.editable)}}>
           </label>
         </div>
         <!-- Canonical Skill selector for Equipment Actions -->
-        <label>Skill
+        <label>{{localize "FATED.Common.Skill"}}
           <select name="system.actions.{{action.index}}.skill" {{disabled (not @root.editable)}}>
-            <option value="">Unspecified</option>
+            <option value="">{{localize "FATED.Common.Unspecified"}}</option>
             {{#each @root.skills as |skill|}}
               <option value="{{skill.key}}" {{#if (eq action.skill skill.key)}}selected{{/if}}>{{skill.label}}</option>
             {{/each}}
@@ -45,47 +45,47 @@
         </label>
         {{#if @root.system.proficiency}}
           <p class="muted">
-           Equipment Proficiency <strong>{{@root.system.proficiency}}</strong>
-           takes precedence over this Action Skill.
+           {{localize "FATED.Item.EquipmentProficiency"}} <strong>{{@root.system.proficiency}}</strong>
+           {{localize "FATED.Item.ProficiencyPrecedence"}}
          </p>
         {{/if}}
-        <div>Base Success Threshold <strong>4</strong><p class="muted">Universal base. Configure deviations as Threshold modifiers.</p>{{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}</div>
-        <label>Multi-Action eligible
+        <div>{{localize "FATED.Action.BaseSuccessThreshold"}} <strong>4</strong><p class="muted">{{localize "FATED.Item.ThresholdHint"}}</p>{{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}</div>
+        <label>{{localize "FATED.Action.MultiEligible"}}
           <select name="system.actions.{{action.index}}.multiActionEligible" {{disabled (not @root.editable)}}>
             {{selectOptions @root.eligibilityOptions selected=action.eligibility}}
           </select>
         </label>
-        <label>Minimum range <input type="number" step="1" name="system.actions.{{action.index}}.range.min" value="{{action.range.min}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
-        <label>Maximum range <input type="number" step="1" name="system.actions.{{action.index}}.range.max" value="{{action.range.max}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
-        <label>Range units <input name="system.actions.{{action.index}}.range.units" value="{{action.range.units}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
-        <label>Damage per Success (attack Actions only) <input type="number" min="0" step="any" name="system.actions.{{action.index}}.damage" value="{{action.damage}}" placeholder="Weapon Damage, or unspecified" {{disabled (not @root.editable)}}></label>
+        <label>{{localize "FATED.Item.MinimumRange"}} <input type="number" step="1" name="system.actions.{{action.index}}.range.min" value="{{action.range.min}}" placeholder="{{localize "FATED.Common.Unspecified"}}" {{disabled (not @root.editable)}}></label>
+        <label>{{localize "FATED.Item.MaximumRange"}} <input type="number" step="1" name="system.actions.{{action.index}}.range.max" value="{{action.range.max}}" placeholder="{{localize "FATED.Common.Unspecified"}}" {{disabled (not @root.editable)}}></label>
+        <label>{{localize "FATED.Action.RangeUnits"}} <input name="system.actions.{{action.index}}.range.units" value="{{action.range.units}}" placeholder="{{localize "FATED.Common.Unspecified"}}" {{disabled (not @root.editable)}}></label>
+        <label>{{localize "FATED.Item.AttackDamage"}} <input type="number" min="0" step="any" name="system.actions.{{action.index}}.damage" value="{{action.damage}}" placeholder="{{localize "FATED.Item.DamagePlaceholder"}}" {{disabled (not @root.editable)}}></label>
       </div>
       <fieldset class="stance-options">
-        <legend>Allowed stances (none checked = unspecified)</legend>
+        <legend>{{localize "FATED.Item.StancesHint"}}</legend>
         {{#each action.stances as |stance|}}
-        <label class="checkbox-line"><input type="checkbox" name="system.actions.{{action.index}}.stances.{{stance.value}}" {{checked stance.checked}} {{disabled (not @root.editable)}}> {{stance.value}}</label>
+        <label class="checkbox-line"><input type="checkbox" name="system.actions.{{action.index}}.stances.{{stance.value}}" {{checked stance.checked}} {{disabled (not @root.editable)}}> {{stance.label}}</label>
         {{/each}}
       </fieldset>
-      <label>Damage / effect summary <textarea name="system.actions.{{action.index}}.effect" rows="2" {{disabled (not @root.editable)}}>{{action.effect}}</textarea></label>
-      <label>Rules text <textarea name="system.actions.{{action.index}}.rules" rows="3" {{disabled (not @root.editable)}}>{{action.rules}}</textarea></label>
+      <label>{{localize "FATED.Item.EffectSummary"}} <textarea name="system.actions.{{action.index}}.effect" rows="2" {{disabled (not @root.editable)}}>{{action.effect}}</textarea></label>
+      <label>{{localize "FATED.Item.RulesText"}} <textarea name="system.actions.{{action.index}}.rules" rows="3" {{disabled (not @root.editable)}}>{{action.rules}}</textarea></label>
       {{#each action.modifierGroups as |group|}}
       <fieldset>
         <legend>{{group.label}}</legend>
         {{#each group.entries as |modifier index|}}
         <div class="modifier-editor">
-          <label>Source / reason <input name="system.actions.{{action.index}}.modifiers.{{group.kind}}.{{index}}.label" value="{{modifier.label}}" {{disabled (not @root.editable)}}></label>
-          <label>Adjustment <input type="number" step="1" name="system.actions.{{action.index}}.modifiers.{{group.kind}}.{{index}}.value" value="{{modifier.value}}" placeholder="Unspecified" {{disabled (not @root.editable)}}></label>
-          <button type="button" data-action="removeModifier" data-kind="{{group.kind}}" data-modifier-id="{{modifier.id}}" {{disabled (not @root.editable)}}>Remove modifier</button>
+          <label>{{localize "FATED.Item.ModifierSource"}} <input name="system.actions.{{action.index}}.modifiers.{{group.kind}}.{{index}}.label" value="{{modifier.label}}" {{disabled (not @root.editable)}}></label>
+          <label>{{localize "FATED.Item.Adjustment"}} <input type="number" step="1" name="system.actions.{{action.index}}.modifiers.{{group.kind}}.{{index}}.value" value="{{modifier.value}}" placeholder="{{localize "FATED.Common.Unspecified"}}" {{disabled (not @root.editable)}}></label>
+          <button type="button" data-action="removeModifier" data-kind="{{group.kind}}" data-modifier-id="{{modifier.id}}" {{disabled (not @root.editable)}}>{{localize "FATED.Item.RemoveModifier"}}</button>
         </div>
         {{/each}}
-        <button type="button" data-action="addModifier" data-kind="{{group.kind}}" {{disabled (not @root.editable)}}>Add {{group.label}}</button>
+        <button type="button" data-action="addModifier" data-kind="{{group.kind}}" {{disabled (not @root.editable)}}>{{localize "FATED.Item.AddModifier"}}</button>
       </fieldset>
       {{/each}}
-      <button type="button" data-action="removeAction" {{disabled (not @root.editable)}}>Remove Action</button>
+      <button type="button" data-action="removeAction" {{disabled (not @root.editable)}}>{{localize "FATED.Item.RemoveAction"}}</button>
     </div>
   </details>
   {{else}}
-  <p>No Actions configured.</p>
+  <p>{{localize "FATED.Item.NoActions"}}</p>
   {{/each}}
-  <button type="button" data-action="addAction" {{disabled (not editable)}}>Add Action</button>
+  <button type="button" data-action="addAction" {{disabled (not editable)}}>{{localize "FATED.Item.AddAction"}}</button>
 </section>

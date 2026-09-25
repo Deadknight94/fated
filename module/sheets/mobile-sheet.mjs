@@ -1,4 +1,7 @@
-import { equipmentView, toggleEquipment } from "../equipment.mjs";
+import { uiText, systemMessage } from "../presentation/text.mjs";
+import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, modifierLabel, defenseView, rangeLabel, declarationIssuesView } from "../presentation/labels.mjs";
+import { equipmentView } from "../equipment.mjs";
+import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { calculateActorAction, healthView } from "../health.mjs";
 import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
@@ -9,25 +12,25 @@ import { adjustResource } from "../resources.mjs";
 import { calculateDefense, actionDamage } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 import { buildSkillGroups } from "../skills.mjs";
+import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
-const label = value => value ? value[0].toUpperCase() + value.slice(1) : "Unspecified";
-const displayNumber = value => Number.isFinite(value) ? String(value) : "Unspecified";
+const displayNumber = value => Number.isFinite(value) ? String(value) : uiText("Unspecified");
 
 function breakdownView(value) {
   return { base: displayNumber(value.base), total: displayNumber(value.total), complete: value.complete,
     modifiers: value.modifiers.map(modifier => ({
-      label: modifier.label || "Unlabelled modifier",
-      value: Number.isFinite(modifier.value) ? `${modifier.value >= 0 ? "+" : ""}${modifier.value}` : "Unspecified"
+      label: modifierLabel(modifier),
+      value: Number.isFinite(modifier.value) ? `${modifier.value >= 0 ? "+" : ""}${modifier.value}` : uiText("Unspecified")
     })) };
 }
 
-export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
+export class FatedMobileSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "fated-mobile"], tag: "form",
     position: { width: 760, height: 780 },
-    window: { resizable: true },
+    window: { title: "FATED.Sheets.Mobile", resizable: true },
     form: { submitOnChange: true, closeOnSubmit: false },
     actions: {
       toggleEquipment,
@@ -84,42 +87,42 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const evaluation = getDeclarationEvaluation(this.document);
     const actions = this.document.getAvailableActions().map(action => {
       const calculation = calculateActorAction(this.document, action);
-      const range = action.range.min === null && action.range.max === null ? "Unspecified"
-        : `${action.range.min ?? "?"}–${action.range.max ?? "?"}${action.range.units ? ` ${action.range.units}` : " (units unspecified)"}`;
+      const range = rangeLabel(action.range);
       return { ...action,
         damagePerSuccess: actionDamage(action, this.document.items.get(action.source.itemId)),
         hasDamage: actionDamage(action, this.document.items.get(action.source.itemId)) !== null,
-        additionIssue: evaluation.locked ? null : powerActionAdditionIssue(action, evaluation),
-        name: action.name || "Unnamed Action",
-        rollRequirementLabel: action.rollRequirement === "required" ? "Requires Roll" : action.rollRequirement === "none" ? "No Roll" : "Roll requirement unspecified",
-        classificationLabel: label(action.classification), attackLabel: label(action.attackType), rangeLabel: range,
-        stanceLabel: action.allowedStances.length ? action.allowedStances.map(label).join(", ") : "Unspecified",
-        eligibilityLabel: action.multiActionEligible === null ? "Unspecified" : action.multiActionEligible ? "Yes" : "No",
+        additionIssue: evaluation.locked ? null : systemMessage(powerActionAdditionIssue(action, evaluation)),
+        name: action.name || uiText("Unnamed Action"),
+        rollRequirementLabel: action.rollRequirement ? displayLabel("rollRequirement", action.rollRequirement) : uiText("Roll requirement unspecified"),
+        classificationLabel: displayLabel("classification", action.classification), attackLabel: displayLabel("attack", action.attackType), rangeLabel: range,
+        stanceLabel: action.allowedStances.length ? action.allowedStances.map(value => displayLabel("stance", value)).join(", ") : uiText("Unspecified"),
+        eligibilityLabel: uiText(action.multiActionEligible === null ? "Unspecified" : action.multiActionEligible ? "Yes" : "No"),
         diceSourceLabel: formatDiceSourceLabel(action, calculation, this.document),
         dice: breakdownView(calculation.successDice), threshold: breakdownView(calculation.successThreshold),
-        thresholdReviewIssue: calculation.successThreshold.reviewIssue
+        thresholdReviewIssue: systemMessage(calculation.successThreshold.reviewIssue)
       };
     });
-    const planner = { ...evaluation, revision: declaration.revision, stanceLabel: label(declaration.stance),
+    const planner = { ...evaluation, revision: declaration.revision, stanceLabel: displayLabel("stance", declaration.stance),
+      issues: declarationIssuesView(evaluation),
       stanceChosen: Boolean(declaration.stance),
-      stances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === declaration.stance })),
+      stances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === declaration.stance })),
       canAddMovement: !evaluation.locked && evaluation.movementCount === 0 && Boolean(declaration.stance),
       entries: evaluation.entries.map((entry, index, all) => ({ ...entry, number: index + 1,
-        movement: entry.kind === "movement", name: entry.action?.name || "Missing or unnamed Action",
-        classificationLabel: label(entry.action?.classification),
+        movement: entry.kind === "movement", name: entry.action?.name || uiText("Missing or unnamed Action"),
+        classificationLabel: displayLabel("classification", entry.action?.classification),
         requiresRoll: entry.action?.rollRequirement === "required", noRoll: entry.action?.rollRequirement === "none",
         dice: entry.calculation ? breakdownView(entry.calculation.successDice) : null,
         threshold: entry.calculation ? breakdownView(entry.calculation.successThreshold) : null,
         diceSourceLabel: formatDiceSourceLabel(entry.action, entry.calculation, this.document),
-        rangeLabel: entry.action ? `${entry.action.range.min ?? "?"}–${entry.action.range.max ?? "?"} ${entry.action.range.units || "(units unspecified)"}` : "",
+        rangeLabel: entry.action ? rangeLabel(entry.action.range) : "",
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };
-    return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: buildSkillGroups(this.document.system.skills),
-      healthState: healthView(this.document, { isGM: game.user.isGM }),
-      defense: calculateDefense(this.document),
-      currentStances: DECLARATION_STANCES.map(value => ({ value, label: label(value), selected: value === this.document.system.currentStance })),
-      items: this.document.items.contents.map(equipmentView),
-      sections: ["character", "turn", "actions", "items"].map(id => ({ id, label: label(id), active: id === this.section })),
+    return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: skillGroupsView(buildSkillGroups(this.document.system.skills)),
+      healthState: localizedHealth(healthView(this.document, { isGM: game.user.isGM })),
+      defense: defenseView(calculateDefense(this.document)),
+      currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),
+      items: this.document.items.contents.map(item => localizedEquipment(equipmentView(item))),
+      sections: ["character", "turn", "actions", "items"].map(id => ({ id, label: displayLabel("section", id), active: id === this.section })),
       character: this.section === "character", turn: this.section === "turn",
       actionsView: this.section === "actions", itemsView: this.section === "items" };
   }
@@ -150,7 +153,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     try {
       await adjustResource(this.document, button.dataset.resource, Number(button.dataset.delta));
     } catch (error) {
-      ui.notifications.warn(error.message);
+      ui.notifications.warn(systemMessage(error.message));
     } finally {
       this.resourcePending = false;
     }
@@ -164,7 +167,7 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     try {
       await updateDeclaration(this.document, revision, { type, stance, kind, itemId, actionId, entryId, direction: Number(direction) });
     } catch (error) {
-      ui.notifications.warn(error.message);
+      ui.notifications.warn(systemMessage(error.message));
     } finally {
       this.plannerPending = false;
       await this.render({ force: true });
@@ -174,17 +177,17 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (!this.isEditable) return;
     await this.submit();
     const data = await foundry.applications.api.DialogV2.input({
-      window: { title: "Add Proficiency" },
+      window: { title: uiText("Add Proficiency") },
       content: `
         <div class="form-group">
-          <label>Display Name</label>
+          <label>${uiText("Display Name")}</label>
           <div class="form-fields">
             <input type="text" name="name" required autofocus>
           </div>
         </div>
       `,
       ok: {
-        label: "Add Proficiency"
+        label: uiText("Add Proficiency")
       }
     });
 
@@ -196,14 +199,14 @@ export class FatedMobileSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const key = normalizeProficiencyKey(name);
 
     if (!key) {
-      ui.notifications.warn("Invalid proficiency name.");
+      ui.notifications.warn(uiText("Invalid proficiency name."));
       return;
     }
 
     const profs = this.document.system.proficiencies ?? [];
 
     if (hasDuplicateKey(profs, key)) {
-      ui.notifications.warn(`Proficiency ${key} already exists.`);
+      ui.notifications.warn(uiText("Proficiency {key} already exists.", { key }));
       return;
     }
 

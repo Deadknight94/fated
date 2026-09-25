@@ -1,12 +1,15 @@
+import { uiText, systemMessage } from "../presentation/text.mjs";
+import { displayLabel } from "../presentation/labels.mjs";
+import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
 import { ActionDataModel, STANCES } from "../actions/action-model.mjs";
 import { readActionForm } from "./action-form.mjs";
 import { legacyThresholdIssue } from "../actions/actions.mjs";
-import { SKILL_KEYS, SKILL_LABELS } from "../skills.mjs";
+import { SKILL_KEYS } from "../skills.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 
-export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
+export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin(ItemSheetV2)) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "item", "standard-form"],
     tag: "form",
@@ -44,37 +47,39 @@ export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     return {
       ...context,
       item: this.document,
+      typeLabel: displayLabel("itemType", this.document.type),
       system: this.document.system,
       editable: this.isEditable,
-      classifications: { "": "Unspecified", main: "Main Action", free: "Free Action", power: "Power Action" },
-      attackTypes: { "": "Unspecified", melee: "Melee", ranged: "Ranged" },
-      diceSources: { "": "Unspecified", fixed: "Fixed base", heart: "Heart", body: "Body", mind: "Mind" },
-      eligibilityOptions: { "": "Unspecified", true: "Yes", false: "No" },
-      rollRequirements: { "": "Unspecified", required: "Requires Roll", none: "No Roll" },
+      classifications: Object.fromEntries(Object.entries({ "": "Unspecified", main: "Main Action", free: "Free Action", power: "Power Action" }).map(([value, text]) => [value, uiText(text)])),
+      attackTypes: Object.fromEntries(Object.entries({ "": "Unspecified", melee: "Melee", ranged: "Ranged" }).map(([value, text]) => [value, uiText(text)])),
+      diceSources: Object.fromEntries(Object.entries({ "": "Unspecified", fixed: "Fixed base", heart: "Heart", body: "Body", mind: "Mind" }).map(([value, text]) => [value, uiText(text)])),
+      eligibilityOptions: Object.fromEntries(Object.entries({ "": "Unspecified", true: "Yes", false: "No" }).map(([value, text]) => [value, uiText(text)])),
+      rollRequirements: Object.fromEntries(Object.entries({ "": "Unspecified", required: "Requires Roll", none: "No Roll" }).map(([value, text]) => [value, uiText(text)])),
       isArmor: this.document.type === "armor",
       hasEquipmentState: ["armor", "weapon", "equipment"].includes(this.document.type),
-      stateLabel: this.document.type === "armor" ? "Worn" : "Equipped",
+      stateLabel: uiText(this.document.type === "armor" ? "Worn" : "Equipped"),
       isWeapon: this.document.type === "weapon",
       hasProficiency: ["weapon", "armor", "equipment"].includes(this.document.type),
       hasLoad: ["weapon", "armor", "equipment", "feature"].includes(this.document.type),
           actions: this.document.system.actions.map((action, index) => ({
         ...action.toObject(),
         index,
-        thresholdReviewIssue: legacyThresholdIssue(action),
+        thresholdReviewIssue: systemMessage(legacyThresholdIssue(action)),
         eligibility: action.multiActionEligible === null ? "" : String(action.multiActionEligible),
         stances: STANCES.map(value => ({
           value,
+          label: displayLabel("stance", value),
           checked: action.allowedStances.includes(value)
         })),
         modifierGroups: [
           {
             kind: "successDice",
-            label: "Success Dice modifiers",
+            label: uiText("Success Dice modifiers"),
             entries: action.modifiers.successDice
           },
           {
             kind: "successThreshold",
-            label: "Success Threshold modifiers",
+            label: uiText("Success Threshold modifiers"),
             entries: action.modifiers.successThreshold
           }
         ]
@@ -82,7 +87,7 @@ export class FatedItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       isProficiency: this.document.type === "weaponProficiency",
       skills: SKILL_KEYS.map(key => ({
         key,
-        label: SKILL_LABELS[key]
+        label: displayLabel("skill", key)
     }))
   };
 }

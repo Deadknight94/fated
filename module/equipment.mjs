@@ -19,12 +19,3 @@ export function equipmentView(item) {
     stateLabel: item.type === "armor" ? "Worn" : "Equipped",
     equipped: item.system.equipped, editable: item.isOwner };
 }
-
-export async function toggleEquipment(event, button) {
-  if (this.equipmentPending) return;
-  const item = this.document.items.get(button.dataset.itemId);
-  this.equipmentPending = true;
-  try { await setEquipped(item, !item?.system.equipped); }
-  catch (error) { ui.notifications.warn(error.message); }
-  finally { this.equipmentPending = false; }
-}

@@ -1,3 +1,5 @@
+import { uiText, systemMessage } from "../presentation/text.mjs";
+import { modifierLabel, defenseView } from "../presentation/labels.mjs";
 import { actionDamage } from "../defense.mjs";
 import { previewDamage, applyDamage } from "../damage.mjs";
 
@@ -6,7 +8,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 /** Target-centric GM bookkeeping window. Inputs are transient physical results, not Actor state. */
 export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = { classes: ["fated", "damage-bookkeeping", "standard-form"], tag: "div",
-    position: { width: 480, height: 620 }, window: { title: "Physical damage bookkeeping", resizable: true },
+    position: { width: 480, height: 620 }, window: { title: "FATED.Common.PhysicalDamage", resizable: true },
     actions: { preview: DamageBookkeeping.preview, apply: DamageBookkeeping.apply } };
   static PARTS = { main: { template: "systems/fated/templates/actor/damage-bookkeeping.hbs" } };
 
@@ -18,12 +20,14 @@ export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2)
         const item = attacker.items.get(action.source.itemId);
         const damage = actionDamage(action, item);
         return damage === null ? [] : [{ key: `${attacker.id}:${item.id}:${action.id}`, attacker, action, item,
-          label: `${attacker.name} · ${item.name} · ${action.name || "Unnamed Action"} · Damage ${damage}` }];
+          label: `${attacker.name} · ${item.name} · ${action.name || uiText("Unnamed Action")} · ${uiText("Damage")} ${damage}` }];
       }));
   }
 
   async _prepareContext() {
-    return { targetName: this.target.name, values: this.values, result: this.result, message: this.message,
+    return { targetName: this.target.name, values: this.values, result: this.result ? { ...this.result, defense: defenseView(this.result.defense),
+        finalDamageModifiers: this.result.finalDamageModifiers.map(modifier => ({ ...modifier, label: modifierLabel(modifier) })) } : null,
+      message: systemMessage(this.message),
       attacks: this.availableAttacks().map(attack => ({ value: attack.key, label: attack.label, selected: attack.key === this.values.attack })),
       canApply: this.target.isOwner && this.result && this.result.wounds > 0 && !this.pending };
   }

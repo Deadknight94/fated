@@ -1,19 +1,19 @@
 <div class="mobile-shell">
   <header class="mobile-header">
     <img src="{{actor.img}}" alt="" width="48" height="48">
-    <div><p class="mobile-eyebrow">Fated · At the table</p><h1>{{actor.name}}</h1></div>
+    <div><p class="mobile-eyebrow">{{localize "FATED.Mobile.AtTable"}}</p><h1>{{actor.name}}</h1></div>
   </header>
   <main class="mobile-content">
     {{#if character}}
-    <section aria-label="Character">
-      <h2>Character</h2>
+    <section aria-label="{{localize "FATED.Common.Character"}}">
+      <h2>{{localize "FATED.Common.Character"}}</h2>
       <div class="mobile-attributes">
-        <label>Heart <input type="number" name="system.attributes.heart" value="{{system.attributes.heart}}" min="0" {{disabled (not editable)}}></label>
-        <label>Body <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" {{disabled (not editable)}}></label>
-        <label>Mind <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" {{disabled (not editable)}}></label>
+        <label>{{localize "FATED.Attribute.Heart"}} <input type="number" name="system.attributes.heart" value="{{system.attributes.heart}}" min="0" {{disabled (not editable)}}></label>
+        <label>{{localize "FATED.Attribute.Body"}} <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" {{disabled (not editable)}}></label>
+        <label>{{localize "FATED.Attribute.Mind"}} <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" {{disabled (not editable)}}></label>
       </div>
       <div class="mobile-skills">
-        <h3>Skills</h3>
+        <h3>{{localize "FATED.Sheet.Skills"}}</h3>
 
         <div class="mobile-skills-grid">
           {{#each skills as |group|}}
@@ -38,54 +38,54 @@
         </div>
       </div>
       <div class="mobile-resources">
-        <div><label>Endurance <span class="mobile-resource-value"><input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}><span>/ {{system.resources.endurance.max}}</span></span></label>
-          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="-1" aria-label="Decrease Endurance by 1" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="1" aria-label="Increase Endurance by 1" {{disabled (not editable)}}>+1</button></div></div>
-        <div><label>Hope <span class="mobile-resource-value"><input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}><span>/ ±{{system.resources.hope.max}}</span></span></label>
-          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="hope" data-delta="-1" aria-label="Decrease Hope by 1" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="hope" data-delta="1" aria-label="Increase Hope by 1" {{disabled (not editable)}}>+1</button></div></div>
-        <div><label>Power <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
-          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="power" data-delta="-1" aria-label="Decrease Power by 1" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="power" data-delta="1" aria-label="Increase Power by 1" {{disabled (not editable)}}>+1</button></div></div>
-        <div class="mobile-load"><span>Load</span><strong>{{system.load}}</strong><small>From owned weapons, armor, and equipment</small></div>
+        <div><label>{{localize "FATED.Resource.Endurance"}} <span class="mobile-resource-value"><input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}><span>/ {{system.resources.endurance.max}}</span></span></label>
+          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreaseEndurance"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreaseEndurance"}}" {{disabled (not editable)}}>+1</button></div></div>
+        <div><label>{{localize "FATED.Resource.Hope"}} <span class="mobile-resource-value"><input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}><span>/ ±{{system.resources.hope.max}}</span></span></label>
+          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="hope" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreaseHope"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="hope" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreaseHope"}}" {{disabled (not editable)}}>+1</button></div></div>
+        <div><label>{{localize "FATED.Resource.Power"}} <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
+          <div class="mobile-resource-controls"><button type="button" data-action="adjustResource" data-resource="power" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreasePower"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="power" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreasePower"}}" {{disabled (not editable)}}>+1</button></div></div>
+        <div class="mobile-load"><span>{{localize "FATED.Resource.Load"}}</span><strong>{{system.load}}</strong><small>{{localize "FATED.Mobile.LoadHint"}}</small></div>
       </div>
-      <label class="mobile-current-stance">Current Stance <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
-      <p class="mobile-note">Dice are rolled physically at the table.</p>
+      <label class="mobile-current-stance">{{localize "FATED.Sheet.CurrentStance"}} <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+      <p class="mobile-note">{{localize "FATED.Mobile.PhysicalDice"}}</p>
       {{> "systems/fated/templates/actor/health-state.hbs"}}
       {{> "systems/fated/templates/actor/defense.hbs"}}
     </section>
     {{#if character}}
-    <section aria-label="Proficiencies">
-      <h2>Proficiencies</h2>
+    <section aria-label="{{localize "FATED.Sheet.Proficiencies"}}">
+      <h2>{{localize "FATED.Sheet.Proficiencies"}}</h2>
       {{#if system.proficiencies.length}}
         <div class="mobile-proficiencies-grid">
           {{#each system.proficiencies as |prof index|}}
             <div class="mobile-proficiency-row" data-proficiency-key="{{prof.key}}">
               <label>
-                <span>Display</span>
+                <span>{{localize "FATED.Sheet.Display"}}</span>
                 <input type="text" name="system.proficiencies.{{index}}.displayName" value="{{prof.displayName}}" {{disabled (not @root.editable)}} />
               </label>
               <label>
-                <span>Key</span>
+                <span>{{localize "FATED.Sheet.Key"}}</span>
                 <input type="text" name="system.proficiencies.{{index}}.key" value="{{prof.key}}" readonly {{disabled (not @root.editable)}} />
               </label>
               <label>
-                <span>Attribute</span>
+                <span>{{localize "FATED.Sheet.Attribute"}}</span>
                 <select name="system.proficiencies.{{index}}.attribute" {{disabled (not @root.editable)}}>
-                  <option value="heart" {{#if (eq prof.attribute "heart")}}selected{{/if}}>Heart</option>
-                  <option value="body" {{#if (eq prof.attribute "body")}}selected{{/if}}>Body</option>
-                  <option value="mind" {{#if (eq prof.attribute "mind")}}selected{{/if}}>Mind</option>
+                  <option value="heart" {{#if (eq prof.attribute "heart")}}selected{{/if}}>{{localize "FATED.Attribute.Heart"}}</option>
+                  <option value="body" {{#if (eq prof.attribute "body")}}selected{{/if}}>{{localize "FATED.Attribute.Body"}}</option>
+                  <option value="mind" {{#if (eq prof.attribute "mind")}}selected{{/if}}>{{localize "FATED.Attribute.Mind"}}</option>
                 </select>
               </label>
               <label>
-                <span>Level</span>
+                <span>{{localize "FATED.Sheet.Level"}}</span>
                 <input type="number" name="system.proficiencies.{{index}}.level" value="{{prof.level}}" min="0" {{disabled (not @root.editable)}} />
               </label>
-              <button type="button" data-action="removeProficiency" data-proficiency-key="{{prof.key}}" {{disabled (not @root.editable)}}>Remove</button>
+              <button type="button" data-action="removeProficiency" data-proficiency-key="{{prof.key}}" {{disabled (not @root.editable)}}>{{localize "FATED.Common.Remove"}}</button>
             </div>
           {{/each}}
         </div>
       {{else}}
-        <p class="muted">No proficiencies yet.</p>
+        <p class="muted">{{localize "FATED.Sheet.NoProficiencies"}}</p>
       {{/if}}
-      <button type="button" data-action="addProficiency" {{disabled (not @root.editable)}}>Add Proficiency</button>
+      <button type="button" data-action="addProficiency" {{disabled (not @root.editable)}}>{{localize "FATED.Common.AddProficiency"}}</button>
     </section>
     {{/if}}
     {{/if}}
@@ -93,65 +93,65 @@
     {{> "systems/fated/templates/actor/turn-planner.hbs"}}
     {{/if}}
     {{#if actionsView}}
-    <section aria-label="Actions">
-      <h2>Actions <span class="mobile-count">{{actions.length}}</span></h2>
-      <p class="mobile-note">Enabled Item Actions. Values below include configured Action and current character-state modifiers. Stance and other situational restrictions are checked at the table.</p>
+    <section aria-label="{{localize "FATED.Common.Actions"}}">
+      <h2>{{localize "FATED.Common.Actions"}} <span class="mobile-count">{{actions.length}}</span></h2>
+      <p class="mobile-note">{{localize "FATED.Mobile.ActionHint"}}</p>
       <div class="mobile-action-list">
       {{#each actions as |action|}}
       <article class="mobile-action-card">
         <header><p class="mobile-eyebrow">{{action.classificationLabel}}</p><h3>{{action.name}}</h3><p class="mobile-source">{{action.source.itemName}}</p></header>
         <p>{{action.rollRequirementLabel}}</p>
-        {{#if action.hasDamage}}<p><strong>Damage per Success: {{action.damagePerSuccess}}</strong> · Physical Successes × Damage, then final modifiers (minimum 0).</p>{{#each action.damageModifiers}}<p>{{label}}: {{value}} final Damage</p>{{/each}}{{/if}}
+        {{#if action.hasDamage}}<p><strong>{{localize "FATED.Damage.PerSuccess"}}: {{action.damagePerSuccess}}</strong> · {{localize "FATED.Mobile.DamageHint"}}</p>{{#each action.damageModifiers}}<p>{{label}}: {{value}} {{localize "FATED.Damage.Final"}}</p>{{/each}}{{/if}}
         {{#if action.thresholdReviewIssue}}<p role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}
         <dl class="mobile-action-facts">
-          <div><dt>Success Dice</dt><dd>{{action.dice.total}}</dd></div>
-          <div><dt>Success Threshold</dt><dd>{{action.threshold.total}}</dd></div>
-          <div><dt>Use</dt><dd>{{action.attackLabel}}</dd></div>
-          <div><dt>Range</dt><dd>{{action.rangeLabel}}</dd></div>
+          <div><dt>{{localize "FATED.Roll.SuccessDice"}}</dt><dd>{{action.dice.total}}</dd></div>
+          <div><dt>{{localize "FATED.Roll.SuccessThreshold"}}</dt><dd>{{action.threshold.total}}</dd></div>
+          <div><dt>{{localize "FATED.Action.Use"}}</dt><dd>{{action.attackLabel}}</dd></div>
+          <div><dt>{{localize "FATED.Action.Range"}}</dt><dd>{{action.rangeLabel}}</dd></div>
         </dl>
-        {{#if action.effect}}<p class="mobile-rules"><strong>Damage / effect:</strong> {{action.effect}}</p>{{/if}}
-        <p><strong>Allowed stances:</strong> {{action.stanceLabel}}</p>
+        {{#if action.effect}}<p class="mobile-rules"><strong>{{localize "FATED.Action.DamageEffect"}}:</strong> {{action.effect}}</p>{{/if}}
+        <p><strong>{{localize "FATED.Action.AllowedStances"}}:</strong> {{action.stanceLabel}}</p>
         {{#if action.rules}}<p class="mobile-rules">{{action.rules}}</p>{{/if}}
         <details class="mobile-breakdown">
-          <summary>Dice &amp; threshold details</summary>
-          <p>Multi-Action eligible: {{action.eligibilityLabel}}</p>
-          <h4>Success Dice · {{action.diceSourceLabel}}</h4>
-          <dl><div><dt>Base Success Dice</dt><dd>{{action.dice.base}}</dd></div>
+          <summary>{{localize "FATED.Mobile.DiceDetails"}}</summary>
+          <p>{{localize "FATED.Action.MultiEligible"}}: {{action.eligibilityLabel}}</p>
+          <h4>{{localize "FATED.Roll.SuccessDice"}} · {{action.diceSourceLabel}}</h4>
+          <dl><div><dt>{{localize "FATED.Action.BaseDice"}}</dt><dd>{{action.dice.base}}</dd></div>
           {{#each action.dice.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
-          <div><dt>Total configured Success Dice</dt><dd>{{action.dice.total}}</dd></div></dl>
-          <h4>Success Threshold</h4>
-          <dl><div><dt>Base Threshold</dt><dd>{{action.threshold.base}}</dd></div>
+          <div><dt>{{localize "FATED.Action.ConfiguredDice"}}</dt><dd>{{action.dice.total}}</dd></div></dl>
+          <h4>{{localize "FATED.Roll.SuccessThreshold"}}</h4>
+          <dl><div><dt>{{localize "FATED.Action.BaseThreshold"}}</dt><dd>{{action.threshold.base}}</dd></div>
           {{#each action.threshold.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
-          <div><dt>Final Threshold</dt><dd>{{action.threshold.total}}</dd></div></dl>
+          <div><dt>{{localize "FATED.Action.FinalThreshold"}}</dt><dd>{{action.threshold.total}}</dd></div></dl>
         </details>
-        <button type="button" data-action="openItem" data-item-id="{{action.source.itemId}}">Open {{action.source.itemName}}</button>
+        <button type="button" data-action="openItem" data-item-id="{{action.source.itemId}}">{{localize "FATED.Common.Open"}} {{action.source.itemName}}</button>
       </article>
-      {{else}}<div class="mobile-empty"><h3>No Actions yet</h3><p>Open an Item from Items and add an Action. Enable it to show it here.</p></div>{{/each}}
+      {{else}}<div class="mobile-empty"><h3>{{localize "FATED.Mobile.NoActions"}}</h3><p>{{localize "FATED.Mobile.AddActionHint"}}</p></div>{{/each}}
       </div>
     </section>
     {{/if}}
     {{#if itemsView}}
-    <section aria-label="Items">
-      <h2>Items</h2><p class="mobile-note">Tap an Item to read or configure its Actions.</p>
+    <section aria-label="{{localize "FATED.Sheet.Items"}}">
+      <h2>{{localize "FATED.Sheet.Items"}}</h2><p class="mobile-note">{{localize "FATED.Mobile.ItemsHint"}}</p>
       <div class="mobile-item-list">
       {{#each items as |item|}}
-      <div class="equipment-row"><button class="mobile-item" type="button" data-action="openItem" data-item-id="{{item.id}}"><img src="{{item.img}}" alt="" width="40" height="40"><span>{{item.name}}<small>{{item.type}}</small></span><span aria-hidden="true">›</span></button>
+      <div class="equipment-row"><button class="mobile-item" type="button" data-action="openItem" data-item-id="{{item.id}}"><img src="{{item.img}}" alt="" width="40" height="40"><span>{{item.name}}<small>{{item.typeLabel}}</small></span><span aria-hidden="true">›</span></button>
         <button
           type="button"
           data-action="removeItem"
           data-item-id="{{item.id}}"
           {{disabled (not @root.editable)}}
         >
-          Remove
+          {{localize "FATED.Common.Remove"}}
         </button>
-      {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}Yes{{else}}No{{/if}}</button>{{/if}}</div>
-      {{else}}<p>No owned Items yet. Ask the GM to add your equipment and features.</p>{{/each}}
+      {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}{{localize "FATED.Common.Yes"}}{{else}}{{localize "FATED.Common.No"}}{{/if}}</button>{{/if}}</div>
+      {{else}}<p>{{localize "FATED.Mobile.NoItems"}}</p>{{/each}}
       </div>
     </section>
     {{/if}}
   </main>
-  <nav class="mobile-nav" aria-label="Character sections">
+  <nav class="mobile-nav" aria-label="{{localize "FATED.Mobile.Sections"}}">
     {{#each sections}}<button type="button" data-action="showSection" data-section="{{id}}" {{#if active}}aria-current="page"{{/if}}>{{label}}</button>{{/each}}
-    <button type="button" data-action="openRest">Rest</button>
+    <button type="button" data-action="openRest">{{localize "FATED.Common.Rest"}}</button>
   </nav>
 </div>

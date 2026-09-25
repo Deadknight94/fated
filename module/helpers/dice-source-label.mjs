@@ -12,6 +12,8 @@
 //   - Legacy attribute source: "Body 5"
 
 import { SKILL_LABELS } from "../skills.mjs";
+import { displayLabel } from "../presentation/labels.mjs";
+import { uiText } from "../presentation/text.mjs";
 
 /**
  * Return a display string for the source of a dice pool.
@@ -20,17 +22,17 @@ import { SKILL_LABELS } from "../skills.mjs";
  * @param {object} actor - The actor instance (system data).
  * @returns {string}
  */
-export function formatDiceSourceLabel(action, calculation, actor) {
+export function formatDiceSourceLabel(action, calculation, actor, i18n) {
   // Prefer authoritative provenance from the calculation result.
   const source = calculation?.sourceProvenance ?? calculation?.source ?? {};
 
   // Handle missing proficiency or skill.
   if (source.kind === "missing") {
     const key = source.key;
-    if (source.type === "proficiency") return `Missing Proficiency: ${key}`;
+    if (source.type === "proficiency") return uiText("Missing Proficiency: {key}", { key }, i18n);
     // skill missing – use canonical label
-    const label = SKILL_LABELS[key] || key;
-    return `Missing Skill: ${label}`;
+    const label = displayLabel("skill", key, i18n);
+    return uiText("Missing Skill: {skill}", { skill: label }, i18n);
   }
 
   // Handle proficiency source.
@@ -39,13 +41,13 @@ export function formatDiceSourceLabel(action, calculation, actor) {
     const displayName = source.displayName || source.key
       .replace(/([a-z])([A-Z])/g, "$1 $2")
       .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
-    const suffix = level === 0 && source.untrained ? " (Untrained)" : "";
+    const suffix = level === 0 && source.untrained ? ` (${uiText("Untrained", {}, i18n)})` : "";
     return `${displayName} ${level}${suffix}`;
   }
 
   // Handle skill source.
   if (source.kind === "skill") {
-    const label = SKILL_LABELS[source.key] || source.key
+    const label = SKILL_LABELS[source.key] ? displayLabel("skill", source.key, i18n) : source.key
       .replace(/([a-z])([A-Z])/g, "$1 $2")
       .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
     const level = source.level ?? "?";
@@ -56,12 +58,12 @@ export function formatDiceSourceLabel(action, calculation, actor) {
   if (source.kind === "legacy") {
     const key = source.key;
     // legacy attributes use the same formatting as skills to keep UI
-    const label = SKILL_LABELS[key] || key
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
+    const label = ["body", "mind", "heart"].includes(key) ? displayLabel("attribute", key, i18n)
+      : key === "fixed" ? uiText("Fixed base", {}, i18n) : SKILL_LABELS[key] ? displayLabel("skill", key, i18n)
+      : key?.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") || uiText("Unspecified", {}, i18n);
     const value = source.value ?? "?";
     return `${label} ${value}`;
   }
 
-  return "Unspecified";
+  return uiText("Unspecified", {}, i18n);
 }
