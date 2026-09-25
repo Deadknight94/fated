@@ -1,20 +1,39 @@
 {{#with healthState as |health|}}
-<section class="panel health-state" aria-label="Health and conditions">
-  <h2>Health</h2>
-  <p><strong>Wounds: {{health.woundLabel}}</strong> · Severity {{health.severity}}</p>
+<section class="panel health-state" aria-label="{{localize "FATED.Health.HealthAndConditions"}}">
+  <h2>{{localize "FATED.Health.Health"}}</h2>
+  <p><strong>{{localize "FATED.Health.Wounds"}}: {{health.woundLabel}}</strong> · {{localize "FATED.Health.Severity"}} {{health.severity}}</p>
   <div class="health-controls">
-    <button type="button" data-action="health" data-health-operation="wound" data-delta="-1" aria-label="Decrease wound severity" {{disabled (or (not @root.editable) (not health.canDecreaseWound))}}>−1 Wound</button>
-    <button type="button" data-action="health" data-health-operation="wound" data-delta="1" aria-label="Increase wound severity" {{disabled (or (not @root.editable) (not health.canIncreaseWound))}}>+1 Wound</button>
-  </div>
-  {{#if health.conditions.length}}<ul class="health-conditions">{{#each health.conditions}}<li>{{this}}</li>{{/each}}</ul>{{else}}<p>No resource conditions.</p>{{/if}}
+    <button
+      type="button"
+      data-action="health"
+      data-health-operation="wound"
+      data-delta="-1"
+      aria-label="{{localize "FATED.Health.DecreaseWoundSeverity"}}"
+      {{disabled (or (not @root.editable) (not health.canDecreaseWound))}}
+    >
+      {{localize "FATED.Health.Decrease"}} 1 {{localize "FATED.Health.Wound"}}
+    </button>
+
+    <button
+      type="button"
+      data-action="health"
+      data-health-operation="wound"
+      data-delta="1"
+      aria-label="{{localize "FATED.Health.IncreaseWoundSeverity"}}"
+      {{disabled (or (not @root.editable) (not health.canIncreaseWound))}}
+    >
+      {{localize "FATED.Health.Increase"}} 1 {{localize "FATED.Health.Wound"}}
+  </button>
+</div>
+  {{#if health.conditions.length}}<ul class="health-conditions">{{#each health.conditions}}<li>{{this}}</li>{{/each}}</ul>{{else}}<p>{{localize "FATED.Health.NoResourceConditions"}}</p>{{/if}}
   {{#if health.deathsDoor}}
-    <p><strong>Death's Door · {{#if health.stabilized}}Stabilized{{else}}Unstabilized{{/if}} · Incapacitated</strong></p>
-    <button type="button" data-action="health" data-health-operation="stabilize" {{disabled (not @root.editable)}}>{{#if health.stabilized}}Mark unstabilized{{else}}Mark stabilized{{/if}}</button>
-    {{#if health.stabilized}}<p>Stabilization stops Death's Door drain. Wound severity stays 3; Incapacitation remains.</p>
-    {{else}}<p>Unstabilized: lose 1 Endurance AND 1 Hope each combat round, or each hour outside combat. If already Exhausted, Endurance loss becomes another Hope loss (total −2 Hope). Apply manually; no timed drain is automated.</p>{{/if}}
+    <p><strong>{{localize "FATED.Health.DeathsDoor"}} · {{#if health.stabilized}}{{localize "FATED.Health.Stabilized"}}{{else}}{{localize "FATED.Health.Unstabilized"}}{{/if}} · {{localize "FATED.Health.Incapacitated"}}</strong></p>
+    <button type="button" data-action="health" data-health-operation="stabilize" {{disabled (not @root.editable)}}>{{#if health.stabilized}}{{localize "FATED.Health.MarkUnstabilized"}}{{else}}{{localize "FATED.Health.MarkStabilized"}}{{/if}}</button>
+    {{#if health.stabilized}}<p>{{localize "FATED.Health.StabilizationStops"}}</p>
+    {{else}}<p>{{localize "FATED.Health.UnstabilizedLose"}}</p>{{/if}}
   {{/if}}
-  {{#if health.broken}}<p><strong>Broken:</strong> Incapacitated until no longer Despondent or no longer Exhausted. Broken itself causes no Death's Door drain. Lose 1 Power at each combat round's end (minimum 0). Continuously Broken for Body days causes death. Apply these rules manually; no timer, drain or duration death is automated.</p>{{/if}}
-  {{#if health.dead}}<p><strong>Dead.</strong> Reducing Wounds or changing resources does not clear recorded death.</p>{{/if}}
-  {{#if health.isGM}}<details><summary>GM administrative correction</summary><p>Correct the recorded death flag for bookkeeping/testing only. This is not healing or resurrection. Severity 4 still means Dead; lower severity separately before clearing a mistaken death record.</p><button type="button" data-action="health" data-health-operation="correct-death" {{disabled (not @root.editable)}}>{{#if health.recordedDead}}Clear recorded death (GM correction){{else}}Record death (GM correction){{/if}}</button></details>{{/if}}
+  {{#if health.broken}}<p><strong>{{localize "FATED.Health.Broken"}}:</strong> {{localize "FATED.Health.IncapacitatedUntil"}}. {{localize "FATED.Health.BrokenCausesNo"}}. {{localize "FATED.Health.LosePower"}}. {{localize "FATED.Health.ContinuouslyBroken"}}. {{localize "FATED.Health.ApplyRulesManually"}}.</p>{{/if}}
+  {{#if health.dead}}<p><strong>{{localize "FATED.Health.Dead"}}.</strong> {{localize "FATED.Health.ReducingWounds"}}</p>{{/if}}
+  {{#if health.isGM}}<details><summary>{{localize "FATED.Health.GMAdministrativeCorrection"}}</summary><p>{{localize "FATED.Health.CorrectRecordedDeath"}}. {{localize "FATED.Health.NotHealingOrResurrection"}}. {{localize "FATED.Health.Severity4MeansDead"}}. {{localize "FATED.Health.LowerSeverityBeforeClearing"}}.</p><button type="button" data-action="health" data-health-operation="correct-death" {{disabled (not @root.editable)}}>{{#if health.recordedDead}}{{localize "FATED.Health.ClearRecordedDeath"}}{{else}}{{localize "FATED.Health.RecordDeath"}}{{/if}}</button></details>{{/if}}
 </section>
 {{/with}}

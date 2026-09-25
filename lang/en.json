@@ -44,13 +44,54 @@
       "DeathsDoor": "Death's Door",
       "Dead": "Dead",
       "Bandaged": "Bandaged",
-      "Treated": "Treated"
+      "Treated": "Treated",
+      "Health": "Health",
+      "Wounds": "Wounds",
+      "Severity": "Severity",
+      "Increase": "Increase",
+      "Decrease": "Decrease",
+      "NoResourceConditions": "No resource conditions.",
+      "Stabilized": "Stabilized",
+      "Unstabilized": "Unstabilized",
+      "Incapacitated": "Incapacitated",
+      "MarkUnstabilized": "Mark unstabilized",
+      "MarkStabilized": "Mark stabilized",
+      "StabilizationStops": "Stabilization stops Death's Door drain. Wound severity stays 3; Incapacitation remains.",
+      "UnstabilizedLose": "Unstabilized: lose 1 Endurance AND 1 Hope each combat round, or each hour outside combat. If already Exhausted, Endurance loss becomes another Hope loss (total −2 Hope). Apply manually; no timed drain is automated.",
+      "Broken": "Broken",
+      "IncapacitatedUntil": "Incapacitated until no longer Despondent or no longer Exhausted",
+      "BrokenCausesNo": "Broken itself causes no Death's Door drain",
+      "LosePower": "Lose 1 Power at each combat round's end (minimum 0)",
+      "ContinuouslyBroken": "Continuously Broken for Body days causes death",
+      "ApplyRulesManually": "Apply these rules manually; no timer, drain or duration death is automated",
+      "ReducingWounds": "Reducing Wounds or changing resources does not clear recorded death.",
+      "CorrectRecordedDeath": "Correct the recorded death flag for bookkeeping/testing only",
+      "NotHealingOrResurrection": "This is not healing or resurrection",
+      "Severity4MeansDead": "Severity 4 still means Dead",
+      "LowerSeverityBeforeClearing": "lower severity separately before clearing a mistaken death record",
+      "Wound": "Wound",
+      "LightWound": "Light Wound",
+      "GrievousWound": "Grievous Wound",
+      "Overburdened": "Overburdened",
+      "Exhausted": "Exhausted",
+      "Inspired": "Inspired",
+      "Despondent": "Despondent",
+      "HealthAndConditions": "Health and conditions",
+      "DecreaseWoundSeverity": "Decrease wound severity",
+      "IncreaseWoundSeverity": "Increase wound severity",
+      "GMAdministrativeCorrection": "GM administrative correction",
+      "ClearRecordedDeath": "Clear recorded death (GM correction)",
+      "RecordDeath": "Record death (GM correction)"
     },
     "Combat": {
       "Defense": "Defense",
       "Damage": "Damage",
       "Wound": "Wound",
-      "Wounds": "Wounds"
+      "Wounds": "Wounds",
+      "Raw": "Raw Defense",
+      "Effective": "Effective Defense",
+      "DefenseBreakdown": "Defense breakdown",
+      "Minimum": "minimum"
     },
     "Common": {
       "Roll": "Roll",
@@ -58,7 +99,14 @@
       "Equip": "Equip",
       "Unequip": "Unequip",
       "Wear": "Wear",
-      "Rest": "Rest"
+      "Rest": "Rest",
+      "Add": "Add",
+      "AddProficiency": "Add Proficiency",
+      "PhysicalDamage": "Physical damage bookkeeping",
+      "Yes": "Yes",
+      "No": "No",
+      "Worn": "Worn",
+      "Equipped": "Equipped"
     },
     "Skill": {
       "Awe": "Awe",
@@ -79,6 +127,30 @@
       "Healing": "Healing",
       "Diplomacy": "Diplomacy",
       "Deceive": "Deceive"
+    },
+    "Sheet": {
+      "Name": "Name",
+      "PrimaryAttributes": "Primary Attributes",
+      "Skills": "Skills",
+      "Resources": "Resources",
+      "Proficiencies": "Proficiencies",
+      "Items": "Items",
+      "Biography": "Biography / Notes",
+      "CurrentStance": "Current Stance",
+      "Display": "Display",
+      "Key": "Key",
+      "Attribute": "Attribute",
+      "Level": "Level",
+      "NoProficiencies": "No proficiencies yet.",
+      "NoItems": "No items yet.",
+      "OpenMobile": "Open mobile interface",
+      "Rest": "Rest",
+      "Remove": "Remove"
+    },
+    "ItemType": {
+      "Armor": "Armor",
+      "Weapon": "Weapon",
+      "Equipment": "Equipment"
     }
   }
 }

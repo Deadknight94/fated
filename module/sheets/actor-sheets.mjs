@@ -9,6 +9,70 @@ import { openDamageBookkeeping } from "./damage-bookkeeping.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 import { buildSkillGroups } from "../skills.mjs";
 
+const STANCE_LOCALIZATION_KEYS = {
+  offensive: "FATED.Stance.Offensive",
+  neutral: "FATED.Stance.Neutral",
+  defensive: "FATED.Stance.Defensive",
+  ranged: "FATED.Stance.Ranged"
+};
+
+const ATTRIBUTE_LOCALIZATION_KEYS = {
+  body: "FATED.Attribute.Body",
+  mind: "FATED.Attribute.Mind",
+  heart: "FATED.Attribute.Heart"
+};
+
+const SKILL_LOCALIZATION_KEYS = {
+  awe: "FATED.Skill.Awe",
+  athletics: "FATED.Skill.Athletics",
+  huntingForaging: "FATED.Skill.HuntingForaging",
+  travel: "FATED.Skill.Travel",
+  craft: "FATED.Skill.Craft",
+  finesse: "FATED.Skill.Finesse",
+  persuade: "FATED.Skill.Persuade",
+  stealth: "FATED.Skill.Stealth",
+  perception: "FATED.Skill.Perception",
+  explore: "FATED.Skill.Explore",
+  reason: "FATED.Skill.Reason",
+  lore: "FATED.Skill.Lore",
+  enhearten: "FATED.Skill.Enhearten",
+  leadership: "FATED.Skill.Leadership",
+  insight: "FATED.Skill.Insight",
+  healing: "FATED.Skill.Healing",
+  diplomacy: "FATED.Skill.Diplomacy",
+  deceive: "FATED.Skill.Deceive"
+};
+
+const ITEM_TYPE_LOCALIZATION_KEYS = {
+  armor: "FATED.ItemType.Armor",
+  weapon: "FATED.ItemType.Weapon",
+  equipment: "FATED.ItemType.Equipment"
+};
+
+const EQUIPMENT_STATE_LOCALIZATION_KEYS = {
+  armor: "FATED.Common.Worn",
+  weapon: "FATED.Common.Equipped",
+  equipment: "FATED.Common.Equipped"
+};
+
+const WOUND_LOCALIZATION_KEYS = {
+  0: "FATED.Health.Healthy",
+  1: "FATED.Health.LightWound",
+  2: "FATED.Health.GrievousWound",
+  3: "FATED.Health.DeathsDoor",
+  4: "FATED.Health.Dead"
+};
+
+const HEALTH_CONDITION_LOCALIZATION_KEYS = {
+  overburdened: "FATED.Health.Overburdened",
+  exhausted: "FATED.Health.Exhausted",
+  inspired: "FATED.Health.Inspired",
+  despondent: "FATED.Health.Despondent",
+  broken: "FATED.Health.Broken",
+  incapacitated: "FATED.Health.Incapacitated",
+  dead: "FATED.Health.Dead"
+};
+
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
@@ -32,19 +96,64 @@ class BaseFatedActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const skills = this.document.type === "fated"
-  ? buildSkillGroups(this.document.system.skills)
+  ? buildSkillGroups(this.document.system.skills).map(group => ({
+      ...group,
+      label: game.i18n.localize(ATTRIBUTE_LOCALIZATION_KEYS[group.attribute]),
+      skills: group.skills.map(skill => ({
+        ...skill,
+        label: game.i18n.localize(SKILL_LOCALIZATION_KEYS[skill.key])
+      }))
+    }))
   : [];
-    return {
+
+const baseHealthState = healthView(this.document, { isGM: game.user.isGM });
+
+const healthState = baseHealthState
+  ? {
+      ...baseHealthState,
+      woundLabel: game.i18n.localize(WOUND_LOCALIZATION_KEYS[baseHealthState.severity]),
+      conditions: [
+        baseHealthState.overburdened &&
+          `${game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.overburdened)} (+1)`,
+        baseHealthState.exhausted &&
+          `${game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.exhausted)} (+1)`,
+        baseHealthState.inspired &&
+          `${game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.inspired)} (−1)`,
+        baseHealthState.despondent &&
+          `${game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.despondent)} (+1)`,
+        baseHealthState.broken &&
+          game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.broken),
+        baseHealthState.incapacitated &&
+          game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.incapacitated),
+        baseHealthState.dead &&
+          game.i18n.localize(HEALTH_CONDITION_LOCALIZATION_KEYS.dead)
+      ].filter(Boolean)
+    }
+  : null;
+
+return {
       ...context,
       actor: this.document,
       system: this.document.system,
-      items: this.document.items.contents.map(equipmentView),
+      items: this.document.items.contents.map(item => {
+       const view = equipmentView(item);
+
+      return {
+          ...view,
+          typeLabel: ITEM_TYPE_LOCALIZATION_KEYS[item.type]
+            ? game.i18n.localize(ITEM_TYPE_LOCALIZATION_KEYS[item.type])
+            : item.type,
+          stateLabel: EQUIPMENT_STATE_LOCALIZATION_KEYS[item.type]
+            ? game.i18n.localize(EQUIPMENT_STATE_LOCALIZATION_KEYS[item.type])
+            : view.stateLabel
+        };
+      }),
       editable: this.isEditable,
-      healthState: healthView(this.document, { isGM: game.user.isGM }),
+      healthState,
       skills,
       ...(this.document.type === "fated" ? { defense: calculateDefense(this.document), isGM: game.user.isGM } : {}),
       ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
-        label: value[0].toUpperCase() + value.slice(1), selected: value === this.document.system.currentStance })) } : {}),
+        label: game.i18n.localize(STANCE_LOCALIZATION_KEYS[value]), selected: value === this.document.system.currentStance })) } : {}),
       ...(this.document.type === "fated" ? { powerMax: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind } : {})
     };
   }

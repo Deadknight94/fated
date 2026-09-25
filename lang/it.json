@@ -44,13 +44,54 @@
       "DeathsDoor": "Soglia della Morte",
       "Dead": "Morto",
       "Bandaged": "Bendato",
-      "Treated": "Trattato"
+      "Treated": "Trattato",
+      "Health": "Salute",
+      "Wounds": "Ferite",
+      "Severity": "Gravità",
+      "Increase": "Aumenta",
+      "Decrease": "Diminuisci",
+      "NoResourceConditions": "Nessuna condizione di risorsa.",
+      "Stabilized": "Stabilizzato",
+      "Unstabilized": "Instabile",
+      "Incapacitated": "Incapacitato",
+      "MarkUnstabilized": "Segna instabile",
+      "MarkStabilized": "Segna stabilizzato",
+      "StabilizationStops": "La stabilizzazione ferma il danno della Soglia della Morte. La gravità delle ferite rimane 3; l'incapacità persiste.",
+      "UnstabilizedLose": "Instabile: perdi 1 Resistenza E 1 Speranza ogni round di combattimento, o ogni ora fuori dal combattimento. Se già esausto, la perdita di Resistenza diventa un'altra perdita di Speranza (totale −2 Speranza). Applica manualmente; nessun danno automatizzato.",
+      "Broken": "Spezzato",
+      "IncapacitatedUntil": "Incapacitato fino a quando non sei più Sconfortato o non sei più Esausto",
+      "BrokenCausesNo": "Essere Spezzato non causa danno della Soglia della Morte",
+      "LosePower": "Perdi 1 Potere alla fine di ogni round di combattimento (minimo 0)",
+      "ContinuouslyBroken": "Essere continuamente Spezzato per un numero di giorni pari a Corpo causa la morte",
+      "ApplyRulesManually": "Applica queste regole manualmente; nessun timer, danno o durata automatizzata",
+      "ReducingWounds": "Ridurre le Ferite o cambiare le risorse non cancella la registrazione della morte.",
+      "CorrectRecordedDeath": "Correggi la registrazione della morte solo per contabilità/test",
+      "NotHealingOrResurrection": "Questo non è guarigione o risurrezione",
+      "Severity4MeansDead": "La gravità 4 significa ancora Morto",
+      "LowerSeverityBeforeClearing": "diminuisci la gravità prima di cancellare una registrazione errata di morte",
+      "Wound": "Ferita",
+      "LightWound": "Ferita Lieve",
+      "GrievousWound": "Ferita Grave",
+      "Overburdened": "Sovraccarico",
+      "Exhausted": "Esausto",
+      "Inspired": "Ispirato",
+      "Despondent": "Sconfortato",
+      "HealthAndConditions": "Salute e condizioni",
+      "DecreaseWoundSeverity": "Diminuisci la gravità della ferita",
+      "IncreaseWoundSeverity": "Aumenta la gravità della ferita",
+      "GMAdministrativeCorrection": "Correzione amministrativa GM",
+      "ClearRecordedDeath": "Cancella morte registrata (correzione GM)",
+      "RecordDeath": "Registra morte (correzione GM)"
     },
     "Combat": {
       "Defense": "Difesa",
       "Damage": "Danno",
       "Wound": "Ferita",
-      "Wounds": "Ferite"
+      "Wounds": "Ferite",
+      "Raw": "Difesa Grezza",
+      "Effective": "Difesa Effettiva",
+      "DefenseBreakdown": "Suddivisione della Difesa",
+      "Minimum": "minimo"
     },
     "Common": {
       "Roll": "Tira",
@@ -58,7 +99,14 @@
       "Equip": "Equipaggia",
       "Unequip": "Rimuovi equipaggiamento",
       "Wear": "Indossa",
-      "Rest": "Riposo"
+      "Rest": "Riposo",
+      "Add": "Aggiungi",
+      "AddProficiency": "Aggiungi Perizia",
+      "PhysicalDamage": "Gestione danno fisico",
+      "Yes": "Sì",
+      "No": "No",
+      "Worn": "Indossata",
+      "Equipped": "Equipaggiato"
     },
     "Skill": {
       "Awe": "Maestosità",
@@ -79,7 +127,30 @@
       "Healing": "Cura",
       "Diplomacy": "Diplomazia",
       "Deceive": "Inganno"
+    },
+    "Sheet": {
+      "Name": "Nome",
+      "PrimaryAttributes": "Attributi Principali",
+      "Skills": "Abilità",
+      "Resources": "Risorse",
+      "Proficiencies": "Perizie",
+      "Items": "Oggetti",
+      "Biography": "Biografia / Note",
+      "CurrentStance": "Posizione Attuale",
+      "Display": "Mostra",
+      "Key": "Chiave",
+      "Attribute": "Attributo",
+      "Level": "Livello",
+      "NoProficiencies": "Nessuna perizia ancora.",
+      "NoItems": "Nessun oggetto ancora.",
+      "OpenMobile": "Apri interfaccia mobile",
+      "Rest": "Riposo",
+      "Remove": "Rimuovi"
+    },
+    "ItemType": {
+      "Armor": "Armatura",
+      "Weapon": "Arma",
+      "Equipment": "Equipaggiamento"
     }
-    
   }
 }

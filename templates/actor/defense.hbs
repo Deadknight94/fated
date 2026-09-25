@@ -1,7 +1,7 @@
-<section class="panel" aria-label="Defense">
-  <h2>Defense · {{defense.total}}</h2>
-  <details><summary>Defense breakdown</summary><p>Body {{defense.body}} + Mind {{defense.mind}} = {{defense.base}}</p>
+<section class="panel" aria-label="{{localize "FATED.Combat.Defense"}}">
+  <h2>{{localize "FATED.Combat.Defense"}} · {{defense.total}}</h2>
+  <details><summary>{{localize "FATED.Combat.DefenseBreakdown"}}</summary><p>{{localize "FATED.Attribute.Body"}} {{defense.body}} + {{localize "FATED.Attribute.Mind"}} {{defense.mind}} = {{defense.base}}</p>
     {{#each defense.modifiers}}<p>{{label}}: {{value}}</p>{{/each}}
-    <p>Raw Defense: {{defense.raw}} · Effective Defense: {{defense.total}} (minimum 1)</p>
+    <p>{{localize "FATED.Combat.Raw"}}: {{defense.raw}} · {{localize "FATED.Combat.Effective"}}: {{defense.total}} ({{localize "FATED.Combat.Minimum"}} 1)</p>
   </details>
 </section>
