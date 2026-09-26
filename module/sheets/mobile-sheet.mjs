@@ -13,6 +13,7 @@ import { calculateDefense, actionDamage } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 import { buildSkillGroups } from "../skills.mjs";
 import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
+import { ProficiencySheetMixin, captureProficiencyDetails, restoreProficiencyDetails } from "./proficiency-controls.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -26,7 +27,7 @@ function breakdownView(value) {
     })) };
 }
 
-export class FatedMobileSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
+export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(HandlebarsApplicationMixin(ActorSheetV2))) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "fated-mobile"], tag: "form",
     position: { width: 760, height: 780 },
@@ -65,6 +66,7 @@ export class FatedMobileSheet extends LocalizedSheetMixin(HandlebarsApplicationM
   async _preRender(context, options) {
     // Preserve scroll position
     this._scrollPosition = this.element?.querySelector(".mobile-content")?.scrollTop ?? 0;
+    captureProficiencyDetails(this);
     // Preserve planner detail open state
     this.openPlannerDetails = new Set([...(this.element?.querySelectorAll("details[open][data-planner-detail]") ?? [])]
       .map(element => element.dataset.plannerDetail));
@@ -73,6 +75,7 @@ export class FatedMobileSheet extends LocalizedSheetMixin(HandlebarsApplicationM
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    restoreProficiencyDetails(this);
     for (const element of this.element.querySelectorAll("details[data-planner-detail]")) {
       element.open = this.openPlannerDetails?.has(element.dataset.plannerDetail) ?? false;
     }
@@ -118,6 +121,7 @@ export class FatedMobileSheet extends LocalizedSheetMixin(HandlebarsApplicationM
         canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
       })) };
     return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: skillGroupsView(buildSkillGroups(this.document.system.skills)),
+      canEditProficiencyKeys: game.user.isGM && this.isEditable,
       healthState: localizedHealth(healthView(this.document, { isGM: game.user.isGM })),
       defense: defenseView(calculateDefense(this.document)),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),

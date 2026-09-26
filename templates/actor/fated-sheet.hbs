@@ -73,32 +73,46 @@
         <ul class="proficiency-list">
           {{#each system.proficiencies as |prof index|}}
             <li class="proficiency-row" data-proficiency-key="{{prof.key}}">
-              <label>
-                <span>{{localize "FATED.Sheet.Display"}}</span>
-                <input type="text" name="system.proficiencies.{{index}}.displayName" value="{{prof.displayName}}" {{disabled (not @root.editable)}} />
-              </label>
-              <label>
-                <span>{{localize "FATED.Sheet.Key"}}</span>
-                <input
-                  type="text"
-                  name="system.proficiencies.{{index}}.key"
-                  value="{{prof.key}}"
-                  readonly
-                >
-              </label>
-              <label>
-                <span>{{localize "FATED.Sheet.Attribute"}}</span>
-                <select name="system.proficiencies.{{index}}.attribute" {{disabled (not @root.editable)}}>
-                  <option value="heart" {{#if (eq prof.attribute "heart")}}selected{{/if}}>{{localize "FATED.Attribute.Heart"}}</option>
-                  <option value="body" {{#if (eq prof.attribute "body")}}selected{{/if}}>{{localize "FATED.Attribute.Body"}}</option>
-                  <option value="mind" {{#if (eq prof.attribute "mind")}}selected{{/if}}>{{localize "FATED.Attribute.Mind"}}</option>
-                </select>
-              </label>
-              <label>
-                <span>{{localize "FATED.Sheet.Level"}}</span>
-                <input type="number" name="system.proficiencies.{{index}}.level" value="{{prof.level}}" min="0" {{disabled (not @root.editable)}} />
-              </label>
-              <button type="button" data-action="removeProficiency" data-proficiency-key="{{prof.key}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
+              <details data-proficiency-key="{{prof.key}}">
+                <summary>
+                  <span class="proficiency-summary-name">{{prof.displayName}}</span>
+                  <span class="proficiency-summary-attribute">
+                    {{#if (eq prof.attribute "heart")}}{{localize "FATED.Attribute.Heart"}}{{/if}}
+                    {{#if (eq prof.attribute "body")}}{{localize "FATED.Attribute.Body"}}{{/if}}
+                    {{#if (eq prof.attribute "mind")}}{{localize "FATED.Attribute.Mind"}}{{/if}}
+                  </span>
+                  <span class="proficiency-summary-level">{{localize "FATED.Sheet.Level"}} {{prof.level}}</span>
+                </summary>
+                <div class="proficiency-fields">
+                  <label>
+                    <span>{{localize "FATED.Sheet.Display"}}</span>
+                    <input type="text" name="system.proficiencies.{{index}}.displayName" value="{{prof.displayName}}" {{disabled (not @root.editable)}} />
+                  </label>
+                  <label>
+                    <span>{{localize "FATED.Sheet.Key"}} {{#unless @root.canEditProficiencyKeys}}<i class="fas fa-lock proficiency-key-lock" role="img" aria-label="{{localize "FATED.Sheet.LockedKey"}}" title="{{localize "FATED.Sheet.LockedKey"}}"></i>{{/unless}}</span>
+                    <input
+                      type="text"
+                      name="system.proficiencies.{{index}}.key"
+                      value="{{prof.key}}"
+                      data-proficiency-key-input="{{prof.key}}"
+                      {{#unless @root.canEditProficiencyKeys}}readonly{{/unless}}
+                    >
+                  </label>
+                  <label>
+                    <span>{{localize "FATED.Sheet.Attribute"}}</span>
+                    <select name="system.proficiencies.{{index}}.attribute" {{disabled (not @root.editable)}}>
+                      <option value="heart" {{#if (eq prof.attribute "heart")}}selected{{/if}}>{{localize "FATED.Attribute.Heart"}}</option>
+                      <option value="body" {{#if (eq prof.attribute "body")}}selected{{/if}}>{{localize "FATED.Attribute.Body"}}</option>
+                      <option value="mind" {{#if (eq prof.attribute "mind")}}selected{{/if}}>{{localize "FATED.Attribute.Mind"}}</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>{{localize "FATED.Sheet.Level"}}</span>
+                    <input type="number" name="system.proficiencies.{{index}}.level" value="{{prof.level}}" min="0" {{disabled (not @root.editable)}} />
+                  </label>
+                  <button type="button" data-action="removeProficiency" data-proficiency-key="{{prof.key}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
+                </div>
+              </details>
             </li>
           {{/each}}
         </ul>

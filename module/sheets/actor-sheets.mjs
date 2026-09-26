@@ -12,6 +12,7 @@ import { calculateDefense } from "../defense.mjs";
 import { openDamageBookkeeping } from "./damage-bookkeeping.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 import { buildSkillGroups } from "../skills.mjs";
+import { ProficiencySheetMixin, captureProficiencyDetails, restoreProficiencyDetails } from "./proficiency-controls.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
@@ -55,7 +56,11 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
   }
 }
 
-export class FatedActorSheet extends BaseFatedActorSheet {
+export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
+  async _prepareContext(options) {
+    return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable };
+  }
+
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
     actions: {
@@ -77,18 +82,21 @@ export class FatedActorSheet extends BaseFatedActorSheet {
   };
 
   /**
-   * Preserve scroll position across renders.
+   * Preserve scroll position and expanded proficiency rows across renders.
    * Capture before the sheet renders, then restore after rendering.
    */
   async _preRender(context, options) {
-  this._scrollPosition =
-    this.element?.querySelector(".window-content")?.scrollTop ?? 0;
+    this._scrollPosition =
+      this.element?.querySelector(".window-content")?.scrollTop ?? 0;
+    captureProficiencyDetails(this);
 
     await super._preRender(context, options);
   }
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+
+    restoreProficiencyDetails(this);
 
     const scrollContainer = this.element?.querySelector(".window-content");
     if (!scrollContainer || this._scrollPosition === undefined) return;

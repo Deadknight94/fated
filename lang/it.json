@@ -185,6 +185,7 @@
       "CurrentStance": "Posizione Attuale",
       "Display": "Mostra",
       "Key": "Chiave",
+      "LockedKey": "Solo il GM può modificare la chiave in una scheda modificabile.",
       "Attribute": "Attributo",
       "Level": "Livello",
       "NoProficiencies": "Nessuna perizia ancora.",
@@ -376,6 +377,11 @@
       "Settings": "Impostazioni di Foundry"
     },
     "Validation": {
+      "ProficiencyKeyPermission": "Solo il GM può rinominare le chiavi delle competenze in una scheda modificabile.",
+      "ProficiencyKeyPending": "È già in corso una modifica della chiave di una competenza.",
+      "ProficiencyKeyMissing": "La competenza non esiste più. Aggiorna la scheda.",
+      "InvalidProficiencyKey": "Chiave della competenza non valida.",
+      "ProficiencyKeyRecoveryFailed": "La modifica della chiave e il ripristino sono falliti. Controlla le chiavi delle competenze di questo Attore e i riferimenti dei suoi Oggetti.",
       "InvalidProficiency": "Nome della Perizia non valido.",
       "DuplicateProficiency": "La Perizia {key} esiste già.",
       "ActorPermission": "Non puoi modificare questo personaggio.",

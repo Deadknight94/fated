@@ -185,6 +185,7 @@
       "CurrentStance": "Current Stance",
       "Display": "Display",
       "Key": "Key",
+      "LockedKey": "Key editing is restricted to GMs on editable sheets.",
       "Attribute": "Attribute",
       "Level": "Level",
       "NoProficiencies": "No proficiencies yet.",
@@ -376,6 +377,11 @@
       "Settings": "Foundry Settings"
     },
     "Validation": {
+      "ProficiencyKeyPermission": "Only a GM on an editable sheet can rename proficiency keys.",
+      "ProficiencyKeyPending": "A proficiency key change is already in progress.",
+      "ProficiencyKeyMissing": "The proficiency no longer exists. Refresh the sheet.",
+      "InvalidProficiencyKey": "Invalid proficiency key.",
+      "ProficiencyKeyRecoveryFailed": "The proficiency key update and recovery failed. Check this Actor’s proficiency keys and owned Item references.",
       "InvalidProficiency": "Invalid proficiency name.",
       "DuplicateProficiency": "Proficiency {key} already exists.",
       "ActorPermission": "You cannot update this Actor.",

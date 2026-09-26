@@ -300,14 +300,32 @@
 }
 
 .fated .proficiency-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr auto;
-  gap: 0.25rem;
-  align-items: center;
   border: 1px solid var(--fated-border);
   border-radius: 0.25rem;
   padding: 0.25rem;
 }
+
+.fated-actor .proficiency-row summary,
+.fated-mobile .mobile-proficiency-row summary {
+  cursor: pointer;
+  padding: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.fated .proficiency-summary-name { font-weight: bold; }
+.fated .proficiency-summary-attribute,
+.fated .proficiency-summary-level { margin-inline-start: 0.75rem; }
+
+.fated-actor .proficiency-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 0.5rem;
+  align-items: end;
+  padding: 0.5rem;
+}
+
+.fated .proficiency-fields label { min-width: 0; }
+.fated .proficiency-key-lock { font-size: 0.75em; }
 
 /* Mobile‑specific proficiency layout */
 .mobile-proficiencies-grid {
@@ -315,15 +333,19 @@
   gap: 0.5rem;
 }
 .mobile-proficiency-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr auto;
-  gap: 0.25rem;
-  align-items: center;
   border: 1px solid var(--fated-border);
   border-radius: 0.25rem;
   padding: 0.25rem;
 }
 
+.fated-mobile .proficiency-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.fated-mobile .mobile-proficiency-row summary { min-height: 44px; }
 
 
 /* Mobile proficiency layout – single‑column on narrow screens */
@@ -331,7 +353,7 @@
   .mobile-proficiencies-grid {
     grid-template-columns: 1fr;
   }
-  .mobile-proficiency-row {
+  .fated-mobile .proficiency-fields {
     grid-template-columns: 1fr;
     gap: 0.15rem;
   }
