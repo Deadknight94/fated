@@ -1,5 +1,5 @@
 import { uiText, systemMessage } from "../presentation/text.mjs";
-import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView } from "../presentation/labels.mjs";
+import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView, rangeLabel } from "../presentation/labels.mjs";
 import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
 import { equipmentView } from "../equipment.mjs";
 import { toggleEquipment } from "./equipment-controls.mjs";
@@ -209,9 +209,44 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   }
 }
 export class NpcActorSheet extends BaseFatedActorSheet {
+  _npcSection = "stats";
+
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
+    return { ...context,
+      npcSections: ["stats", "actions", "items", "notes"].map(id => ({ id,
+        label: id === "stats" ? game.i18n.localize("FATED.Npc.Stats")
+          : id === "notes" ? game.i18n.localize("FATED.Npc.Notes") : displayLabel("section", id),
+        active: id === this._npcSection })),
+      npcStats: this._npcSection === "stats", npcActions: this._npcSection === "actions",
+      npcItems: this._npcSection === "items", npcNotes: this._npcSection === "notes",
+      actions: this.document.getAvailableActions().map(action => ({ ...action,
+        name: action.name || uiText("Unnamed Action"),
+        classificationLabel: displayLabel("classification", action.classification),
+        attackLabel: action.attackType ? displayLabel("attack", action.attackType) : null,
+        rollLabel: displayLabel("rollRequirement", action.rollRequirement),
+        rangeLabel: action.range && (action.range.min !== null || action.range.max !== null || action.range.units)
+          ? rangeLabel(action.range) : null
+      }))
+    };
+  }
+
+  static async selectNpcSection(event, button) {
+    const section = button.dataset.section;
+    if (!["stats", "actions", "items", "notes"].includes(section)) return;
+    if (this.isEditable) await this.submit();
+    this._npcSection = section;
+    await this.render();
+  }
+
+  static openNpcItem(event, button) {
+    return this.document.items.get(button.dataset.itemId)?.sheet.render(true);
+  }
+
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
     classes: [...super.DEFAULT_OPTIONS.classes, "npc-actor"],
+    actions: { selectNpcSection: NpcActorSheet.selectNpcSection, openNpcItem: NpcActorSheet.openNpcItem },
     window: {
       ...super.DEFAULT_OPTIONS.window,
       title: "FATED.Sheets.Npc"
@@ -222,7 +257,8 @@ export class NpcActorSheet extends BaseFatedActorSheet {
     main: {
       id: "main",
       root: true,
-      template: "systems/fated/templates/actor/npc-sheet.hbs"
+      template: "systems/fated/templates/actor/npc-sheet.hbs",
+      scrollable: [".npc-content"]
     }
   };
 }

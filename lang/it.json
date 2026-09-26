@@ -202,6 +202,7 @@
       "WeaponProficiency": "Perizia con le armi"
     },
     "Npc": {
+      "Stats": "Statistiche",
       "Type": "PNG / Avversario",
       "Resources": "Risorse dell’avversario",
       "ItemsActions": "Oggetti / Azioni",

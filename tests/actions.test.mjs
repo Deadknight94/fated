@@ -159,8 +159,8 @@ test("existing Fated and NPC derived resources are preserved", () => {
   assert.equal(actor.resources.hope.value, -2);
   assert.equal(actor.resources.power, 3);
   assert.deepEqual(actor.toObject(), source);
-  const npc = new NpcDataModel({ resilience: { value: 3, max: 5 }, shadow: 2 });
+  const npc = new NpcDataModel({ resilience: { value: 3, max: 5 }, defense: 2 });
   npc.prepareDerivedData();
   assert.equal(npc.resilience.value, 3);
-  assert.equal(npc.shadow, 2);
+  assert.equal(npc.defense, 2);
 });

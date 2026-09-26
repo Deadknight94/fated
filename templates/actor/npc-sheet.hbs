@@ -8,8 +8,15 @@
     </div>
   </header>
 
+  <nav class="npc-navigation">
+    {{#each npcSections}}
+      <button type="button" data-action="selectNpcSection" data-section="{{id}}" aria-pressed="{{active}}">{{label}}</button>
+    {{/each}}
+  </nav>
+  <div class="npc-content">
+  {{#if npcStats}}
   <section class="panel">
-    <h2>{{localize "FATED.Npc.Resources"}}</h2>
+    <h2>{{localize "FATED.Npc.Stats"}}</h2>
     <div class="resource-grid">
       <label>{{localize "FATED.Resource.Resilience"}}
         <span class="resource-pair">
@@ -18,18 +25,40 @@
           <input type="number" name="system.resilience.max" value="{{system.resilience.max}}" min="0" {{disabled (not editable)}}>
         </span>
       </label>
-      <label>{{localize "FATED.Resource.Shadow"}} <input type="number" name="system.shadow" value="{{system.shadow}}" min="0" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Combat.Defense"}} <input type="number" name="system.defense" value="{{system.defense}}" min="0" {{disabled (not editable)}}></label>
     </div>
   </section>
 
+  {{/if}}
+  {{#if npcActions}}
+  <section class="panel npc-actions">
+    {{#each actions}}
+      <article class="npc-action">
+        <h3>{{name}}</h3>
+        <button type="button" data-action="openNpcItem" data-item-id="{{source.itemId}}">{{source.itemName}}</button>
+        <dl>
+          <dt>{{localize "FATED.Action.Classification"}}</dt><dd>{{classificationLabel}}</dd>
+          {{#if attackLabel}}<dt>{{localize "FATED.Item.AttackType"}}</dt><dd>{{attackLabel}}</dd>{{/if}}
+          {{#if rangeLabel}}<dt>{{localize "FATED.Action.Range"}}</dt><dd>{{rangeLabel}}</dd>{{/if}}
+          <dt>{{localize "FATED.Action.RollRequirement"}}</dt><dd>{{rollLabel}}</dd>
+        </dl>
+        {{#if effect}}<p class="npc-rules">{{effect}}</p>{{/if}}
+        {{#if rules}}<p class="npc-rules">{{rules}}</p>{{/if}}
+      </article>
+    {{else}}
+      <p class="muted">{{localize "FATED.Item.NoActions"}}</p>
+    {{/each}}
+  </section>
+  {{/if}}
+  {{#if npcItems}}
   <section class="panel inventory">
-    <h2>{{localize "FATED.Npc.ItemsActions"}}</h2>
+    <h2>{{localize "FATED.Sheet.Items"}}</h2>
     {{#if items.length}}
       <ul class="item-list">
         {{#each items as |item|}}
           <li class="item-row draggable" data-item-id="{{item.id}}">
             <img src="{{item.img}}" alt="">
-            <span>{{item.name}}</span>
+            <button type="button" data-action="openNpcItem" data-item-id="{{item.id}}">{{item.name}}</button>
             <small>{{item.typeLabel}}</small>
           </li>
         {{/each}}
@@ -39,8 +68,12 @@
     {{/if}}
   </section>
 
+  {{/if}}
+  {{#if npcNotes}}
   <section class="panel">
     <h2>{{localize "FATED.Npc.Notes"}}</h2>
     <textarea name="system.description" rows="10" {{disabled (not editable)}}>{{system.description}}</textarea>
   </section>
+  {{/if}}
+  </div>
 </div>

@@ -186,7 +186,7 @@ export class NpcDataModel extends foundry.abstract.TypeDataModel {
     return {
       description: new HTMLField({ required: false, nullable: false, initial: "" }),
       resilience: resourceField(),
-      shadow: int(0, 0)
+      defense: int(0, 0)
     };
   }
 
