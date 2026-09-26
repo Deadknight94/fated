@@ -185,6 +185,11 @@ export class NpcDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
       description: new HTMLField({ required: false, nullable: false, initial: "" }),
+      attributes: new SchemaField({
+        heart: int(0, 0),
+        body: int(0, 0),
+        mind: int(0, 0)
+      }),
       resilience: resourceField(),
       defense: int(0, 0)
     };

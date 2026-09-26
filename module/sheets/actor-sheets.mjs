@@ -34,6 +34,21 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
     }
   };
 
+  /**
+   * Remove an owned Item from the Actor.
+   * Uses the stable document id from the data-item-id attribute.
+   * Only deletes the embedded document; world items remain untouched.
+   * Respect this.isEditable.
+   */
+  static async removeItem(event, button) {
+    if (!this.isEditable) return;
+    await this.submit();
+    const id = button.dataset.itemId;
+    if (!id) return;
+    // deleteEmbeddedDocuments expects an array of ids
+    await this.document.deleteEmbeddedDocuments("Item", [id]);
+  }
+
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const skills = this.document.type === "fated"
@@ -192,21 +207,6 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       "system.proficiencies": updated
     });
   }
-
-  /**
-   * Remove an owned Item from the Actor.
-   * Uses the stable document id from the data-item-id attribute.
-   * Only deletes the embedded document; world items remain untouched.
-   * Respect this.isEditable.
-   */
-  static async removeItem(event, button) {
-    if (!this.isEditable) return;
-    await this.submit();
-    const id = button.dataset.itemId;
-    if (!id) return;
-    // deleteEmbeddedDocuments expects an array of ids
-    await this.document.deleteEmbeddedDocuments("Item", [id]);
-  }
 }
 export class NpcActorSheet extends BaseFatedActorSheet {
   _npcSection = "stats";
@@ -246,7 +246,7 @@ export class NpcActorSheet extends BaseFatedActorSheet {
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
     classes: [...super.DEFAULT_OPTIONS.classes, "npc-actor"],
-    actions: { selectNpcSection: NpcActorSheet.selectNpcSection, openNpcItem: NpcActorSheet.openNpcItem },
+    actions: { removeItem: NpcActorSheet.removeItem, selectNpcSection: NpcActorSheet.selectNpcSection, openNpcItem: NpcActorSheet.openNpcItem },
     window: {
       ...super.DEFAULT_OPTIONS.window,
       title: "FATED.Sheets.Npc"

@@ -17,6 +17,12 @@
   {{#if npcStats}}
   <section class="panel">
     <h2>{{localize "FATED.Npc.Stats"}}</h2>
+    <h3>{{localize "FATED.Sheet.PrimaryAttributes"}}</h3>
+    <div class="stat-grid three">
+      <label>{{localize "FATED.Attribute.Heart"}} <input type="number" name="system.attributes.heart" value="{{system.attributes.heart}}" min="0" step="1" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Attribute.Body"}} <input type="number" name="system.attributes.body" value="{{system.attributes.body}}" min="0" step="1" {{disabled (not editable)}}></label>
+      <label>{{localize "FATED.Attribute.Mind"}} <input type="number" name="system.attributes.mind" value="{{system.attributes.mind}}" min="0" step="1" {{disabled (not editable)}}></label>
+    </div>
     <div class="resource-grid">
       <label>{{localize "FATED.Resource.Resilience"}}
         <span class="resource-pair">
@@ -60,6 +66,9 @@
             <img src="{{item.img}}" alt="">
             <button type="button" data-action="openNpcItem" data-item-id="{{item.id}}">{{item.name}}</button>
             <small>{{item.typeLabel}}</small>
+            {{#if @root.editable}}
+              <button type="button" data-action="removeItem" data-item-id="{{item.id}}">{{localize "FATED.Sheet.Remove"}}</button>
+            {{/if}}
           </li>
         {{/each}}
       </ul>
