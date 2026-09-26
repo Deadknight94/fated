@@ -139,6 +139,7 @@ const keys = {
   "Heart": "FATED.Attribute.Heart",
   "Mind": "FATED.Attribute.Mind",
   "Body": "FATED.Attribute.Body",
+  "Foundry settings": "FATED.Companion.Settings",
   "Invalid proficiency name.": "FATED.Validation.InvalidProficiency",
   "Proficiency {key} already exists.": "FATED.Validation.DuplicateProficiency",
   "You cannot update this Actor.": "FATED.Validation.ActorPermission",

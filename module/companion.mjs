@@ -32,8 +32,13 @@ export function initializeCompanionMode() {
   let pending = Promise.resolve();
   const menu = document.createElement("details");
   menu.className = "fated-companion-menu";
-  menu.innerHTML = `<summary>${uiText("Companion menu")}</summary><button type="button" data-companion="return">${uiText("Open character interface")}</button><button type="button" data-companion="refresh">${uiText("Refresh / reconnect")}</button><button type="button" data-companion="logout">${uiText("Log out")}</button>`;
-
+  menu.innerHTML = `
+    <summary>${uiText("Companion menu")}</summary>
+    <button type="button" data-companion="return">${uiText("Open character interface")}</button>
+    <button type="button" data-companion="settings">${uiText("Foundry settings")}</button>
+    <button type="button" data-companion="refresh">${uiText("Refresh / reconnect")}</button>
+    <button type="button" data-companion="logout">${uiText("Log out")}</button>
+  `;
   async function synchronize() {
     if (game.user.isGM) {
       active = false;
@@ -76,6 +81,11 @@ export function initializeCompanionMode() {
     }
     if (action === "refresh") window.location.reload();
     if (action === "logout") game.logOut();
+    if (action === "settings") {
+      menu.open = false;
+      await game.settings.sheet.render({ force: true });
+      game.settings.sheet.bringToFront?.();
+    }
   });
   window.addEventListener("resize", refresh);
   // Core Escape opens a modal menu inside the suppressed interface, making the shell inert.

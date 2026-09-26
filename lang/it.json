@@ -372,7 +372,8 @@
       "Error": "Impossibile aprire la modalità di accompagnamento. Usa Ricarica / riconnetti nel menu di accompagnamento.",
       "NoCharacter": "Nessun personaggio Fated è assegnato al tuo utente. Chiedi al GM di assegnarlo nella configurazione utenti di Foundry.",
       "WrongType": "Il personaggio assegnato ({name}) non è un Fated. La modalità di accompagnamento supporta solo personaggi Fated.",
-      "NoPermission": "Il personaggio Fated assegnato non è disponibile. Chiedi al GM di controllare i tuoi permessi sul personaggio."
+      "NoPermission": "Il personaggio Fated assegnato non è disponibile. Chiedi al GM di controllare i tuoi permessi sul personaggio.",
+      "Settings": "Impostazioni di Foundry"
     },
     "Validation": {
       "InvalidProficiency": "Nome della Perizia non valido.",

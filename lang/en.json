@@ -372,7 +372,8 @@
       "Error": "Companion Mode could not open. Use Refresh / reconnect in the Companion menu.",
       "NoCharacter": "No Fated character is assigned to your User. Ask the GM to assign your character in Foundry's User configuration.",
       "WrongType": "Your assigned character ({name}) is not a Fated Actor. Companion Mode supports Fated characters only.",
-      "NoPermission": "Your assigned Fated character is unavailable. Ask the GM to check your Actor permissions."
+      "NoPermission": "Your assigned Fated character is unavailable. Ask the GM to check your Actor permissions.",
+      "Settings": "Foundry Settings"
     },
     "Validation": {
       "InvalidProficiency": "Invalid proficiency name.",
