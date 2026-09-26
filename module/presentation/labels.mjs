@@ -29,10 +29,10 @@ export function skillGroupsView(groups, i18n) {
 
 export function localizedHealth(view, i18n) {
   if (!view) return view;
-  const adjustments = { overburdened: " (+1)", exhausted: " (+1)", inspired: " (−1)", despondent: " (+1)" };
+  const adjustments = { overburdened: " (+1)", exhausted: " (+1)", inspired: " (−2)", despondent: " (+1)" };
   return { ...view, woundLabel: displayLabel("wound", view.severity, i18n),
-    conditions: ["overburdened", "exhausted", "inspired", "despondent", "broken", "incapacitated", "dead"]
-      .filter(key => view[key]).map(key => displayLabel("condition", key, i18n) + (adjustments[key] ?? "")) };
+    conditions: [...(view.hopeThresholdModifier === -1 ? [uiText("Hope", {}, i18n) + " (−1)"] : []), ...["overburdened", "exhausted", "inspired", "despondent", "broken", "incapacitated", "dead"]
+      .filter(key => view[key]).map(key => displayLabel("condition", key, i18n) + (adjustments[key] ?? ""))] };
 }
 
 export function localizedEquipment(view, i18n) {
@@ -46,6 +46,7 @@ export function modifierLabel(modifier, i18n) {
   if (source?.type === "stance") return uiText("{stance} stance", { stance: displayLabel("stance", source.stance, i18n) }, i18n);
   if (source?.type === "declaration" && modifier.id === "multi-action") return uiText("Multi-Action", {}, i18n);
   if (source?.type === "actor-state") {
+    if (source.condition === "hope") return uiText("Hope", {}, i18n);
     return source.condition === "wounds" ? displayLabel("wound", modifier.value, i18n)
       : displayLabel("condition", source.condition, i18n);
   }

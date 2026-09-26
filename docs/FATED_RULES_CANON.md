@@ -62,8 +62,10 @@ A Fated whose current Load exceeds its current Endurance becomes Overburdened. A
 
 ## Hope
 
-A Fated whose current Hope equals their positive Hope Limit becomes Inspired and gains a bonus of 1 to their Success Threshold. Conversely, a Fated whose current Hope equals their negative Hope Limit becomes Despondent and suffers a penalty of 1 to their Success Threshold. Hope cannot move beyond either limit; any excess Hope gained above the positive Hope Limit or lost below the negative Hope Limit is discarded.
-*I.e Dargon is Inspired. His next Skill Roll will score successes on 3+. Later on, Dragon suffers a Light Wound, but doesn’t lose any hope. His Skill Rolls succeed on a 4+. Even later on, after seeing a loved one die, Dargon's Hope falls to his negative Hope Limit, making him Despondent. His Skill Rolls now succeed on 6+.*
+For a Fated with a positive Hope Limit, current Hope greater than 0 grants a bonus of 1 to Success Threshold, reducing the threshold by 1. At the positive Hope Limit, the Fated becomes Inspired and the total Hope bonus increases to 2, reducing Success Threshold by 2. These are tiers of one modifier and do not stack. A Fated whose current Hope equals their negative Hope Limit becomes Despondent and suffers a penalty of 1 to Success Threshold. Negative Hope above the negative Hope Limit and Hope exactly 0 have no Success Threshold effect. With Hope Limit 0, neither Inspired nor Despondent applies and there is no Hope modifier. Hope cannot move beyond either limit; any excess Hope gained above the positive Hope Limit or lost below the negative Hope Limit is discarded.
+
+All normal Success Threshold modifiers remain cumulative, including Wounds, Load, Exhaustion, stance, Multi-Action, and equipment. There is no Success Threshold floor or ceiling. A natural 6 remains a Critical Success regardless of the final Success Threshold.
+*For example, with base Success Threshold 4, Dargon succeeds on 3+ while Hope is positive but below maximum, and on 2+ when Inspired. After suffering a Light Wound while still Inspired, his rolls succeed on 3+. If his Hope then falls to the negative Hope Limit, he becomes Despondent and succeeds on 6+ including the Light Wound. Without the wound, negative Hope above minimum or Hope 0 gives 4+, and minimum Hope gives 5+.*
 
 ## Power
 

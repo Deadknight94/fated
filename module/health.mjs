@@ -15,13 +15,14 @@ export function deriveHealth(system) {
   const exhausted = endurance === 0;
   const inspired = limit > 0 && hope === limit;
   const despondent = limit > 0 && hope === -limit;
+  const hopeThresholdModifier = inspired ? -2 : limit > 0 && hope > 0 ? -1 : despondent ? 1 : 0;
   const broken = exhausted && despondent;
   const deathsDoor = severity === 3;
   const dead = severity >= 4 || system.health?.dead === true;
   const stabilized = deathsDoor && system.health?.stabilized === true;
   const incapacitated = deathsDoor || broken;
   return { severity, woundLabel: WOUND_LABELS[severity], overburdened, exhausted, inspired, despondent,
-    broken, deathsDoor, dead, stabilized, incapacitated };
+    hopeThresholdModifier, broken, deathsDoor, dead, stabilized, incapacitated };
 }
 
 /** Only new causes reached while already incapacitated trigger second-incapacitation death. */
@@ -56,8 +57,7 @@ export function actorStateModifiers(actor) {
   }
   if (state.overburdened) add("overburdened", "Overburdened", 1);
   if (state.exhausted) add("exhausted", "Exhausted", 1);
-  if (state.inspired) add("inspired", "Inspired", -1);
-  if (state.despondent) add("despondent", "Despondent", 1);
+  if (state.hopeThresholdModifier) add("hope", "Hope", state.hopeThresholdModifier);
   return { successThreshold: modifiers };
 }
 
@@ -119,6 +119,8 @@ export function healthView(actor, { isGM = false } = {}) {
     canDecreaseWound: actor.isOwner && state.severity > 0,
     canIncreaseWound: actor.isOwner && state.severity < 4,
     conditions: [state.overburdened && "Overburdened (+1)", state.exhausted && "Exhausted (+1)",
-      state.inspired && "Inspired (−1)", state.despondent && "Despondent (+1)", state.broken && "Broken",
+      state.inspired && "Inspired (−2)",
+      state.hopeThresholdModifier === -1 && "Hope (−1)",
+      state.despondent && "Despondent (+1)", state.broken && "Broken",
       state.incapacitated && "Incapacitated", state.dead && "Dead"].filter(Boolean) };
 }

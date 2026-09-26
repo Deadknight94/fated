@@ -10,7 +10,7 @@ Target: Foundry VTT 14.367. This milestone does not calculate attack damage or a
 
 ## Modifier and planner integration
 
-The Actor-state modifier provider returns separate labelled Threshold entries with Actor and condition provenance: Light +1, Grievous +2, Overburdened +1, Exhausted +1, Inspired −1, Despondent +1. There is no wound modifier for severity 3/4. Actor Action cards and editable declarations use this provider, while the existing universal base 4, Action modifiers and Multi-Action remain separate. Locking freezes the full calculation/modifier breakdown as before.
+The Actor-state modifier provider returns separate labelled Threshold entries with Actor and condition provenance: Light +1, Grievous +2, Overburdened +1, Exhausted +1, one Hope entry (positive Hope −1, Inspired −2, Despondent +1). There is no wound modifier for severity 3/4. Actor Action cards and editable declarations use this provider, while the existing universal base 4, Action modifiers and Multi-Action remain separate. Locking freezes the full calculation/modifier breakdown as before.
 
 An Incapacitated or Dead Actor cannot lock a normal declaration. Editing and existing snapshots are preserved; clearing remains allowed. Both the declaration service/evaluator and TypeDataModel pre-update lifecycle check locking. Existing locked snapshots are not recalculated after health changes.
 

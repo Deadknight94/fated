@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { modifierLabel, localizedHealth } from "../module/presentation/labels.mjs";
 await import(pathToFileURL(resolve(process.env.FOUNDRY_APP_PATH ?? resolve(process.env.LOCALAPPDATA ?? ".", "Programs/Foundry Virtual Tabletop/resources/app"), "common/server.mjs")));
 const { FatedDataModel } = await import("../module/data-models.mjs");
 const { ActionDataModel } = await import("../module/actions/action-model.mjs");
@@ -67,8 +69,80 @@ test("Inspired/Despondent use exact Hope boundaries and require a positive Hope 
   const s = deriveHealth(a.system);
   assert.equal(s.inspired, false); assert.equal(s.despondent, false);
   assert.deepEqual(actorStateModifiers(a).successThreshold, []);
-  assert.equal(calculateActorAction(actor({ resources: { hope: { value: 6 } } }), action()).successThreshold.total, 3);
+  assert.equal(calculateActorAction(actor({ resources: { hope: { value: 6 } } }), action()).successThreshold.total, 2);
   assert.equal(calculateActorAction(actor({ resources: { hope: { value: -6 } } }), action()).successThreshold.total, 5);
+});
+
+for (const [hope, total] of [[0, 4], [1, 3], [3, 3], [5, 3], [6, 2], [-1, 4], [-5, 4], [-6, 5]]) {
+  test(`Hope ${hope}: base 4 becomes ${total}, with exactly one applicable Hope tier`, () => {
+    const a = actor({ resources: { hope: { value: hope } } });
+    const before = a.system.toObject();
+    const state = deriveHealth(a.system);
+    const result = calculateActorAction(a, action());
+    assert.equal(result.successThreshold.total, total);
+    assert.equal(state.inspired, hope === 6);
+    assert.equal(state.despondent, hope === -6);
+    assert.deepEqual(result.successThreshold.modifiers.map(m => [m.source.condition, m.value]),
+      total === 4 ? [] : [["hope", total - 4]]);
+    assert.equal(result.successDice.total, 4);
+    assert.deepEqual(a.system.toObject(), before);
+    assert.equal(a.updates.length, 0);
+  });
+}
+
+test("Hope stacks with Light Wounds, other actor states and Multi-Action without duplication", () => {
+  for (const [hope, bonus] of [[1, -1], [6, -2]]) {
+    const a = actor({ health: { woundSeverity: 1 }, resources: { hope: { value: hope } } });
+    assert.equal(calculateActorAction(a, action()).successThreshold.total, 5 + bonus);
+    const b = actor({ health: { woundSeverity: 1 }, load: 1,
+      resources: { hope: { value: hope }, endurance: { value: 0 } },
+      declaration: { stance: "neutral", entries: [entry("a"), entry("b")] } });
+    const threshold = getDeclarationEvaluation(b).entries[0].calculation.successThreshold;
+    assert.equal(threshold.total, 8 + bonus);
+    assert.equal(threshold.modifiers.filter(m => m.source.condition === "hope").length, 1);
+  }
+});
+
+test("Hope has no floor/ceiling, zero-limit bonus or NPC effect; out-of-range Hope stays clamped", () => {
+  for (const [hope, expected] of [[99, -2], [-99, 1]]) {
+    const a = actor({ resources: { hope: { value: hope } } });
+    assert.equal(deriveHealth(a.system).hopeThresholdModifier, expected);
+    for (const value of [-10, 10]) {
+      assert.equal(calculateActorAction(a, action(), { successThreshold: [{ value }] }).successThreshold.total, 4 + expected + value);
+    }
+    a.type = "npc";
+    assert.deepEqual(actorStateModifiers(a).successThreshold, []);
+  }
+  const a = actor({ attributes: { heart: 0, mind: 0 }, resources: { hope: { value: 1 } } });
+  assert.equal(deriveHealth(a.system).hopeThresholdModifier, 0);
+  assert.equal(calculateActorAction(a, action()).successThreshold.total, 4);
+});
+
+test("Hope provenance and localized Action/Turn labels survive locking; conditions show the right tier", async () => {
+  const previousGame = globalThis.game;
+  try {
+    for (const [language, hopeLabel, inspiredLabel] of [["en", "Hope", "Inspired"], ["it", "Speranza", "Ispirato"]]) {
+      const strings = JSON.parse(readFileSync(new URL(`../lang/${language}.json`, import.meta.url), "utf8"));
+      globalThis.game = { user: { id: "test" }, i18n: { localize: key => key.split(".").reduce((value, part) => value?.[part], strings) ?? key } };
+      for (const [hope, bonus] of [[1, -1], [6, -2], [-6, 1]]) {
+        const a = actor({ resources: { hope: { value: hope } }, declaration: { stance: "neutral", entries: [entry("a")] } });
+        const modifier = calculateActorAction(a, action()).successThreshold.modifiers[0];
+        assert.deepEqual(modifier.source, { type: "actor-state", actorId: "test", actorUuid: "Actor.test", condition: "hope" });
+        assert.equal(modifierLabel(modifier), hopeLabel);
+        assert.equal(modifierLabel({ label: "Custom Hope", source: { type: "item", condition: "hope" } }), "Custom Hope");
+        if (hope > 0) assert.ok(localizedHealth(healthView(a)).conditions.includes(`${hope === 6 ? inspiredLabel : hopeLabel} (−${Math.abs(bonus)})`));
+        await updateDeclaration(a, 0, { type: "lock" });
+        await a.update({ "system.resources.hope.value": 0 });
+        const locked = getDeclarationEvaluation(a).entries[0].calculation.successThreshold;
+        assert.equal(locked.total, 4 + bonus);
+        assert.equal(modifierLabel(locked.modifiers[0]), hopeLabel);
+      }
+    }
+    const mobile = readFileSync(new URL("../module/sheets/mobile-sheet.mjs", import.meta.url), "utf8");
+    assert.match(mobile, /label: modifierLabel\(modifier\)/);
+    assert.match(mobile, /threshold: breakdownView\(calculation.successThreshold\)/);
+    assert.match(mobile, /breakdownView\(entry.calculation.successThreshold\)/);
+  } finally { globalThis.game = previousGame; }
 });
 
 test("Hope Limit zero with Endurance zero is Exhausted but not Broken", () => {
