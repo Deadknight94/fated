@@ -2,12 +2,20 @@
   <h2>{{localize "FATED.Common.Turn"}} · {{#if planner.locked}}{{localize "FATED.Planner.Locked"}}{{else}}{{localize "FATED.Planner.Editing"}}{{/if}}</h2>
   {{#if planner.locked}}
     <p class="turn-stance">{{planner.stanceLabel}}</p>
+    <p>{{localize "FATED.Planner.EndurancePush"}}: {{planner.enduranceSpend}}</p>
     <p class="mobile-note">{{localize "FATED.Planner.FrozenHint"}}</p>
   {{else}}
     <h3>{{localize "FATED.Planner.ChooseStance"}}</h3>
     <div class="turn-stance-buttons" role="group" aria-label="{{localize "FATED.Common.Stance"}}">
       {{#each planner.stances}}
       <button type="button" data-action="planner" data-operation="stance" data-stance="{{value}}" aria-pressed="{{selected}}" {{disabled (not @root.editable)}}>{{label}}</button>
+      {{/each}}
+    </div>
+    <h3>{{localize "FATED.Planner.EndurancePush"}}</h3>
+    <p class="mobile-note">{{localize "FATED.Planner.EndurancePushHint"}}</p>
+    <div class="turn-stance-buttons" role="group" aria-label="{{localize "FATED.Planner.EndurancePush"}}">
+      {{#each planner.enduranceOptions}}
+      <button type="button" data-action="planner" data-operation="endurance-spend" data-endurance-spend="{{value}}" aria-pressed="{{selected}}" {{disabled (or disabled (not @root.editable))}}>{{value}}</button>
       {{/each}}
     </div>
     <h3>{{localize "FATED.Planner.DeclareSequence"}}</h3>

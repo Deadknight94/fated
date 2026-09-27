@@ -1,6 +1,6 @@
 import { calculateActionFromActorData } from "./actions/actions.mjs";
 import { normalizeWoundCare } from "./wound-care.mjs";
-import { clampHope } from "./resources.mjs";
+import { adjustResource, clampHope } from "./resources.mjs";
 
 export const WOUND_LABELS = ["Healthy", "Light Wound", "Grievous Wound", "Death's Door", "Dead"];
 
@@ -90,9 +90,31 @@ export async function applyWounds(actor, wounds) {
   const projection = projectWounds(actor.system.health, wounds);
   if (projection.woundSeverity === actor.system.health.woundSeverity && !projection.treatmentReopened) return false;
   const changes = { "system.health.woundSeverity": projection.woundSeverity };
+  const hope = actor.system.resources.hope.value;
+  const loss = projection.woundSeverity === 1 ? Math.max(1, Math.ceil(hope / 2))
+    : projection.woundSeverity === 2 ? Math.ceil((actor.system.attributes.heart + actor.system.attributes.mind) / 2) : 0;
+  if (loss) changes["system.resources.hope.value"] = clampHope(hope - loss, actor.system.attributes);
   if (projection.treatmentReopened) changes["system.health.woundCare"] = projection.woundCare;
   await actor.update(changes);
   return true;
+}
+
+/** Explicit witnesses only: call once per witness per simultaneous Wound event. */
+export async function applyWitnessedWoundHopeLoss(actor, resultingSeverity) {
+  if (actor.type !== "fated" || !actor.isOwner || ![1, 2, 3].includes(resultingSeverity)) return false;
+  const hope = actor.system.resources.hope.value;
+  const value = clampHope(hope - resultingSeverity, actor.system.attributes);
+  if (value === hope) return false;
+  await actor.update({ "system.resources.hope.value": value });
+  return true;
+}
+
+/** One elapsed combat round or out-of-combat hour; caller owns timing, never both. */
+export async function applyDeathsDoorDrain(actor) {
+  if (actor.type !== "fated" || !actor.isOwner) return false;
+  const state = getActorHealth(actor);
+  if (!state.deathsDoor || state.stabilized || state.dead) return false;
+  return adjustResource(actor, state.exhausted ? "hope" : "endurance", -1);
 }
 
 /** Manual bookkeeping only; no recovery, timed drain or resurrection. */

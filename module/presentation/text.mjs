@@ -1,5 +1,9 @@
 /** UI-only English source text to localization keys. Never apply to user-authored text. */
 const keys = {
+  "Endurance Push": "FATED.Planner.EndurancePush",
+  "Choose 0, 1 or 2 Endurance.": "FATED.Planner.EnduranceSpendRange",
+  "Not enough Endurance for this turn.": "FATED.Planner.EnduranceSpendInsufficient",
+  "Endurance spend exceeds the remaining Wound penalty.": "FATED.Planner.EnduranceSpendExcess",
   "Companion Mode could not open. Use Refresh / reconnect in the Companion menu.": "FATED.Companion.Error",
   "Log out": "FATED.Companion.Logout",
   "Refresh / reconnect": "FATED.Companion.Refresh",

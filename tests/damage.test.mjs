@@ -208,7 +208,9 @@ for (const wounds of [0, 1, 2, 3]) {
       assert.equal(mods.some(m => m.source.condition === "treated"), false);
       assert.deepEqual(target.updates[0]["system.health.woundCare"], expectedCare);
     }
-    assert.deepEqual(target.system.toObject().resources, before.resources);
+    const expectedResources = structuredClone(before.resources);
+    if (wounds === 1) expectedResources.hope.value -= 3; // Reopened Grievous Wound event.
+    assert.deepEqual(target.system.toObject().resources, expectedResources);
     assert.deepEqual(target.system.toObject().declaration, before.declaration);
   });
 }

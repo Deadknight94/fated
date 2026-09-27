@@ -8,6 +8,7 @@ import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
+import { enduranceSpendOptions } from "../declaration/endurance-push.mjs";
 import { adjustResource } from "../resources.mjs";
 import { calculateDefense, actionDamage } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
@@ -106,6 +107,8 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
       };
     });
     const planner = { ...evaluation, revision: declaration.revision, stanceLabel: displayLabel("stance", declaration.stance),
+      enduranceSpend: evaluation.locked ? evaluation.enduranceSpend : declaration.enduranceSpend,
+      enduranceOptions: enduranceSpendOptions(this.document, declaration.enduranceSpend),
       issues: declarationIssuesView(evaluation),
       stanceChosen: Boolean(declaration.stance),
       stances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === declaration.stance })),
@@ -166,10 +169,10 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
   static async planner(event, button) {
     if (!this.isEditable || this.plannerPending) return;
     const revision = Number(button.closest("[data-declaration-revision]").dataset.declarationRevision);
-    const { operation: type, stance, kind, itemId, actionId, entryId, direction } = button.dataset;
+    const { operation: type, stance, kind, itemId, actionId, entryId, direction, enduranceSpend } = button.dataset;
     this.plannerPending = true;
     try {
-      await updateDeclaration(this.document, revision, { type, stance, kind, itemId, actionId, entryId, direction: Number(direction) });
+      await updateDeclaration(this.document, revision, { type, stance, kind, itemId, actionId, entryId, direction: Number(direction), enduranceSpend: Number(enduranceSpend) });
     } catch (error) {
       ui.notifications.warn(systemMessage(error.message));
     } finally {

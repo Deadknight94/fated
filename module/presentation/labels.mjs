@@ -43,6 +43,7 @@ export function localizedEquipment(view, i18n) {
 /** Only system provenance authorizes translation; custom Item/Action modifier labels stay verbatim. */
 export function modifierLabel(modifier, i18n) {
   const source = modifier.source;
+  if (source?.type === "declaration" && source.condition === "wound-suppression" && modifier.id === "endurance-push") return uiText("Endurance Push", {}, i18n);
   if (source?.type === "stance") return uiText("{stance} stance", { stance: displayLabel("stance", source.stance, i18n) }, i18n);
   if (source?.type === "declaration" && modifier.id === "multi-action") return uiText("Multi-Action", {}, i18n);
   if (source?.type === "actor-state") {

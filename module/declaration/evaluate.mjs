@@ -1,5 +1,6 @@
 import { calculateActionFromActorData } from "../actions/actions.mjs";
 import { healthLockIssue } from "../health.mjs";
+import { enduranceSpendIssue } from "./endurance-push.mjs";
 
 export const DECLARATION_VERSION = 1;
 export const DECLARATION_STANCES = ["neutral", "offensive", "defensive", "ranged"];
@@ -48,12 +49,14 @@ export function powerActionAdditionIssue(action, { mainCount, powerCount }) {
 }
 
 export function freshDeclaration(stance = "", revision = 0) {
-  return { version: DECLARATION_VERSION, revision, status: "editing", stance, entries: [], snapshot: null, completed: [] };
+  return { version: DECLARATION_VERSION, revision, status: "editing", stance, enduranceSpend: 0, entries: [], snapshot: null, completed: [] };
 }
 
 /** Legality is separate from owned + enabled availability. No map or target inputs. */
 export function evaluateDeclaration(declaration, actions, attributes = {}, additionalModifiers = () => ({}), actorState = null) {
   const issues = [];
+  const spendIssue = enduranceSpendIssue(declaration.enduranceSpend ?? 0, attributes);
+  if (spendIssue) issues.push({ code: "endurance-spend", message: spendIssue, entryId: null, incomplete: false });
   const issue = (code, message, entryId = null, incomplete = false) => issues.push({ code, message, entryId, incomplete });
   const healthIssue = healthLockIssue(actorState);
   if (healthIssue) issue("incapacitated", healthIssue);
@@ -137,7 +140,7 @@ export function lockDeclaration(declaration, actions, attributes, { userId = "",
   const result = evaluateDeclaration(declaration, actions, attributes, additionalModifiers, actorState);
   if (!result.canLock) throw new Error(result.issues.map(i => i.message).join("\n"));
   const snapshot = { version: DECLARATION_VERSION, stance: declaration.stance, lockedAt: now, lockedBy: userId,
-    mainCount: result.mainCount, multiActionPenalty: result.multiActionPenalty,
+    mainCount: result.mainCount, multiActionPenalty: result.multiActionPenalty, enduranceSpend: declaration.enduranceSpend ?? 0,
     entries: result.entries.map(entry => ({ id: entry.id, kind: entry.kind, itemId: entry.itemId, actionId: entry.actionId,
       movementHexes: entry.kind === "movement" ? 3 : null,
       action: entry.action ?? null, calculation: entry.calculation ?? null })) };
@@ -156,6 +159,10 @@ export function editDeclaration(declaration, operation, { id } = {}) {
   }
   if (next.status !== "editing") throw new Error("End this declaration before editing the next turn.");
   switch (operation.type) {
+    case "endurance-spend":
+      if (!Number.isInteger(operation.enduranceSpend) || operation.enduranceSpend < 0 || operation.enduranceSpend > 2) throw new Error("Choose 0, 1 or 2 Endurance.");
+      next.enduranceSpend = operation.enduranceSpend;
+      break;
     case "stance":
       if (!DECLARATION_STANCES.includes(operation.stance)) throw new Error("Unknown stance.");
       next.stance = operation.stance;

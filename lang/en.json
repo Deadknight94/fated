@@ -90,7 +90,7 @@
       "MarkUnstabilized": "Mark unstabilized",
       "MarkStabilized": "Mark stabilized",
       "StabilizationStops": "Stabilization stops Death's Door drain. Wound severity stays 3; Incapacitation remains.",
-      "UnstabilizedLose": "Unstabilized: lose 1 Endurance AND 1 Hope each combat round, or each hour outside combat. If already Exhausted, Endurance loss becomes another Hope loss (total −2 Hope). Apply manually; no timed drain is automated.",
+      "UnstabilizedLose": "Unstabilized: lose 1 Endurance each combat round, or each hour outside combat. If already Exhausted, lose 1 Hope instead. Apply manually; no timed drain is automated.",
       "Broken": "Broken",
       "IncapacitatedUntil": "Incapacitated until no longer Despondent or no longer Exhausted",
       "BrokenCausesNo": "Broken itself causes no Death's Door drain",
@@ -255,6 +255,11 @@
       "ProficiencyHint": "Stable proficiency key used to look up the character's proficiency level."
     },
     "Planner": {
+      "EndurancePush": "Endurance Push",
+      "EndurancePushHint": "Spend Endurance when locking to suppress only Wound penalties for this turn. Other penalties still apply.",
+      "EnduranceSpendRange": "Choose 0, 1 or 2 Endurance.",
+      "EnduranceSpendInsufficient": "Not enough Endurance for this turn.",
+      "EnduranceSpendExcess": "Endurance spend exceeds the remaining Wound penalty.",
       "Locked": "Locked",
       "Editing": "Editing",
       "FrozenHint": "Declared values are frozen. Check off entries as you resolve them at the table.",

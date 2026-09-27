@@ -5,6 +5,7 @@ const text = () => new StringField({ required: true, nullable: false, initial: "
 const integer = (initial = 0) => new NumberField({ required: true, nullable: false, integer: true, min: 0, initial });
 const optionalNumber = () => new NumberField({ required: true, nullable: true, initial: null });
 const stance = () => new StringField({ required: true, blank: true, initial: "", choices: ["", ...STANCES] });
+const enduranceSpend = () => new NumberField({ required: true, nullable: false, integer: true, min: 0, max: 2, initial: 0 });
 const identity = () => ({
   id: new StringField({ required: true, blank: false }),
   kind: new StringField({ required: true, choices: ["action", "movement"] }),
@@ -29,7 +30,7 @@ class DeclarationSnapshot extends foundry.abstract.DataModel {
   static defineSchema() {
     return {
       version: integer(1), stance: stance(), lockedAt: text(), lockedBy: text(),
-      mainCount: integer(), multiActionPenalty: integer(),
+      mainCount: integer(), multiActionPenalty: integer(), enduranceSpend: enduranceSpend(),
       entries: new ArrayField(new SchemaField({ ...identity(), movementHexes: optionalNumber(),
         action: new EmbeddedDataField(SnapshotAction, { nullable: true, initial: null }),
         calculation: new EmbeddedDataField(SnapshotCalculation, { nullable: true, initial: null }) }))
@@ -40,7 +41,7 @@ class DeclarationSnapshot extends foundry.abstract.DataModel {
 export class DeclarationDataModel extends foundry.abstract.DataModel {
   static defineSchema() {
     return {
-      version: integer(1), revision: integer(),
+      version: integer(1), revision: integer(), enduranceSpend: enduranceSpend(),
       status: new StringField({ required: true, initial: "editing", choices: ["editing", "locked"] }),
       stance: stance(), entries: new ArrayField(new SchemaField(identity())),
       snapshot: new EmbeddedDataField(DeclarationSnapshot, { nullable: true, initial: null }),

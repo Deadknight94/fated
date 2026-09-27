@@ -4,6 +4,16 @@ export function clampHope(value, { heart, mind }) {
   return Math.max(-limit, Math.min(limit, value)) || 0;
 }
 
+/** Record Hope from an explicitly supplied physical Fate Die; only its roller is updated. */
+export async function applyFateDieHope(actor, face) {
+  if (actor.type !== "fated" || !actor.isOwner || !Number.isInteger(face) || face < 17 || face > 20) return false;
+  const hope = actor.system.resources.hope.value;
+  const value = clampHope(hope + (face === 20 ? 2 : 1), actor.system.attributes);
+  if (value === hope) return false;
+  await actor.update({ "system.resources.hope.value": value });
+  return true;
+}
+
 /** Only these manual bookkeeping controls may issue resource updates. */
 export async function adjustResource(actor, resource, delta) {
   if (actor.type !== "fated" || !actor.isOwner) return false;

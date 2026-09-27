@@ -1,11 +1,12 @@
 import { editDeclaration, evaluateDeclaration, lockDeclaration, powerActionAdditionIssue, freshDeclaration } from "./evaluate.mjs";
-import { actorStateModifiers, getActorHealth } from "../health.mjs";
+import { endurancePushContext, enduranceSpendIssue } from "./endurance-push.mjs";
 
 export function getDeclarationEvaluation(actor) {
   const declaration = actor.system.declaration.toObject();
   if (declaration.status === "locked") return { ...declaration.snapshot, locked: true, issues: [], canLock: false };
+  const push = endurancePushContext(actor, declaration.enduranceSpend);
   return { ...evaluateDeclaration(declaration, actor.getAvailableActions(), actor.system,
-    () => actorStateModifiers(actor), getActorHealth(actor)), locked: false };
+    () => push.modifiers, push.actorState), locked: false };
 }
 
 /** Revision checks reject stale rendered controls; Foundry handles ownership and persistence. */
@@ -14,9 +15,16 @@ export async function updateDeclaration(actor, revision, operation) {
   const current = actor.system.declaration.toObject();
   if (revision !== current.revision) throw new Error("This declaration changed. Review the refreshed turn and try again.");
   let next;
-  if (operation.type === "lock") next = lockDeclaration(current, actor.getAvailableActions(), actor.system, {
-    userId: game.user.id, additionalModifiers: () => actorStateModifiers(actor), actorState: getActorHealth(actor) });
+  if (operation.type === "lock") {
+    const push = endurancePushContext(actor, current.enduranceSpend);
+    next = lockDeclaration(current, actor.getAvailableActions(), actor.system, {
+      userId: game.user.id, additionalModifiers: () => push.modifiers, actorState: push.actorState });
+  }
   else {
+    if (operation.type === "endurance-spend") {
+      const issue = enduranceSpendIssue(operation.enduranceSpend, actor.system);
+      if (issue) throw new Error(issue);
+    }
     if (operation.type === "add" && operation.kind === "action") {
       const actions = actor.getAvailableActions();
       const action = actions.find(a => a.id === operation.actionId && a.source.itemId === operation.itemId);
@@ -33,6 +41,9 @@ export async function updateDeclaration(actor, revision, operation) {
   const breaksBandage = operation.type === "lock" && next.snapshot.multiActionPenalty > 0
     && actor.system.health.woundSeverity === 2 && actor.system.health.woundCare.care === "bandaged";
   await actor.update({ "system.declaration": next,
+    ...(operation.type === "lock" && next.enduranceSpend ? {
+      "system.resources.endurance.value": actor.system.resources.endurance.value - next.enduranceSpend
+    } : {}),
     ...(operation.type === "lock" ? { "system.currentStance": next.stance } : {}),
     ...(breaksBandage ? { "system.health.woundCare": { care: "none", daysRemaining: 0 } } : {}) });
 }

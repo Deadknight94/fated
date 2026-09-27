@@ -243,11 +243,34 @@ for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: desktop/mobi
   delete globalThis.game;
 });
 
+for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: Endurance buttons constrain choices and rerender without spending`, async () => {
+  globalThis.game = { i18n, user: { isGM: false } };
+  const actor = actorFixture();
+  actor.system.updateSource({ health: { woundCare: { care: "none", daysRemaining: 0 } },
+    declaration: { enduranceSpend: 2 } });
+  actor.system.prepareDerivedData();
+  const before = actor.system.toObject();
+  for (let i = 0; i < 2; i++) {
+    const context = await new FatedMobileSheet({ document: actor })._prepareContext({});
+    assert.deepEqual(context.planner.enduranceOptions.map(o => o.disabled), [false, false, false]);
+    assert.equal(context.planner.enduranceOptions[2].selected, true);
+    const html = templates.get("templates/actor/turn-planner.hbs")(context);
+    assert.equal((html.match(/data-operation="endurance-spend"/g) ?? []).length, 3);
+    assert.doesNotMatch(html, /FATED\./);
+  }
+  assert.deepEqual(actor.system.toObject(), before);
+  actor.system.updateSource({ resources: { endurance: { value: 1 } } });
+  actor.system.prepareDerivedData();
+  const context = await new FatedMobileSheet({ document: actor })._prepareContext({});
+  assert.deepEqual(context.planner.enduranceOptions.map(o => o.disabled), [false, false, true]);
+  delete globalThis.game;
+});
+
 test("locked planner presentation reads frozen numbers and does not recalculate from live data", async () => {
   globalThis.game = { i18n: it, user: { isGM: false } };
   const actor = actorFixture();
   const declaration = { revision: 2, status: "locked", stance: "offensive", completed: [], snapshot: {
-    stance: "offensive", mainCount: 2, multiActionPenalty: 1, entries: [{ id: "entry", kind: "action", action: actor.getAvailableActions()[0],
+    stance: "offensive", enduranceSpend: 2, mainCount: 2, multiActionPenalty: 1, entries: [{ id: "entry", kind: "action", action: actor.getAvailableActions()[0],
       calculation: { sourceProvenance: { kind: "skill", key: "stealth", level: 2 },
         successDice: { base: 2, total: 2, complete: true, modifiers: [] },
         successThreshold: { base: 4, total: 5, complete: true, modifiers: [{ id: "multi-action", label: "Multi-Action", value: 1, source: { type: "declaration" } }] } } }] } };
@@ -258,6 +281,8 @@ test("locked planner presentation reads frozen numbers and does not recalculate 
   assert.equal(context.planner.entries[0].diceSourceLabel, "Furtività 2");
   assert.equal(context.planner.entries[0].threshold.modifiers[0].label, "Azioni Multiple");
   assert.match(templates.get("templates/actor/turn-planner.hbs")(context), /Tira 2 Dadi Successo/);
+  assert.match(templates.get("templates/actor/turn-planner.hbs")(context), /Sforzo di Resistenza: 2/);
+  assert.doesNotMatch(templates.get("templates/actor/turn-planner.hbs")(context), /data-operation="endurance-spend"/);
   assert.deepEqual(declaration, before);
   delete globalThis.game;
 });

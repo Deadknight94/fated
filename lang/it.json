@@ -90,7 +90,7 @@
       "MarkUnstabilized": "Segna instabile",
       "MarkStabilized": "Segna stabilizzato",
       "StabilizationStops": "La stabilizzazione ferma il danno della Soglia della Morte. La gravità delle ferite rimane 3; l'incapacità persiste.",
-      "UnstabilizedLose": "Instabile: perdi 1 Resistenza E 1 Speranza ogni round di combattimento, o ogni ora fuori dal combattimento. Se già esausto, la perdita di Resistenza diventa un'altra perdita di Speranza (totale −2 Speranza). Applica manualmente; nessun danno automatizzato.",
+      "UnstabilizedLose": "Instabile: perdi 1 Resistenza ogni round di combattimento, o ogni ora fuori dal combattimento. Se già esausto, perdi invece 1 Speranza. Applica manualmente; nessuna perdita temporizzata è automatizzata.",
       "Broken": "Spezzato",
       "IncapacitatedUntil": "Incapacitato fino a quando non sei più Sconfortato o non sei più Esausto",
       "BrokenCausesNo": "Essere Spezzato non causa danno della Soglia della Morte",
@@ -255,6 +255,11 @@
       "ProficiencyHint": "Chiave stabile usata per individuare il livello di Perizia del personaggio."
     },
     "Planner": {
+      "EndurancePush": "Sforzo di Resistenza",
+      "EndurancePushHint": "Spendi Resistenza al blocco per sopprimere solo le penalità delle Ferite per questo turno. Le altre penalità si applicano normalmente.",
+      "EnduranceSpendRange": "Scegli 0, 1 o 2 Resistenza.",
+      "EnduranceSpendInsufficient": "Resistenza insufficiente per questo turno.",
+      "EnduranceSpendExcess": "La Resistenza scelta supera la penalità delle Ferite rimanente.",
       "Locked": "Confermata",
       "Editing": "In preparazione",
       "FrozenHint": "I valori dichiarati sono bloccati. Spunta le voci man mano che le risolvi al tavolo.",
