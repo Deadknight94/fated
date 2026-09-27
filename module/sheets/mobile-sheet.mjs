@@ -5,6 +5,7 @@ import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { calculateActorAction, healthView } from "../health.mjs";
 import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
+import { rollSummary } from "../presentation/roll-summary.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
@@ -126,6 +127,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: skillGroupsView(buildSkillGroups(this.document.system.skills)),
       canEditProficiencyKeys: game.user.isGM && this.isEditable,
       healthState: localizedHealth(healthView(this.document, { isGM: game.user.isGM })),
+      rollSummary: rollSummary(this.document),
       defense: defenseView(calculateDefense(this.document)),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),
       items: this.document.items.contents.map(item => localizedEquipment(equipmentView(item))),

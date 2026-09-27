@@ -36,6 +36,12 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     return {
       biography: new HTMLField({ required: false, nullable: false, initial: "" }),
       currentStance: new StringField({ required: true, nullable: false, blank: false, initial: "neutral", choices: STANCES }),
+      manualRollModifiers: new ArrayField(new SchemaField({
+        id: new StringField({ required: true, nullable: false, blank: false, initial: () => foundry.utils.randomID() }),
+        type: new StringField({ required: true, nullable: false, initial: "successDice", choices: ["successDice", "successThreshold"] }),
+        label: new StringField({ required: true, nullable: false, initial: "", trim: false }),
+        value: int(0)
+      }), { initial: () => [] }),
       health: new SchemaField({
         woundSeverity: new NumberField({ required: true, nullable: false, integer: true, min: 0, max: 4, initial: 0 }),
         stabilized: new BooleanField({ required: true, nullable: false, initial: false }),
@@ -89,7 +95,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
     if (source.health) {
       // Normalize woundCare on creation
-      const normalized = normalizeWoundCare(source.health.woundSeverity, source.health.woundCare);
+      const normalized = normalizeWoundCare(source.health.dead ? 4 : source.health.woundSeverity, source.health.woundCare);
       if (normalized.care !== source.health.woundCare.care || normalized.daysRemaining !== source.health.woundCare.daysRemaining) {
         this.parent.updateSource({ "system.health.woundCare.care": normalized.care, "system.health.woundCare.daysRemaining": normalized.daysRemaining });
       }
@@ -113,16 +119,6 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
     const proposed = candidate.toObject();
     proposed.resources.hope.value = corrected;
-    // Normalize woundCare on update
-    const normalized = normalizeWoundCare(proposed.health.woundSeverity, proposed.health.woundCare);
-    if (normalized.care !== proposed.health.woundCare.care || normalized.daysRemaining !== proposed.health.woundCare.daysRemaining) {
-      if (Object.hasOwn(changes, "system")) {
-        foundry.utils.setProperty(changes, "system.health.woundCare", normalized);
-      } else {
-        changes["system.health.woundCare"] = normalized;
-      }
-      proposed.health.woundCare = normalized;
-    }
     if (expanded.system?.health && Object.hasOwn(expanded.system.health, "dead")
       && expanded.system.health.dead !== source.health.dead && !user?.isGM) {
       throw new Error("Only a GM can administratively correct the recorded death state.");
@@ -136,6 +132,16 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
         else changes[`system.health.${field}`] = transition[field];
       }
       proposed.health[field] = transition[field];
+    }
+    // Normalize woundCare on update
+    const normalized = normalizeWoundCare(proposed.health.dead ? 4 : proposed.health.woundSeverity, proposed.health.woundCare);
+    if (normalized.care !== proposed.health.woundCare.care || normalized.daysRemaining !== proposed.health.woundCare.daysRemaining) {
+      if (Object.hasOwn(changes, "system")) {
+        foundry.utils.setProperty(changes, "system.health.woundCare", normalized);
+      } else {
+        changes["system.health.woundCare"] = normalized;
+      }
+      proposed.health.woundCare = normalized;
     }
     if (expanded.system?.declaration?.status === "locked" && source.declaration.status !== "locked") {
       const issue = healthLockIssue(deriveHealth(proposed));

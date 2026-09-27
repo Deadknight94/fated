@@ -266,6 +266,125 @@ for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: Endurance bu
   delete globalThis.game;
 });
 
+for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: manual rows, care selection, summary and mobile calculations render correctly`, async () => {
+  globalThis.game = { i18n, user: { isGM: false } };
+  const actor = actorFixture();
+  actor.system.updateSource({ manualRollModifiers: [
+    { id: "blessing", type: "successDice", value: 1, label: "  Hope <Blessing>  " },
+    { id: "fear", type: "successThreshold", value: 1, label: "Fear Aura" }
+  ] });
+  const sheet = new FatedActorSheet({ document: actor });
+  for (const editable of [true, false]) {
+    sheet.isEditable = editable;
+    const context = await sheet._prepareContext({});
+    assert.equal(context.manualModifiers[0].id, "blessing");
+    const html = templates.get("templates/actor/fated-sheet.hbs")(context);
+    assert.doesNotMatch(html, /FATED\.|name="system.currentStance"/);
+    assert.match(html, /Hope &lt;Blessing&gt;/);
+    assert.match(html, /data-care="treated" aria-pressed="true"/);
+    assert.equal((html.match(/data-health-operation="care"/g) ?? []).length, 3);
+    assert.equal(context.rollSummary.diceModifier, "+1");
+    assert.equal(context.rollSummary.thresholdTotal, 5);
+    for (const tag of html.match(/<(?:input|select|button)[^>]*(?:data-modifier-field|data-action="manualModifier")[^>]*>/g)) {
+      assert.equal(tag.includes("disabled"), !editable);
+    }
+  }
+  const mobile = await new FatedMobileSheet({ document: actor })._prepareContext({});
+  assert.equal(mobile.actions[0].dice.total, "6");
+  assert.equal(mobile.actions[0].threshold.total, "5");
+  const planner = templates.get("templates/actor/turn-planner.hbs")(mobile);
+  assert.match(planner, /data-operation="stance"/);
+  delete globalThis.game;
+});
+
+for (const [lang, i18n] of [["en", en], ["it", it]]) {
+  for (const [name, severity, care, hope, endurance, load, expected, conditions] of [
+    ["no modifiers", 0, "none", 0, 4, 0, 4, []],
+    ["Light Bandaged", 1, "bandaged", 0, 4, 0, 4, ["wounds", "bandaged"]],
+    ["Grievous Bandaged", 2, "bandaged", 0, 4, 0, 5, ["wounds", "bandaged"]],
+    ["Grievous Treated", 2, "treated", 0, 4, 0, 4, ["wounds", "treated"]],
+    ["positive Hope", 0, "none", 1, 4, 0, 3, ["hope"]],
+    ["Inspired", 0, "none", 4, 4, 0, 2, ["hope"]],
+    ["Despondent", 0, "none", -4, 4, 0, 5, ["hope"]],
+    ["Exhausted and Overburdened", 0, "none", 0, 0, 1, 6, ["overburdened", "exhausted"]]
+  ]) test(`${lang}: mobile Roll Summary matches desktop for ${name}`, async () => {
+    globalThis.game = { i18n, user: { isGM: false } };
+    try {
+      const actor = actorFixture();
+      actor.system.updateSource({ health: { woundSeverity: severity, woundCare: { care, daysRemaining: 0 } },
+        resources: { hope: { value: hope }, endurance: { value: endurance } }, load });
+      actor.system.prepareDerivedData();
+      const before = actor.system.toObject();
+      const desktop = await new FatedActorSheet({ document: actor })._prepareContext({});
+      const mobile = await new FatedMobileSheet({ document: actor })._prepareContext({});
+      assert.deepEqual(mobile.rollSummary, desktop.rollSummary);
+      assert.equal(mobile.rollSummary.diceModifier, "+0");
+      assert.equal(mobile.rollSummary.thresholdBase, 4);
+      assert.equal(mobile.rollSummary.thresholdTotal, expected);
+      assert.deepEqual(mobile.rollSummary.successThreshold.map(m => m.source.condition), conditions);
+      const html = templates.get("templates/actor/mobile-sheet.hbs")(mobile);
+      const summary = html.match(/<section class="panel roll-summary"[\s\S]*?<\/section>/)?.[0];
+      assert.ok(summary);
+      assert.match(summary, /<strong>\+0<\/strong>/);
+      assert.ok(summary.includes(`<strong>${expected}+</strong>`));
+      assert.ok(summary.includes(i18n.localize("FATED.Roll.Summary")));
+      for (const modifier of mobile.rollSummary.successThreshold) {
+        assert.ok(summary.includes(Handlebars.escapeExpression(modifier.label)));
+        assert.ok(summary.includes(`<strong>${modifier.signedValue}</strong>`));
+      }
+      assert.doesNotMatch(summary, /FATED\.|<input|<select|<button/);
+      assert.doesNotMatch(html, /data-action="manualModifier"|data-modifier-field|name="system.manualRollModifiers/);
+      assert.deepEqual(actor.system.toObject(), before);
+    } finally { delete globalThis.game; }
+  });
+
+  test(`${lang}: mobile summary preserves manual labels and excludes turn/Action context`, async () => {
+    globalThis.game = { i18n, user: { isGM: false } };
+    try {
+      const actor = actorFixture();
+      actor.items[0].system.updateSource({ actions: [{ ...actor.items[0].system.actions[0].toObject(),
+        allowedStances: ["offensive"], modifiers: {
+          successDice: [{ id: "item-dice", label: "Item dice context", value: 8 }],
+          successThreshold: [{ id: "item-threshold", label: "Item threshold context", value: 7 }]
+        } }] });
+      actor.system.updateSource({ currentStance: "offensive", health: { woundCare: { care: "none", daysRemaining: 0 } },
+        manualRollModifiers: [
+          { id: "manual-dice", type: "successDice", value: 1, label: "  Hope <Blessing>  " },
+          { id: "manual-threshold", type: "successThreshold", value: -1, label: "  Body <Focus>  " }
+        ], declaration: { stance: "offensive", enduranceSpend: 2, entries: [
+          { id: "first", kind: "action", itemId: "item", actionId: "action" },
+          { id: "second", kind: "action", itemId: "item", actionId: "action" }
+        ] } });
+      const desktop = await new FatedActorSheet({ document: actor })._prepareContext({});
+      const sheet = new FatedMobileSheet({ document: actor });
+      const mobile = await sheet._prepareContext({});
+      assert.deepEqual(mobile.rollSummary, desktop.rollSummary);
+      assert.equal(mobile.rollSummary.diceModifier, "+1");
+      assert.equal(mobile.rollSummary.thresholdTotal, 5); // base 4 + Grievous 2 - manual 1
+      assert.equal(mobile.rollSummary.successDice[0].label, "  Hope <Blessing>  ");
+      assert.equal(mobile.rollSummary.successThreshold.at(-1).label, "  Body <Focus>  ");
+      assert.deepEqual(mobile.rollSummary.successThreshold.map(m => m.source.type), ["actor-state", "actor-manual"]);
+      const contextual = mobile.planner.entries[0].calculation.successThreshold.modifiers;
+      assert.ok(contextual.some(m => m.source?.type === "stance"));
+      assert.ok(contextual.some(m => m.id === "multi-action"));
+      assert.ok(contextual.some(m => m.id === "endurance-push"));
+      assert.ok(contextual.some(m => m.id === "item-threshold"));
+      const html = templates.get("templates/actor/mobile-sheet.hbs")(mobile);
+      const summary = html.match(/<section class="panel roll-summary"[\s\S]*?<\/section>/)[0];
+      assert.match(summary, /  Hope &lt;Blessing&gt;  /);
+      assert.match(summary, /  Body &lt;Focus&gt;  /);
+      assert.doesNotMatch(summary, /Item dice context|Item threshold context|<input|<select|<button/);
+      assert.equal(Object.hasOwn(FatedMobileSheet.DEFAULT_OPTIONS.actions, "manualModifier"), false);
+      assert.ok(FatedActorSheet.DEFAULT_OPTIONS.actions.manualModifier);
+      for (const section of ["turn", "actions", "items"]) {
+        sheet.section = section;
+        const other = templates.get("templates/actor/mobile-sheet.hbs")(await sheet._prepareContext({}));
+        assert.doesNotMatch(other, /class="panel roll-summary"|data-action="manualModifier"|data-modifier-field/);
+      }
+    } finally { delete globalThis.game; }
+  });
+}
+
 test("locked planner presentation reads frozen numbers and does not recalculate from live data", async () => {
   globalThis.game = { i18n: it, user: { isGM: false } };
   const actor = actorFixture();

@@ -146,7 +146,7 @@ test("flat and nested severity/care updates normalize proposed state without cha
   }
 });
 
-test("atomic Short Rest preserves compatible wound care and recorded death", async () => {
+test("atomic Short Rest preserves recorded death and normalizes Dead care to None", async () => {
   const { shortRest } = await import("../module/rest/short-rest.mjs");
   const a = actor({ health: { woundSeverity: 2, dead: true, woundCare: { care: "treated", daysRemaining: 3 } } });
   const before = a.system.toObject();
@@ -154,7 +154,7 @@ test("atomic Short Rest preserves compatible wound care and recorded death", asy
   assert.equal(a.updates.length, 1);
   assert.equal(a.system.resources.endurance.value, 5);
   assert.equal(a.system.resources.hope.value, -1);
-  assert.deepEqual(a.system.toObject().health, before.health);
+  assert.deepEqual(a.system.toObject().health, { ...before.health, woundCare: { care: "none", daysRemaining: 0 } });
   assert.equal(a.system.resources.power, before.resources.power);
   assert.deepEqual(a.system.toObject().declaration, before.declaration);
 });

@@ -25,7 +25,17 @@
       "SuccessThreshold": "Soglia di Successo",
       "Success": "Successo",
       "Successes": "Successi",
-      "Untrained": "Non addestrato"
+      "Untrained": "Non addestrato",
+      "Care": "Cura delle ferite",
+      "ManualModifiers": "Modificatori manuali ai tiri",
+      "Source": "Fonte",
+      "Type": "Tipo",
+      "Value": "Valore",
+      "AddModifier": "Aggiungi modificatore",
+      "Summary": "Riepilogo dei tiri",
+      "GlobalModifier": "Modificatore globale totale",
+      "Base": "Base",
+      "FinalGlobalThreshold": "Soglia di Successo globale finale"
     },
     "Stance": {
       "Offensive": "Offensiva",

@@ -62,7 +62,6 @@
       </label>
       <label>{{localize "FATED.Resource.Power"}} <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
       <label>{{localize "FATED.Resource.Load"}} <input type="number" value="{{system.load}}" readonly></label>
-      <label>{{localize "FATED.Sheet.CurrentStance"}} <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
     </div>
   </section>
 
@@ -124,6 +123,37 @@
   </section>
 
   {{> "systems/fated/templates/actor/health-state.hbs"}}
+
+  <section class="panel manual-modifiers">
+    <h2>{{localize "FATED.Roll.ManualModifiers"}}</h2>
+    {{#each manualModifiers}}
+    <div class="manual-modifier-row">
+      <label>{{localize "FATED.Roll.Source"}}<input type="text" data-modifier-field="label" data-modifier-id="{{id}}" value="{{label}}" {{disabled (not @root.editable)}}></label>
+      <label>{{localize "FATED.Roll.Type"}}<select data-modifier-field="type" data-modifier-id="{{id}}" {{disabled (not @root.editable)}}>
+        <option value="successDice" {{#if (eq type "successDice")}}selected{{/if}}>{{localize "FATED.Roll.SuccessDice"}}</option>
+        <option value="successThreshold" {{#if (eq type "successThreshold")}}selected{{/if}}>{{localize "FATED.Roll.SuccessThreshold"}}</option>
+      </select></label>
+      <label>{{localize "FATED.Roll.Value"}}<input type="text" inputmode="text" data-modifier-field="value" data-modifier-id="{{id}}" value="{{signedValue}}" pattern="[+-]?[0-9]+" {{disabled (not @root.editable)}}></label>
+      <button type="button" data-action="manualModifier" data-operation="remove" data-modifier-id="{{id}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
+    </div>
+    {{/each}}
+    <button type="button" data-action="manualModifier" data-operation="add" {{disabled (not editable)}}>{{localize "FATED.Roll.AddModifier"}}</button>
+  </section>
+  <section class="panel roll-summary">
+    <h2>{{localize "FATED.Roll.Summary"}}</h2>
+    <div class="roll-summary-grid">
+      <div><h3>{{localize "FATED.Roll.SuccessDice"}}</h3>
+        <p>{{localize "FATED.Roll.GlobalModifier"}}: <strong>{{rollSummary.diceModifier}}</strong></p>
+        <ul>{{#each rollSummary.successDice}}<li>{{label}} <strong>{{signedValue}}</strong></li>{{/each}}</ul>
+      </div>
+      <div><h3>{{localize "FATED.Roll.SuccessThreshold"}}</h3>
+        <p>{{localize "FATED.Roll.Base"}}: {{rollSummary.thresholdBase}}</p>
+        <ul>{{#each rollSummary.successThreshold}}<li>{{label}} <strong>{{signedValue}}</strong></li>{{/each}}</ul>
+        <p>{{localize "FATED.Roll.FinalGlobalThreshold"}}: <strong>{{rollSummary.thresholdTotal}}+</strong></p>
+      </div>
+    </div>
+  </section>
+
   {{> "systems/fated/templates/actor/defense.hbs"}}
   {{#if isGM}}<button type="button" data-action="openDamage">{{localize "FATED.Common.PhysicalDamage"}}</button>{{/if}}
 

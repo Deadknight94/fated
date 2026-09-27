@@ -49,6 +49,20 @@
       <label class="mobile-current-stance">{{localize "FATED.Sheet.CurrentStance"}} <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
       <p class="mobile-note">{{localize "FATED.Mobile.PhysicalDice"}}</p>
       {{> "systems/fated/templates/actor/health-state.hbs"}}
+      <section class="panel roll-summary" aria-label="{{localize "FATED.Roll.Summary"}}">
+        <h2>{{localize "FATED.Roll.Summary"}}</h2>
+        <div class="roll-summary-grid">
+          <div><h3>{{localize "FATED.Roll.SuccessDice"}}</h3>
+            <p>{{localize "FATED.Roll.GlobalModifier"}}: <strong>{{rollSummary.diceModifier}}</strong></p>
+            <ul>{{#each rollSummary.successDice}}<li>{{label}} <strong>{{signedValue}}</strong></li>{{/each}}</ul>
+          </div>
+          <div><h3>{{localize "FATED.Roll.SuccessThreshold"}}</h3>
+            <p>{{localize "FATED.Roll.Base"}}: {{rollSummary.thresholdBase}}</p>
+            <ul>{{#each rollSummary.successThreshold}}<li>{{label}} <strong>{{signedValue}}</strong></li>{{/each}}</ul>
+            <p>{{localize "FATED.Roll.FinalGlobalThreshold"}}: <strong>{{rollSummary.thresholdTotal}}+</strong></p>
+          </div>
+        </div>
+      </section>
       {{> "systems/fated/templates/actor/defense.hbs"}}
     </section>
     {{#if character}}

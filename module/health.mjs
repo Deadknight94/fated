@@ -1,5 +1,5 @@
 import { calculateActionFromActorData } from "./actions/actions.mjs";
-import { normalizeWoundCare } from "./wound-care.mjs";
+import { normalizeWoundCare, manualWoundCareChoices } from "./wound-care.mjs";
 import { adjustResource, clampHope } from "./resources.mjs";
 
 export const WOUND_LABELS = ["Healthy", "Light Wound", "Grievous Wound", "Death's Door", "Dead"];
@@ -50,7 +50,7 @@ export function actorStateModifiers(actor) {
   if (state.severity === 1 || state.severity === 2) add("wounds", state.woundLabel, state.severity);
   // Wound care modifiers
   const woundSeverity = state.severity;
-  const { care } = normalizeWoundCare(woundSeverity, actor.system.health.woundCare || { care: "none" });
+  const { care } = normalizeWoundCare(state.dead ? 4 : woundSeverity, actor.system.health.woundCare || { care: "none" });
   if (woundSeverity === 1 || woundSeverity === 2) {
     if (care === "bandaged") add("bandaged", "Bandaged", -1);
     if (care === "treated" && woundSeverity === 2) add("treated", "Treated", -2);
@@ -62,8 +62,22 @@ export function actorStateModifiers(actor) {
 }
 
 export function calculateActorAction(actor, action, additionalModifiers = {}) {
+  const global = actorRollModifiers(actor);
   return calculateActionFromActorData(action, actor.system, { ...additionalModifiers,
-    successThreshold: [...actorStateModifiers(actor).successThreshold, ...(additionalModifiers.successThreshold ?? [])] });
+    successDice: [...global.successDice, ...(additionalModifiers.successDice ?? [])],
+    successThreshold: [...global.successThreshold, ...(additionalModifiers.successThreshold ?? [])] });
+}
+
+/** Actor-wide modifiers only; contextual Action/turn modifiers belong to callers. */
+export function actorRollModifiers(actor) {
+  const result = { successDice: [], successThreshold: [...actorStateModifiers(actor).successThreshold] };
+  if (actor.type !== "fated") return result;
+  for (const modifier of actor.system.manualRollModifiers ?? []) {
+    if (!Object.hasOwn(result, modifier.type) || !Number.isInteger(modifier.value)) continue;
+    result[modifier.type].push({ id: modifier.id, label: modifier.label, value: modifier.value,
+      source: { type: "actor-manual", actorId: actor.id ?? "", actorUuid: actor.uuid ?? "" } });
+  }
+  return result;
 }
 
 export function healthLockIssue(state) {
@@ -121,7 +135,11 @@ export async function applyDeathsDoorDrain(actor) {
 export async function updateHealth(actor, operation, { isGM = false } = {}) {
   if (actor.type !== "fated" || !actor.isOwner) return false;
   const health = actor.system.health;
-  if (operation.type === "wound" && [-1, 1].includes(operation.delta)) {
+  if (operation.type === "care") {
+    if (!manualWoundCareChoices(health.woundSeverity, health.dead).includes(operation.care)) return false;
+    await actor.update({ "system.health.woundCare": normalizeWoundCare(health.dead ? 4 : health.woundSeverity,
+      { ...health.woundCare, care: operation.care }) });
+  } else if (operation.type === "wound" && [-1, 1].includes(operation.delta)) {
     const value = Math.max(0, Math.min(4, health.woundSeverity + operation.delta));
     if (value === health.woundSeverity) return false;
     await actor.update({ "system.health.woundSeverity": value });
@@ -138,6 +156,8 @@ export function healthView(actor, { isGM = false } = {}) {
   const state = getActorHealth(actor);
   if (!state) return null;
   return { ...state, isGM, recordedDead: actor.system.health.dead,
+    care: normalizeWoundCare(state.dead ? 4 : state.severity, actor.system.health.woundCare).care,
+    careChoices: !state.dead && [1, 2].includes(state.severity) ? manualWoundCareChoices(state.severity) : [],
     canDecreaseWound: actor.isOwner && state.severity > 0,
     canIncreaseWound: actor.isOwner && state.severity < 4,
     conditions: [state.overburdened && "Overburdened (+1)", state.exhausted && "Exhausted (+1)",

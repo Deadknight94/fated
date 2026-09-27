@@ -5,7 +5,8 @@ import { equipmentView } from "../equipment.mjs";
 import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { openMobileSheet } from "./mobile-sheet.mjs";
-import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
+import { changeManualModifier, manualModifierAction } from "./manual-modifier-controls.mjs";
+import { rollSummary, signedModifier } from "../presentation/roll-summary.mjs";
 import { healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { calculateDefense } from "../defense.mjs";
@@ -64,8 +65,6 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
       healthState,
       skills,
       ...(this.document.type === "fated" ? { defense: defenseView(calculateDefense(this.document)), isGM: game.user.isGM } : {}),
-      ...(this.document.type === "fated" ? { currentStances: DECLARATION_STANCES.map(value => ({ value,
-        label: displayLabel("stance", value), selected: value === this.document.system.currentStance })) } : {}),
       ...(this.document.type === "fated" ? { powerMax: this.document.system.attributes.heart + this.document.system.attributes.body + this.document.system.attributes.mind } : {})
     };
   }
@@ -73,7 +72,24 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
 
 export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
   async _prepareContext(options) {
-    return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable };
+    return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,
+      rollSummary: rollSummary(this.document), manualModifiers: this.document.system.manualRollModifiers.map(entry =>
+        ({ ...entry, signedValue: signedModifier(entry.value) })) };
+  }
+
+  async _onChangeForm(formConfig, event) {
+    const input = event.target;
+    if (!input.matches?.("[data-modifier-field]")) return super._onChangeForm(formConfig, event);
+    const field = input.dataset.modifierField;
+    try {
+      const changed = await changeManualModifier(this, { type: "edit", id: input.dataset.modifierId, field,
+        value: field === "value" ? (input.value.trim() ? Number(input.value) : NaN) : input.value });
+      // Successful Actor updates already rerender, preserving the existing scroll lifecycle.
+      if (!changed) await this.render({ force: true });
+    } catch (error) {
+      ui.notifications.warn(systemMessage(error.message));
+      await this.render({ force: true });
+    }
   }
 
   static DEFAULT_OPTIONS = {
@@ -83,6 +99,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       openRest: function () { return openRestApp(this.document); },
       openMobile: function () { return openMobileSheet(this.document); },
       health: healthAction,
+      manualModifier: manualModifierAction,
       openDamage: openDamageBookkeeping,
       // Proficiency mutation actions
       addProficiency: FatedActorSheet.addProficiency,

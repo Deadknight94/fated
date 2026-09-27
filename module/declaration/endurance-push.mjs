@@ -1,4 +1,4 @@
-import { actorStateModifiers, getActorHealth } from "../health.mjs";
+import { actorStateModifiers, actorRollModifiers, getActorHealth } from "../health.mjs";
 
 /** Only the system's Wound and wound-care contributions are suppressible. */
 export function suppressibleWoundPenalty(system) {
@@ -21,7 +21,7 @@ export function endurancePushContext(actor, spend) {
   const system = { ...actor.system, resources: { ...actor.system.resources,
     endurance: { ...actor.system.resources.endurance, value: actor.system.resources.endurance.value - validSpend } } };
   const projected = { type: actor.type, id: actor.id, uuid: actor.uuid, system };
-  const modifiers = actorStateModifiers(projected);
+  const modifiers = actorRollModifiers(projected);
   if (validSpend) modifiers.successThreshold.push({
     id: "endurance-push", label: "Endurance Push", value: -validSpend,
     source: { type: "declaration", condition: "wound-suppression", enduranceSpend: validSpend,

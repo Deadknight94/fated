@@ -1,3 +1,9 @@
+/** Manual choices derive from normalization; pending healing remains lifecycle-only. */
+export function manualWoundCareChoices(woundSeverity, dead = false) {
+  return ["none", "bandaged", "treated"].filter(care =>
+    normalizeWoundCare(dead ? 4 : woundSeverity, { care }).care === care);
+}
+
 export function normalizeWoundCare(woundSeverity, woundCare) {
   // Default result
   const result = { care: "none", daysRemaining: 0 };

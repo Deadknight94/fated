@@ -25,7 +25,17 @@
       "SuccessThreshold": "Success Threshold",
       "Success": "Success",
       "Successes": "Successes",
-      "Untrained": "Untrained"
+      "Untrained": "Untrained",
+      "Care": "Wound Care",
+      "ManualModifiers": "Manual Roll Modifiers",
+      "Source": "Source",
+      "Type": "Type",
+      "Value": "Value",
+      "AddModifier": "Add Modifier",
+      "Summary": "Roll Summary",
+      "GlobalModifier": "Total global modifier",
+      "Base": "Base",
+      "FinalGlobalThreshold": "Final global Success Threshold"
     },
     "Stance": {
       "Offensive": "Offensive",

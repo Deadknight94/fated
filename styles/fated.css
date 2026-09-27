@@ -406,3 +406,16 @@
 .npc-actor .npc-action dd { margin: 0; }
 .npc-actor .npc-rules { white-space: pre-wrap; overflow-wrap: anywhere; }
 .npc-actor .item-row button, .npc-actor .npc-action button { min-height: 44px; height: auto; white-space: normal; }
+
+/* Character-wide modifier bookkeeping and health care controls. */
+.fated .manual-modifier-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(4rem, 1fr) auto; gap: .5rem; align-items: end; margin-bottom: .5rem; }
+.fated .manual-modifier-row label { min-width: 0; }
+.fated .manual-modifier-row input, .fated .manual-modifier-row select { width: 100%; min-height: 2.75rem; }
+.fated .manual-modifiers button, .fated .wound-care-controls button { min-height: 2.75rem; }
+.fated .wound-care-controls button[aria-pressed="true"] { background: var(--color-warm-2, #65452b); color: #fff; outline: 2px solid currentColor; font-weight: bold; }
+.fated .roll-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.fated .roll-summary li { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .fated .manual-modifier-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .fated .roll-summary-grid { grid-template-columns: 1fr; }
+}

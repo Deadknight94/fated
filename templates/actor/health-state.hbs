@@ -1,7 +1,10 @@
 {{#with healthState as |health|}}
 <section class="panel health-state" aria-label="{{localize "FATED.Health.HealthAndConditions"}}">
   <h2>{{localize "FATED.Health.Health"}}</h2>
-  <p><strong>{{localize "FATED.Health.Wounds"}}: {{health.woundLabel}}</strong> · {{localize "FATED.Health.Severity"}} {{health.severity}}</p>
+  <p><strong>{{localize "FATED.Health.Wounds"}}: {{health.woundLabel}}{{#if health.careLabel}} · {{health.careLabel}}{{/if}}</strong> · {{localize "FATED.Health.Severity"}} {{health.severity}}</p>
+  {{#if health.careChoices.length}}<div class="health-controls wound-care-controls" aria-label="{{localize "FATED.Roll.Care"}}">
+    {{#each health.careChoices}}<button type="button" data-action="health" data-health-operation="care" data-care="{{value}}" aria-pressed="{{selected}}" {{disabled (not @root.editable)}}>{{label}}</button>{{/each}}
+  </div>{{/if}}
   <div class="health-controls">
     <button
       type="button"
