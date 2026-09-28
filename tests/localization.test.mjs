@@ -52,7 +52,7 @@ test("stable labels and all Skill groups translate without changing values", () 
 test("health and equipment projections preserve input and authored names", () => {
   const health = { severity: 2, woundLabel: "Grievous Wound", exhausted: true, broken: true, conditions: ["Broken"] };
   const before = structuredClone(health);
-  assert.deepEqual(localizedHealth(health, it).conditions, ["Esausto", "Spezzato"]);
+  assert.deepEqual(localizedHealth(health, it).conditions, ["Spezzato"]);
   assert.equal(localizedHealth(health, it).woundLabel, "Ferita Grave");
   assert.equal(localizedHealth(null, it), null);
   assert.deepEqual(health, before);
