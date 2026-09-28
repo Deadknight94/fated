@@ -29,12 +29,11 @@ export function skillGroupsView(groups, i18n) {
 
 export function localizedHealth(view, i18n) {
   if (!view) return view;
-  const adjustments = { overburdened: " (+1)", exhausted: " (+1)", inspired: " (−2)", despondent: " (+1)" };
   return { ...view, woundLabel: displayLabel("wound", view.severity, i18n),
     careLabel: view.care && view.care !== "none" ? displayLabel("care", view.care, i18n) : null,
     careChoices: (view.careChoices ?? []).map(value => ({ value, label: displayLabel("care", value, i18n), selected: value === view.care })),
-    conditions: [...(view.hopeThresholdModifier === -1 ? [uiText("Hope", {}, i18n) + " (−1)"] : []), ...["overburdened", "exhausted", "inspired", "despondent", "broken", "incapacitated", "dead"]
-      .filter(key => view[key]).map(key => displayLabel("condition", key, i18n) + (adjustments[key] ?? ""))] };
+    conditions: [...(view.hopeThresholdModifier === -1 ? [uiText("Hope", {}, i18n)] : []), ...["overburdened", "exhausted", "inspired", "despondent", "broken", "incapacitated", "dead"]
+      .filter(key => view[key]).map(key => displayLabel("condition", key, i18n))] };
 }
 
 export function localizedEquipment(view, i18n) {
