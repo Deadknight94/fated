@@ -81,6 +81,8 @@
       "MissingSkill": "Abilità mancante: {skill}"
     },
     "Health": {
+      "BandagedDescription": "Ferita Bendata: Ignora 1 punto della penalità alla Soglia di Successo causata dalla Ferita. Per i danni successivi, la Ferita mantiene la sua normale gravità. Una Ferita Leggera Bendata diventa Grave se si subisce un’altra Ferita. Se una Ferita Grave è Bendata, dichiarare Azioni Multiple rompe la fasciatura dopo la risoluzione di quelle Azioni Multiple.",
+      "TreatedDescription": "Ferita Trattata: Ignora 2 punti della penalità alla Soglia di Successo causata dalla Ferita. Se il Fated dovesse subire un’altra Ferita, perde invece il trattamento: la Ferita Grave si riapre e torna ad applicarsi la sua piena penalità. Quel singolo danno non aumenta la gravità della Ferita.",
       "Healthy": "Sano",
       "Light": "Lieve",
       "Grievous": "Grave",

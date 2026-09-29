@@ -118,10 +118,10 @@ test("Hope has no floor/ceiling, zero-limit bonus or NPC effect; out-of-range Ho
   assert.equal(calculateActorAction(a, action()).successThreshold.total, 4);
 });
 
-test("Hope provenance and localized Action/Turn labels survive locking; conditions show the right tier", async () => {
+test("Hope provenance and localized Action/Turn labels survive locking; Health omits numerical modifiers", async () => {
   const previousGame = globalThis.game;
   try {
-    for (const [language, hopeLabel, inspiredLabel] of [["en", "Hope", "Inspired"], ["it", "Speranza", "Ispirato"]]) {
+    for (const [language, hopeLabel] of [["en", "Hope"], ["it", "Speranza"]]) {
       const strings = JSON.parse(readFileSync(new URL(`../lang/${language}.json`, import.meta.url), "utf8"));
       globalThis.game = { user: { id: "test" }, i18n: { localize: key => key.split(".").reduce((value, part) => value?.[part], strings) ?? key } };
       for (const [hope, bonus] of [[1, -1], [6, -2], [-6, 1]]) {
@@ -130,7 +130,7 @@ test("Hope provenance and localized Action/Turn labels survive locking; conditio
         assert.deepEqual(modifier.source, { type: "actor-state", actorId: "test", actorUuid: "Actor.test", condition: "hope" });
         assert.equal(modifierLabel(modifier), hopeLabel);
         assert.equal(modifierLabel({ label: "Custom Hope", source: { type: "item", condition: "hope" } }), "Custom Hope");
-        if (hope > 0) assert.ok(localizedHealth(healthView(a)).conditions.includes(`${hope === 6 ? inspiredLabel : hopeLabel} (−${Math.abs(bonus)})`));
+        assert.deepEqual(localizedHealth(healthView(a)).conditions, []);
         await updateDeclaration(a, 0, { type: "lock" });
         await a.update({ "system.resources.hope.value": 0 });
         const locked = getDeclarationEvaluation(a).entries[0].calculation.successThreshold;

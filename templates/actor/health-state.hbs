@@ -5,6 +5,7 @@
   {{#if health.careChoices.length}}<div class="health-controls wound-care-controls" aria-label="{{localize "FATED.Roll.Care"}}">
     {{#each health.careChoices}}<button type="button" data-action="health" data-health-operation="care" data-care="{{value}}" aria-pressed="{{selected}}" {{disabled (not @root.editable)}}>{{label}}</button>{{/each}}
   </div>{{/if}}
+  {{#if health.careDescription}}<p class="muted health-care-note">{{health.careDescription}}</p>{{/if}}
   <div class="health-controls">
     <button
       type="button"

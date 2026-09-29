@@ -81,6 +81,8 @@
       "MissingSkill": "Missing Skill: {skill}"
     },
     "Health": {
+      "BandagedDescription": "Wound Bandaged: Ignore 1 point of the Wound’s Success Threshold penalty. The Wound still counts at its normal severity for further damage. A Bandaged Light Wound becomes Grievous if another Wound is suffered. If a Grievous Wound is Bandaged, declaring Multi-Action breaks the bandage after that Multi-Action resolves.",
+      "TreatedDescription": "Wound Treated: Ignore 2 points of the Wound’s Success Threshold penalty. If the Fated would suffer another Wound, the treatment is lost instead: the Grievous Wound reopens and its full penalty returns. That damage instance does not increase wound severity.",
       "Healthy": "Healthy",
       "Light": "Light",
       "Grievous": "Grievous",

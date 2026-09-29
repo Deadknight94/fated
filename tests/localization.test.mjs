@@ -212,6 +212,41 @@ function actorFixture() {
     getAvailableActions: () => getItemActions(item) };
 }
 
+for (const [lang, i18n] of [["en", en], ["it", it]]) {
+  for (const [severity, care] of [[1, "none"], [2, "none"], [1, "bandaged"], [2, "bandaged"], [2, "treated"]]) {
+    test(`${lang}: wound-care note for severity ${severity}, ${care} renders on desktop and mobile without mutation`, async () => {
+      globalThis.game = { i18n, user: { isGM: false } };
+      const actor = actorFixture();
+      actor.system.updateSource({ health: { woundSeverity: severity, woundCare: { care, daysRemaining: 0 } } });
+      actor.system.prepareDerivedData();
+      const before = actor.system.toObject();
+      const expected = care === "none" ? null : catalogs[lang].FATED.Health[
+        care === "bandaged" ? "BandagedDescription" : "TreatedDescription"];
+      if (expected) {
+        assert.ok(expected.startsWith(lang === "en"
+          ? (care === "bandaged" ? "Wound Bandaged: Ignore 1 point" : "Wound Treated: Ignore 2 points")
+          : (care === "bandaged" ? "Ferita Bendata: Ignora 1 punto" : "Ferita Trattata: Ignora 2 punti")));
+        assert.match(expected, care === "bandaged"
+          ? (lang === "en" ? /after that Multi-Action resolves/ : /dopo la risoluzione di quelle Azioni Multiple/)
+          : (lang === "en" ? /does not increase wound severity/ : /non aumenta la gravità della Ferita/));
+      }
+      for (const [Sheet, path] of [[FatedActorSheet, "fated-sheet"], [FatedMobileSheet, "mobile-sheet"]]) {
+        const context = await new Sheet({ document: actor })._prepareContext({});
+        assert.equal(context.healthState.careDescription, expected);
+        assert.deepEqual(context.healthState.conditions, []);
+        const html = templates.get(`templates/actor/${path}.hbs`)({ ...context, character: true });
+        assert.doesNotMatch(html, /FATED\./);
+        if (expected) {
+          assert.ok(html.includes(`<p class="muted health-care-note">${Handlebars.escapeExpression(expected)}</p>`));
+          assert.ok(html.indexOf('wound-care-controls') < html.indexOf('health-care-note'));
+        } else assert.doesNotMatch(html, /health-care-note/);
+      }
+      assert.deepEqual(actor.system.toObject(), before);
+      delete globalThis.game;
+    });
+  }
+}
+
 for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: desktop/mobile/Item/rest/NPC contexts render without mutating documents`, async () => {
   globalThis.game = { i18n, user: { isGM: true } };
   const actor = actorFixture();

@@ -32,6 +32,11 @@ export function localizedHealth(view, i18n) {
   return {
     ...view,
     woundLabel: displayLabel("wound", view.severity, i18n),
+    careDescription: view.care === "bandaged"
+      ? uiText("Wound Bandaged: Ignore 1 point of the Wound’s Success Threshold penalty. The Wound still counts at its normal severity for further damage. A Bandaged Light Wound becomes Grievous if another Wound is suffered. If a Grievous Wound is Bandaged, declaring Multi-Action breaks the bandage after that Multi-Action resolves.", {}, i18n)
+      : view.care === "treated"
+        ? uiText("Wound Treated: Ignore 2 points of the Wound’s Success Threshold penalty. If the Fated would suffer another Wound, the treatment is lost instead: the Grievous Wound reopens and its full penalty returns. That damage instance does not increase wound severity.", {}, i18n)
+        : null,
     careLabel: view.care && view.care !== "none"
       ? displayLabel("care", view.care, i18n)
       : null,

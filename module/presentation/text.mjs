@@ -1,5 +1,7 @@
 /** UI-only English source text to localization keys. Never apply to user-authored text. */
 const keys = {
+  "Wound Bandaged: Ignore 1 point of the Wound’s Success Threshold penalty. The Wound still counts at its normal severity for further damage. A Bandaged Light Wound becomes Grievous if another Wound is suffered. If a Grievous Wound is Bandaged, declaring Multi-Action breaks the bandage after that Multi-Action resolves.": "FATED.Health.BandagedDescription",
+  "Wound Treated: Ignore 2 points of the Wound’s Success Threshold penalty. If the Fated would suffer another Wound, the treatment is lost instead: the Grievous Wound reopens and its full penalty returns. That damage instance does not increase wound severity.": "FATED.Health.TreatedDescription",
   "Endurance Push": "FATED.Planner.EndurancePush",
   "Choose 0, 1 or 2 Endurance.": "FATED.Planner.EnduranceSpendRange",
   "Not enough Endurance for this turn.": "FATED.Planner.EnduranceSpendInsufficient",
