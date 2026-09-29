@@ -213,32 +213,46 @@ function actorFixture() {
 }
 
 for (const [lang, i18n] of [["en", en], ["it", it]]) {
-  for (const [severity, care] of [[1, "none"], [2, "none"], [1, "bandaged"], [2, "bandaged"], [2, "treated"]]) {
+  for (const [severity, care, descriptionKey] of [
+    [1, "bandaged", "LightBandagedDescription"],
+    [2, "bandaged", "GrievousBandagedDescription"],
+    [2, "treated", "GrievousTreatedDescription"],
+    ...[0, 1, 2, 3, 4].map(severity => [severity, "none", null]),
+    ...[0, 3, 4].flatMap(severity => ["bandaged", "treated"].map(care => [severity, care, null])),
+    [1, "treated", null]
+  ]) {
     test(`${lang}: wound-care note for severity ${severity}, ${care} renders on desktop and mobile without mutation`, async () => {
       globalThis.game = { i18n, user: { isGM: false } };
       const actor = actorFixture();
       actor.system.updateSource({ health: { woundSeverity: severity, woundCare: { care, daysRemaining: 0 } } });
       actor.system.prepareDerivedData();
       const before = actor.system.toObject();
-      const expected = care === "none" ? null : catalogs[lang].FATED.Health[
-        care === "bandaged" ? "BandagedDescription" : "TreatedDescription"];
+      const expected = descriptionKey ? catalogs[lang].FATED.Health[descriptionKey] : null;
+      // Check the presentation guard directly even when the DataModel normalizes incompatible care.
+      assert.equal(localizedHealth({ severity, care }, i18n).careDescription, expected);
       if (expected) {
         assert.ok(expected.startsWith(lang === "en"
           ? (care === "bandaged" ? "Wound Bandaged: Ignore 1 point" : "Wound Treated: Ignore 2 points")
           : (care === "bandaged" ? "Ferita Bendata: Ignora 1 punto" : "Ferita Trattata: Ignora 2 punti")));
         assert.match(expected, care === "bandaged"
-          ? (lang === "en" ? /after that Multi-Action resolves/ : /dopo la risoluzione di quelle Azioni Multiple/)
+          ? severity === 1
+            ? (lang === "en" ? /still counts as Light; if another Wound is suffered, it becomes Grievous/ : /conta ancora come Leggera; se si subisce un’altra Ferita, diventa Grave/)
+            : (lang === "en" ? /after that Multi-Action resolves/ : /dopo la risoluzione di quelle Azioni Multiple/)
           : (lang === "en" ? /does not increase wound severity/ : /non aumenta la gravità della Ferita/));
+        if (severity === 1) assert.doesNotMatch(expected, /Multi-Action|Azioni Multiple/);
+        else assert.doesNotMatch(expected, /Light|Leggera/);
       }
       for (const [Sheet, path] of [[FatedActorSheet, "fated-sheet"], [FatedMobileSheet, "mobile-sheet"]]) {
         const context = await new Sheet({ document: actor })._prepareContext({});
         assert.equal(context.healthState.careDescription, expected);
-        assert.deepEqual(context.healthState.conditions, []);
         const html = templates.get(`templates/actor/${path}.hbs`)({ ...context, character: true });
         assert.doesNotMatch(html, /FATED\./);
         if (expected) {
           assert.ok(html.includes(`<p class="muted health-care-note">${Handlebars.escapeExpression(expected)}</p>`));
           assert.ok(html.indexOf('wound-care-controls') < html.indexOf('health-care-note'));
+          for (const key of ["LightBandagedDescription", "GrievousBandagedDescription", "GrievousTreatedDescription"]) {
+            if (key !== descriptionKey) assert.ok(!html.includes(Handlebars.escapeExpression(catalogs[lang].FATED.Health[key])));
+          }
         } else assert.doesNotMatch(html, /health-care-note/);
       }
       assert.deepEqual(actor.system.toObject(), before);
