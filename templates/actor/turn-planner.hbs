@@ -20,7 +20,7 @@
     </div>
     <h3>{{localize "FATED.Planner.DeclareSequence"}}</h3>
   {{/if}}
-  <p class="turn-counts">{{localize "FATED.Planner.MainActions"}}: {{planner.mainCount}} / 3 · {{localize "FATED.Planner.MultiThreshold"}}: {{#if (eq planner.multiActionPenalty null)}}{{localize "FATED.Common.Unspecified"}}{{else}}+{{planner.multiActionPenalty}}{{/if}}</p>
+  <p class="turn-counts">{{localize "FATED.Planner.MainActions"}}: {{planner.mainCount}} / 3 · {{localize "FATED.Planner.MultiPenalty"}}: {{#if (eq planner.multiActionPenalty null)}}{{localize "FATED.Common.Unspecified"}}{{else}}+{{planner.multiActionPenalty}}{{/if}}</p>
   {{#if planner.issues.length}}
   <div class="turn-issues" role="status">
     <strong>{{localize "FATED.Planner.CannotLock"}}</strong>
@@ -74,16 +74,21 @@
   {{#if planner.locked}}
     <button type="button" class="turn-primary" data-action="planner" data-operation="clear" {{disabled (not editable)}}>{{localize "FATED.Planner.End"}}</button>
   {{else}}
-    <button type="button" data-action="planner" data-operation="add" data-kind="movement" {{disabled (or (not planner.canAddMovement) (not editable))}}>{{localize "FATED.Planner.AddMovement"}}</button>
-    {{#if planner.stanceChosen}}
-    <details class="turn-picker" data-planner-detail="picker">
-      <summary>{{localize "FATED.Item.AddAction"}}</summary>
+    <div class="turn-add-area">
+      <h3>{{localize "FATED.Planner.AddToSequence"}}</h3>
+      <div class="turn-add-controls" role="group" aria-label="{{localize "FATED.Planner.AddToSequence"}}">
+        <button type="button" data-action="toggleActionPicker" aria-expanded="{{planner.actionPickerOpen}}" aria-controls="{{planner.actionPickerId}}" {{disabled (or (not planner.stanceChosen) (not editable))}}>{{localize "FATED.Planner.AddActionButton"}}</button>
+        <button type="button" data-action="planner" data-operation="add" data-kind="movement" {{disabled (or (not planner.canAddMovement) (not editable))}}>{{localize "FATED.Planner.AddMovementButton"}}</button>
+      </div>
+    </div>
+    <div class="turn-picker" id="{{planner.actionPickerId}}" {{#unless planner.actionPickerOpen}}hidden{{/unless}}>
+      {{#if planner.stanceChosen}}
       <p class="mobile-note">{{localize "FATED.Planner.PickerHint"}}</p>
       {{#each actions}}
       <button type="button" data-action="planner" data-operation="add" data-kind="action" data-item-id="{{source.itemId}}" data-action-id="{{id}}" {{disabled (or additionIssue (not @root.editable))}}><strong>{{name}}</strong><span>{{source.itemName}} · {{classificationLabel}} · {{rollRequirementLabel}}</span>{{#if additionIssue}}<span>{{additionIssue}}</span>{{/if}}</button>
       {{else}}<p>{{localize "FATED.Planner.NoActions"}}</p>{{/each}}
-    </details>
-    {{/if}}
+      {{/if}}
+    </div>
     <button type="button" class="turn-primary" data-action="planner" data-operation="lock" {{disabled (or (not planner.canLock) (not editable))}}>{{localize "FATED.Planner.Lock"}}</button>
   {{/if}}
 </section>

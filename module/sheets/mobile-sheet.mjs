@@ -52,6 +52,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
       showSection: FatedMobileSheet.showSection,
       openItem: FatedMobileSheet.openItem,
       planner: FatedMobileSheet.planner,
+      toggleActionPicker: FatedMobileSheet.toggleActionPicker,
       adjustResource: FatedMobileSheet.adjustResource,
       health: healthAction,
       openRest: FatedMobileSheet.openRest,
@@ -76,6 +77,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     templates: ["systems/fated/templates/actor/turn-planner.hbs", "systems/fated/templates/actor/health-state.hbs", "systems/fated/templates/actor/defense.hbs"], scrollable: [".mobile-content"] } };
 
   section = "character";
+  actionPickerOpen = false;
 
   async _preRender(context, options) {
     // Preserve scroll position
@@ -125,6 +127,8 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
       enduranceOptions: enduranceSpendOptions(this.document, declaration.enduranceSpend),
       issues: declarationIssuesView(evaluation),
       stanceChosen: Boolean(declaration.stance),
+      actionPickerOpen: this.actionPickerOpen && Boolean(declaration.stance) && !evaluation.locked,
+      actionPickerId: `${this.id}-action-picker`,
       stances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === declaration.stance })),
       canAddMovement: !evaluation.locked && evaluation.movementCount === 0 && Boolean(declaration.stance),
       entries: evaluation.entries.map((entry, index, all) => ({ ...entry, number: index + 1,
@@ -159,6 +163,16 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     this._scrollPosition = 0;
     this.section = section;
     await this.render({ force: true });
+  }
+
+  /** Sheet-local expansion only: no submit or declaration operation. */
+  static toggleActionPicker(event, button) {
+    if (button.disabled) return;
+    const picker = this.element.querySelector(".turn-picker");
+    if (!picker) return;
+    this.actionPickerOpen = !this.actionPickerOpen;
+    picker.hidden = !this.actionPickerOpen;
+    button.setAttribute("aria-expanded", String(this.actionPickerOpen));
   }
 
   static openItem(event, button) {

@@ -52,6 +52,10 @@
 .fated-mobile .turn-number { color: var(--mobile-accent); }
 .fated-mobile .turn-issues { padding: 0.75rem; border: 1px solid #e0ab65; border-radius: 8px; color: #ffe2bd; }
 .fated-mobile .turn-issues ul { padding-left: 1.2rem; }
+.fated-mobile .turn-add-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.fated-mobile .turn-add-controls button { min-width: 0; white-space: normal; }
+.fated-mobile .turn-add-controls [aria-expanded="true"] { border-color: var(--mobile-accent); }
+.fated-mobile .turn-picker[hidden] { display: none; }
 .fated-mobile .turn-picker button { display: grid; width: 100%; text-align: left; margin: 0.5rem 0; gap: 0.25rem; }
 .fated-mobile .turn-picker span { color: var(--mobile-muted); font-size: 0.85rem; }
 .fated-mobile .turn-completed { border-color: var(--mobile-accent); }

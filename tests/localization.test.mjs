@@ -454,3 +454,87 @@ test("locked planner presentation reads frozen numbers and does not recalculate 
   assert.deepEqual(declaration, before);
   delete globalThis.game;
 });
+
+for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: unified sequence controls toggle locally and preserve planner operations`, async () => {
+  globalThis.game = { i18n, user: { isGM: false } };
+  const actor = actorFixture();
+  actor.system.updateSource({ declaration: { stance: "neutral" } });
+  const sheet = new FatedMobileSheet({ document: actor });
+  const render = async () => templates.get("templates/actor/turn-planner.hbs")(await sheet._prepareContext({}));
+  const before = actor.system.toObject();
+  actor.update = async () => assert.fail("Toggling must not write Actor data");
+  sheet.submit = async () => assert.fail("Toggling must not submit the sheet");
+  const picker = { hidden: true };
+  const toggle = { disabled: false, setAttribute(name, value) { this[name] = value; } };
+  sheet.element = { querySelector(selector) { assert.equal(selector, ".turn-picker"); return picker; } };
+  const handler = FatedMobileSheet.DEFAULT_OPTIONS.actions.toggleActionPicker;
+  let html = await render();
+  const labels = catalogs[lang].FATED.Planner;
+  assert.ok(html.includes(`<h3>${labels.AddToSequence}</h3>`));
+  assert.match(html, /<button type="button" data-action="toggleActionPicker" aria-expanded="false" aria-controls="[^"]+-action-picker"/);
+  assert.ok(html.includes(`>${labels.AddActionButton}</button>`));
+  assert.ok(html.includes(`>${labels.AddMovementButton}</button>`));
+  assert.match(html, /<button type="button" data-action="planner" data-operation="add" data-kind="movement"/);
+  assert.doesNotMatch(html, /<details[^>]*turn-picker|<summary>.*Add Action/);
+  assert.match(html, /class="turn-picker"[^>]*hidden/);
+  handler.call(sheet, {}, toggle);
+  assert.equal(toggle["aria-expanded"], "true");
+  assert.equal(picker.hidden, false);
+  html = await render();
+  assert.match(html, /aria-expanded="true"/);
+  assert.doesNotMatch(html, /class="turn-picker"[^>]*hidden/);
+  assert.equal((html.match(/class="turn-picker"/g) ?? []).length, 1);
+  assert.match(html, /data-operation="add" data-kind="action" data-item-id="item" data-action-id="action"/);
+  assert.match(html, /<strong>Heart<\/strong>/);
+  handler.call(sheet, {}, toggle);
+  assert.equal(picker.hidden, true);
+  assert.equal(toggle["aria-expanded"], "false");
+  assert.match(await render(), /class="turn-picker"[^>]*hidden/);
+  assert.deepEqual(actor.system.toObject(), before);
+  assert.equal(new FatedMobileSheet({ document: actor }).actionPickerOpen, false);
+
+  // Exercise the unchanged sheet dispatcher and real declaration service.
+  handler.call(sheet, {}, toggle);
+  let writes = 0;
+  actor.update = async changes => { writes++; actor.system.updateSource({ declaration: changes["system.declaration"] }); };
+  sheet.render = async () => { sheet.context = await sheet._prepareContext({}); };
+  const add = async kind => FatedMobileSheet.DEFAULT_OPTIONS.actions.planner.call(sheet, {}, {
+    dataset: { operation: "add", kind, itemId: "item", actionId: "action" },
+    closest: () => ({ dataset: { declarationRevision: actor.system.declaration.revision } })
+  });
+  await add("action");
+  assert.equal(writes, 1);
+  assert.equal(actor.system.declaration.entries[0].kind, "action");
+  assert.equal(actor.system.declaration.entries[0].actionId, "action");
+  assert.equal(sheet.context.planner.actionPickerOpen, true);
+  await add("action");
+  assert.equal(sheet.context.planner.multiActionPenalty, 1);
+  html = await render();
+  assert.ok(html.includes(`${labels.MultiPenalty}: +1`));
+  assert.doesNotMatch(html, /FATED\./);
+  await add("movement");
+  assert.equal(writes, 3);
+  assert.equal(actor.system.declaration.entries[2].kind, "movement");
+  assert.equal(sheet.context.planner.canAddMovement, false);
+  assert.match(await render(), /data-kind="movement" disabled/);
+  sheet.isEditable = false;
+  html = await render();
+  assert.match(html, /data-action="toggleActionPicker"[^>]*disabled/);
+  assert.match(html, /data-kind="action"[^>]*disabled/);
+  assert.match(html, /data-operation="lock" disabled/);
+  sheet.isEditable = true;
+  actor.system.updateSource({ declaration: { stance: null, entries: [] } });
+  html = await render();
+  assert.match(html, /data-action="toggleActionPicker"[^>]*aria-expanded="false"[^>]*disabled/);
+  assert.match(html, /data-kind="movement" disabled/);
+  assert.doesNotMatch(html, /data-kind="action"/);
+  // Power addition issues still reach the original picker button unchanged.
+  actor.system.updateSource({ declaration: { stance: "neutral", entries: [{ id: "power", kind: "action", itemId: "item", actionId: "action" }] } });
+  actor.items[0].system.updateSource({ actions: [{ ...actor.items[0].system.actions[0].toObject(), classification: "power" }] });
+  const context = await sheet._prepareContext({});
+  assert.ok(context.actions[0].additionIssue);
+  html = templates.get("templates/actor/turn-planner.hbs")(context);
+  assert.match(html, /data-kind="action"[^>]*disabled/);
+  assert.ok(html.includes(Handlebars.escapeExpression(context.actions[0].additionIssue)));
+  delete globalThis.game;
+});
