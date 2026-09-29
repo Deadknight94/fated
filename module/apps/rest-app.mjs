@@ -1,3 +1,8 @@
+/**
+ * @file ApplicationV2 rest controller. Holds transient form inputs, builds localized
+ * presentation data and delegates persistent changes to rest services. Registers
+ * with Actor.apps for rerenders; neither this window nor its services runs a timer.
+ */
 import { uiText, systemMessage } from "../presentation/text.mjs";
 import { displayLabel, localizedHealth } from "../presentation/labels.mjs";
 import { healthView } from "../health.mjs";
@@ -7,6 +12,11 @@ import { beginExtendedRest, completeExtendedRestDay, completeExtendedRestGrievou
 import { advanceWoundCareDay } from "../rest/wound-care-day.mjs";
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
+/**
+ * Rest controller for one Fated Document. Builds UI context without writes and
+ * passes entered physical Healing results to services. Local values/pending state
+ * are not Actor data; perform() prevents overlapping requests in this window.
+ */
 export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor({ document: actor, ...options } = {}) {
     if (actor?.type !== "fated") throw new Error("RestApp can only be opened for fated actors");
@@ -24,6 +34,7 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
       completeGrievousHealing: function () { return this.perform(completeExtendedRestGrievousHealing); } }
   };
   static PARTS = { main: { template: "systems/fated/templates/actor/rest-app.hbs", scrollable: [".rest-content"] } };
+  // Actor.apps membership lets native Actor updates rerender this auxiliary window.
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
     this.document.apps[this.id] = this;
@@ -32,6 +43,7 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
     super._onClose(options);
     delete this.document.apps[this.id];
   }
+  // Transient input strings preserve blank Healing fields as "not supplied".
   values = { spendHope: false, extraRecovery: "1", shortHealing: "", longHealing: "", extendedHealing: "" };
   pending = false;
   async _onRender(context, options) {
@@ -41,6 +53,7 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (input.type === "checkbox") input.addEventListener("change", () => this.render({ force: true }));
     }
   }
+  /** Blank omits Healing; bad numeric input becomes NaN so the service rejects it. */
   healingOptions(field) {
     if (this.element?.querySelector(`[data-rest-field="${field}"]`)?.validity.badInput) return { healingSuccesses: NaN };
     const value = this.values[field].trim();
@@ -50,6 +63,7 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return { ...this.healingOptions("shortHealing"), spendHope: this.values.spendHope,
       ...(this.values.spendHope ? { extraRecovery: Number(this.values.extraRecovery) } : {}) };
   }
+  /** Guard this window while a rest service writes; always restore editable UI. */
   async perform(service, options) {
     if (this.pending) return false;
     if (!this.document.isOwner) { ui.notifications.warn(uiText("You cannot update this Actor.")); return false; }
@@ -87,6 +101,11 @@ export class RestApp extends HandlebarsApplicationMixin(ApplicationV2) {
       careLabel: displayLabel("care", this.document.system.health.woundCare.care) };
   }
 }
+/**
+ * Reuses or creates the Actor's RestApp, reserves it in actor.apps before async
+ * rendering to handle repeated taps, and returns the app. Failed initial render
+ * removes the reservation. Opening alone does not apply a rest.
+ */
 export async function openRestApp(actor) {
   const existing = Object.values(actor.apps).find(app => app instanceof RestApp);
   const app = existing ?? new RestApp({ document: actor });

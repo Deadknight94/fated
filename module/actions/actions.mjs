@@ -1,13 +1,28 @@
+/**
+ * @file Action rule layer: detached enabled-Action discovery and pure dice/Threshold
+ * calculations with source provenance. Availability is not legality; declaration
+ * evaluation supplies turn context. No Document updates or digital rolls occur here.
+ */
 import { BASE_SUCCESS_THRESHOLD } from "./action-model.mjs";
 
-/** Preserve ambiguous legacy data for explicit review instead of inventing a modifier. */
+/**
+ * Preserve ambiguous legacy data for explicit review instead of inventing a modifier.
+ *
+ * Pure check returning a review message for a stored non-4 legacy threshold,
+ * otherwise null. No automatic conversion or source mutation occurs.
+ */
 export function legacyThresholdIssue(action) {
   const value = action.successThreshold;
   return value !== null && value !== undefined && value !== BASE_SUCCESS_THRESHOLD
     ? `Stored legacy Success Threshold ${value} requires review. The universal base is 4; represent confirmed deviations as named Threshold modifiers and reset the legacy value to 4.` : null;
 }
 
-/** Pure, additive infrastructure. Call afresh with all applicable modifiers; never accumulate prior totals. */
+/**
+ * Pure, additive infrastructure. Call afresh with all applicable modifiers; never accumulate prior totals.
+ *
+ * Returns {base, modifiers, total, complete}; copies modifier entries and yields
+ * null total when any numeric input is unknown. Pure and does not clamp totals.
+ */
 export function calculateValue(base, modifiers = []) {
   const entries = modifiers.map(modifier => ({ ...modifier }));
   const complete = Number.isFinite(base) && entries.every(entry => Number.isFinite(entry.value));
@@ -15,6 +30,11 @@ export function calculateValue(base, modifiers = []) {
     total: complete ? base + entries.reduce((sum, entry) => sum + entry.value, 0) : null, complete };
 }
 
+/**
+ * Pure calculation from explicit dice source and separate modifier arrays.
+ * Returns successDice/successThreshold breakdowns; complete dice pools have a
+ * one-die minimum, Threshold has no floor/ceiling. Does not enforce rollRequirement.
+ */
 export function calculateAction(action, attributes = {}, additionalModifiers = {}) {
   const source = action.successDice.source;
   const baseDice = source === "fixed"
@@ -57,12 +77,18 @@ export function calculateAction(action, attributes = {}, additionalModifiers = {
  * @param {object} actorData - Actor.system-like data containing attributes, skills, proficiencies.
  * @param {object} additionalModifiers - Additional modifier arrays.
  * @returns {object} calculation result same shape as calculateAction.
+ *
+ * Pure source precedence: Item proficiency, then Action skill, then legacy
+ * attribute/fixed source. Missing proficiency blocks fallback; level 0 proficiency
+ * uses one die and marks untrained. Adds sourceProvenance for display, without
+ * reading Foundry collections or writing Actor/Item data.
  */
 export function calculateActionFromActorData(action, actorData = {}, additionalModifiers = {}) {
   const proficiencyKey = action?.source?.proficiency ?? "";
   const actorAttributes = actorData.attributes ?? actorData;
   const actorSkills = actorData.skills ?? {};
   const actorProficiencies = actorData.proficiencies ?? [];
+  // Reuse the same calculation with a resolved base without mutating the Action.
   const calculateWithBase = base => calculateAction(
   {
     ...action,
@@ -147,7 +173,13 @@ export function calculateActionFromActorData(action, actorData = {}, additionalM
   };
   return result;
 }
-/** Source provenance is derived, so copying an Item never retains another owner's UUID. */
+/**
+ * Source provenance is derived, so copying an Item never retains another owner's UUID.
+ *
+ * Read-only projection returning detached enabled Actions with current Item
+ * identity, a UUID/action key and per-modifier source provenance. Does not
+ * filter by equipped state, stance or turn legality.
+ */
 export function getItemActions(item) {
   return (item.system.actions ?? []).filter(action => action.enabled).map(action => {
     const data = typeof action.toObject === "function" ? action.toObject() : structuredClone(action);
@@ -169,7 +201,12 @@ export function getItemActions(item) {
   });
 }
 
-/** Available here means enabled on an owned Item; future stance/condition legality is not evaluated. */
+/**
+ * Available here means enabled on an owned Item; stance/condition legality is evaluated elsewhere.
+ *
+ * Read-only flattening of embedded Item.getAvailableActions() results. Returned
+ * Actions are calculation inputs; legality and sheet presentation come later.
+ */
 export function getActorActions(actor) {
   return Array.from(actor.items).flatMap(item => item.getAvailableActions());
 }

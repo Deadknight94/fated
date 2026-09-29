@@ -1,9 +1,15 @@
+/**
+ * @file Client-only Companion shell lifecycle. Reuses FatedMobileSheet and Foundry
+ * User.character; serializes shell refreshes after ready, resize and Document hooks.
+ * Local DOM/CSS suppression never mutates shared Scenes or replaces Actor storage.
+ */
 import { uiText, systemMessage } from "./presentation/text.mjs";
 import { FatedMobileSheet } from "./sheets/mobile-sheet.mjs";
 import { shouldActivateCompanion, companionCharacterState } from "./companion-state.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
+/** Persistent frameless mobile shell; only explicit disposal may close it. */
 class CompanionSheet extends FatedMobileSheet {
   static DEFAULT_OPTIONS = { classes: ["fated-companion"], window: { frame: false, positioned: false } };
 
@@ -14,6 +20,7 @@ class CompanionSheet extends FatedMobileSheet {
   }
 }
 
+/** Same shell lifecycle when the linked character is missing or inaccessible. */
 class CompanionFallback extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = { classes: ["fated", "fated-mobile", "fated-companion"], window: { frame: false, positioned: false } };
   static PARTS = { main: { template: "systems/fated/templates/companion-fallback.hbs" } };
@@ -24,11 +31,19 @@ class CompanionFallback extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
-/** Client-only controller; documents and synchronization remain entirely Foundry-owned. */
+/**
+ * Client-only controller; documents and synchronization remain entirely Foundry-owned.
+ *
+ * Installs DOM listeners and Foundry hooks, creates a menu, and queues shell
+ * synchronization. Returns no state; local activation persists across resize
+ * until GM status clears it. Does not persist settings or Actor changes.
+ */
 export function initializeCompanionMode() {
+  // Session-local latch: rotation/resizing does not eject an activated player.
   let active = false;
   let shell;
   let actorId;
+  // Serialize asynchronous render/dispose work; this is not a Document-write queue.
   let pending = Promise.resolve();
   const menu = document.createElement("details");
   menu.className = "fated-companion-menu";
@@ -39,6 +54,7 @@ export function initializeCompanionMode() {
     <button type="button" data-companion="refresh">${uiText("Refresh / reconnect")}</button>
     <button type="button" data-companion="logout">${uiText("Log out")}</button>
   `;
+  /** Reconcile linked-character/GM changes with local shell and CSS state. */
   async function synchronize() {
     if (game.user.isGM) {
       active = false;
@@ -62,6 +78,7 @@ export function initializeCompanionMode() {
     await shell.render({ force: true });
     shell.bringToFront();
   }
+  /** Queue reconciliation and recover the queue after a render failure. */
   function refresh() {
     pending = pending.then(synchronize).catch(error => {
       console.error("Fated | Companion Mode", error);

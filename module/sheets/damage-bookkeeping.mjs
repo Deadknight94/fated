@@ -1,3 +1,8 @@
+/**
+ * @file GM physical-result controller for one Fated target. Holds transient inputs and
+ * a reviewable preview; damage.mjs owns calculations and health.mjs owns Wound
+ * updates. No canvas selection, digital dice or persistent damage-event log.
+ */
 import { uiText, systemMessage } from "../presentation/text.mjs";
 import { modifierLabel, defenseView } from "../presentation/labels.mjs";
 import { actionDamage } from "../defense.mjs";
@@ -5,7 +10,13 @@ import { previewDamage, applyDamage } from "../damage.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-/** Target-centric GM bookkeeping window. Inputs are transient physical results, not Actor state. */
+/**
+ * Target-centric GM bookkeeping window. Inputs are transient physical results, not Actor state.
+ *
+ * Preview is read-only; Apply checks current inputs/state against the reviewed
+ * result before calling applyDamage. A successful application consumes the local
+ * preview. The pending guard is per window, not cross-client transaction protection.
+ */
 export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = { classes: ["fated", "damage-bookkeeping", "standard-form"], tag: "div",
     position: { width: 480, height: 620 }, window: { title: "FATED.Common.PhysicalDamage", resizable: true },
@@ -14,6 +25,7 @@ export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2)
 
   constructor(target) { super(); this.target = target; this.values = { attack: "", successes: "0", finalDamage: "0" }; }
 
+  /** Read visible Actor Actions with numeric Damage; not a target-legality check. */
   availableAttacks() {
     return game.actors.contents.filter(actor => actor.visible).flatMap(attacker =>
       (attacker.getAvailableActions?.() ?? []).flatMap(action => {
@@ -32,6 +44,7 @@ export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2)
       canApply: this.target.isOwner && this.result && this.result.wounds > 0 && !this.pending };
   }
 
+  /** Read transient form values and re-resolve the selected Action from live Items. */
   readInput() {
     for (const field of ["attack", "successes", "finalDamage"]) this.values[field] = this.element.querySelector(`[data-damage-field="${field}"]`).value;
     const input = { target: this.target };
@@ -55,6 +68,8 @@ export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2)
     try {
       const input = this.readInput();
       const current = previewDamage(input);
+      // Require another review when current arithmetic or target health has changed.
+      // This comparison does not serialize damage requests from other clients.
       if (JSON.stringify(current) !== JSON.stringify(this.result)) {
         this.result = current;
         this.message = "Inputs or Actor state changed. Review the updated preview and press Apply Wounds again.";
@@ -68,6 +83,10 @@ export class DamageBookkeeping extends HandlebarsApplicationMixin(ApplicationV2)
   }
 }
 
+/**
+ * Bound-sheet entry point restricted to GM/Fated targets; returns a newly rendered
+ * window or undefined. Opening does not apply Wounds or mutate the target.
+ */
 export function openDamageBookkeeping() {
   if (!game.user.isGM || this.document.type !== "fated") return;
   return new DamageBookkeeping(this.document).render({ force: true });

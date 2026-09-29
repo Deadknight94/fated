@@ -1,9 +1,23 @@
-/** Manual choices derive from normalization; pending healing remains lifecycle-only. */
+/**
+ * @file Pure wound-care normalization shared by Data Model hooks, health and rest services.
+ * Returns compatible care data without writing Documents or advancing fictional time.
+ */
+/**
+ * Manual choices derive from normalization; pending healing remains lifecycle-only.
+ *
+ * Pure list of allowed manual care identifiers for a severity/death state.
+ * Excludes grievousHealingPending, which only the rest lifecycle schedules.
+ */
 export function manualWoundCareChoices(woundSeverity, dead = false) {
   return ["none", "bandaged", "treated"].filter(care =>
     normalizeWoundCare(dead ? 4 : woundSeverity, { care }).care === care);
 }
 
+/**
+ * Pure normalization of severity and optional care into {care, daysRemaining}.
+ * Invalid/incompatible care becomes none/0; only nonnegative integer durations
+ * survive. No expiry, healing or persistent update is triggered here.
+ */
 export function normalizeWoundCare(woundSeverity, woundCare) {
   // Default result
   const result = { care: "none", daysRemaining: 0 };

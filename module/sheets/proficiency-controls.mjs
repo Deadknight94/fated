@@ -1,9 +1,21 @@
+/**
+ * @file Shared proficiency controller/mixin. GM key renames update the Actor and matching
+ * embedded Item references with attempted rollback on failure. Ordinary form edits
+ * cannot rename keys; DOM expansion state stays client-local. No world Items change.
+ */
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 
+// Reject overlapping renames for the same local Actor while multi-Document writes run.
 const pendingActors = new WeakSet();
 const message = key => game.i18n.localize(`FATED.Validation.${key}`);
 
-/** Rename only this Actor's proficiency and matching embedded Item references. */
+/**
+ * Rename only this Actor's proficiency and matching embedded Item references.
+ *
+ * Returns the normalized/new key after Actor and embedded Item writes. Requires
+ * a GM/editable sheet; rejects overlapping same-client renames. Writes are
+ * separate, with rollback attempted on Item failure, not a database transaction.
+ */
 export async function renameProficiency(sheet, oldKey, value) {
   if (!game.user.isGM || !sheet.isEditable) throw new Error(message("ProficiencyKeyPermission"));
   const actor = sheet.document;
@@ -45,6 +57,10 @@ export async function renameProficiency(sheet, oldKey, value) {
   }
 }
 
+/**
+ * Reads the sheet DOM and stores open keys on the sheet instance for rerendering.
+ * No Document writes; an absent section retains the previous expansion state.
+ */
 export function captureProficiencyDetails(sheet) {
   // Keep character-section state while the mobile sheet displays another section.
   const details = sheet.element?.querySelectorAll("details[data-proficiency-key]") ?? [];
@@ -52,13 +68,23 @@ export function captureProficiencyDetails(sheet) {
     Array.from(details).filter(element => element.open).map(element => element.dataset.proficiencyKey));
 }
 
+/**
+ * Writes only details.open in the current sheet DOM from captured keys.
+ * Does not change proficiencies or any Foundry Document.
+ */
 export function restoreProficiencyDetails(sheet) {
   for (const details of sheet.element?.querySelectorAll("details[data-proficiency-key]") ?? []) {
     details.open = sheet._openProficiencyKeys?.has(details.dataset.proficiencyKey) ?? false;
   }
 }
 
-/** Both sheets use the same guarded key-change route, separate from normal form updates. */
+/**
+ * Both sheets use the same guarded key-change route, separate from normal form updates.
+ *
+ * Returns a sheet subclass that protects keys during ordinary form processing
+ * and routes explicit changes through renameProficiency. Updates DOM key markers
+ * before rerender capture, then refreshes sibling sheets after the writes settle.
+ */
 export function ProficiencySheetMixin(Base) {
   return class extends Base {
     _processFormData(event, form, formData) {

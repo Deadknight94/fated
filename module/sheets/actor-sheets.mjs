@@ -1,3 +1,9 @@
+/**
+ * @file Desktop Fated and simplified NPC sheet/controllers using Foundry ActorSheetV2.
+ * Build localized presentation models and route edits to Documents/shared controls.
+ * The Fated desktop has global modifier editing; the mobile sheet owns the planner.
+ * NPC views do not acquire Fated health, stance or declaration mechanics.
+ */
 import { uiText, systemMessage } from "../presentation/text.mjs";
 import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView, rangeLabel } from "../presentation/labels.mjs";
 import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
@@ -18,6 +24,7 @@ import { ProficiencySheetMixin, captureProficiencyDetails, restoreProficiencyDet
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
+/** Shared submit-on-change shell and read-only context for both Actor types. */
 class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "actor", "standard-form"],
@@ -70,6 +77,11 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
   }
 }
 
+/**
+ * Desktop Fated controller with health, rest, damage and manual-modifier controls.
+ * _prepareContext reads services; form/actions persist through Foundry Documents.
+ * The current desktop template has no stance selector or Turn Planner.
+ */
 export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
   async _prepareContext(options) {
     return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,
@@ -151,7 +163,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   /**
    * Add a new proficiency entry with a unique technical key.
    * The entry is added to the actor's system.proficiencies array.
-   * No UI is directly edited; the form submit will persist the new entry.
+   * Submit pending fields first, then persist the new array with Actor.update().
    */
   static async addProficiency() {
     if (!this.isEditable) return;
@@ -201,7 +213,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
      "system.proficiencies": [...profs, newProf]
    });
 
-   // Await the dialog promise to keep the async flow consistent
+   // Existing unresolved dialog reference remains after the Actor write.
     await dialog;
   }
 
@@ -225,6 +237,11 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     });
   }
 }
+/**
+ * Simplified NPC controller with local stats/actions/items/notes navigation.
+ * Displays configured Item Actions without Fated calculations or a planner;
+ * ordinary forms persist Resilience, Defense and description on the Actor.
+ */
 export class NpcActorSheet extends BaseFatedActorSheet {
   _npcSection = "stats";
 

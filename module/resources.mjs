@@ -1,10 +1,26 @@
-/** Shared bound for prepared values and persistent document corrections. */
+/**
+ * @file Resource bookkeeping services used by mobile controls and health services.
+ * clampHope is pure; async helpers update an owned Fated Actor. Physical Fate Die
+ * Hope entry is explicit and does not roll dice, generate Shadow or scan the party.
+ */
+/**
+ * Shared bound for prepared values and persistent document corrections.
+ *
+ * Pure numeric bound within +/- (Heart + Mind), returning zero rather than -0.
+ * Used both for prepared projections and pending persistent source correction.
+ */
 export function clampHope(value, { heart, mind }) {
   const limit = heart + mind;
   return Math.max(-limit, Math.min(limit, value)) || 0;
 }
 
-/** Record Hope from an explicitly supplied physical Fate Die; only its roller is updated. */
+/**
+ * Record Hope from an explicitly supplied physical Fate Die; only its roller is updated.
+ *
+ * Accepts only integer faces 17-20: +1 Hope for 17-19, +2 for 20. Returns
+ * Promise<boolean>, false for ineligible/no-change cases; otherwise writes one
+ * Actor update. Other Fate Die outcomes are outside this helper.
+ */
 export async function applyFateDieHope(actor, face) {
   if (actor.type !== "fated" || !actor.isOwner || !Number.isInteger(face) || face < 17 || face > 20) return false;
   const hope = actor.system.resources.hope.value;
@@ -14,7 +30,13 @@ export async function applyFateDieHope(actor, face) {
   return true;
 }
 
-/** Only these manual bookkeeping controls may issue resource updates. */
+/**
+ * Manual +/-1 resource bookkeeping shared with explicit health drain.
+ *
+ * Persists one +/-1 adjustment to Endurance, Hope or Power on an owned Fated.
+ * Applies resource bounds and returns false for invalid/no-change requests, true
+ * after Actor.update(). Generic Endurance decrement does not convert loss to Hope.
+ */
 export async function adjustResource(actor, resource, delta) {
   if (actor.type !== "fated" || !actor.isOwner) return false;
   if (!["endurance", "hope", "power"].includes(resource) || ![-1, 1].includes(delta)) return false;
@@ -27,7 +49,7 @@ export async function adjustResource(actor, resource, delta) {
     const limit = actor.system.attributes.heart + actor.system.attributes.body + actor.system.attributes.mind;
     value = Math.max(0, Math.min(value, limit));
   } else {
-    // Endurance is capped by its max; other resources have no upper bound here.
+    // The remaining supported resource is Endurance, bounded by prepared max.
     value = Math.max(0, resource === "endurance" ? Math.min(value, actor.system.resources.endurance.max) : value);
   }
   if (value === current) return false;

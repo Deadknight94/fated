@@ -1,6 +1,18 @@
+/**
+ * @file Desktop manual-modifier controller. Serializes edits per Actor object before
+ * replacing its stored modifier array; labels remain authored text. Calculation
+ * and localization of system modifiers belong to health/presentation services.
+ */
+// Shared across sheets using the same Actor object; not a server-side lock.
 const pendingUpdates = new WeakMap();
 
-/** Serialize blur/add/remove events so an in-flight edit cannot overwrite a sibling. */
+/**
+ * Serialize blur/add/remove events so an in-flight edit cannot overwrite a sibling.
+ *
+ * Returns Promise<boolean> for an add/edit/remove operation. Queues by Actor
+ * object, then reads current entries and calls Actor.update() with the full array.
+ * This protects sibling edits on this client, not independent remote clients.
+ */
 export async function changeManualModifier(sheet, operation) {
   const actor = sheet.document;
   if (!sheet.isEditable || !actor.isOwner || actor.type !== "fated") return false;
@@ -35,6 +47,10 @@ async function applyManualModifier(sheet, operation) {
   return true;
 }
 
+/**
+ * Bound-sheet add/remove click handler; delegates to the Actor queue and clears
+ * a local click guard in finally. Does not calculate modifiers or rewrite labels.
+ */
 export async function manualModifierAction(event, button) {
   if (this._manualModifierPending) return;
   this._manualModifierPending = true;

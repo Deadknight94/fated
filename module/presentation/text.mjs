@@ -1,3 +1,8 @@
+/**
+ * @file Localization boundary for system-owned English UI strings and service errors.
+ * Uses an explicit catalog and whole-message patterns; unknown text passes through.
+ * No stored data or rules change here. Authored names/keys must remain opaque.
+ */
 /** UI-only English source text to localization keys. Never apply to user-authored text. */
 const keys = {
   "Wound Bandaged: Ignore 1 point of the Wound’s Success Threshold penalty. The Wound still counts as Light; if another Wound is suffered, it becomes Grievous.": "FATED.Health.LightBandagedDescription",
@@ -208,7 +213,13 @@ const keys = {
   "Your assigned Fated character is unavailable. Ask the GM to check your Actor permissions.": "FATED.Companion.NoPermission"
 };
 
-/** Localize system-owned UI text; the optional service makes formatters directly testable. */
+/**
+ * Localize system-owned UI text; the optional service makes formatters directly testable.
+ *
+ * Returns translated/interpolated text, falling back to English if the key or
+ * service is unavailable. Reads i18n but has no Document side effects; callers
+ * must only pass system-owned source text.
+ */
 export function uiText(english, data = {}, i18n = globalThis.game?.i18n) {
   const key = Object.hasOwn(keys, english) ? keys[english] : undefined;
   const localized = key && i18n?.localize ? i18n.localize(key) : english;
@@ -223,7 +234,12 @@ const patterns = Object.keys(keys).filter(text => /\{\w+\}/.test(text)).map(text
   return { text, names, pattern: new RegExp(`^${parts.join("(.*?)")}$`, "s") };
 });
 
-/** Recognition depends on the catalog, never on whether translation changes the wording. */
+/**
+ * Recognition depends on the catalog, never on whether translation changes the wording.
+ *
+ * Pure Boolean recognition of complete catalog messages, interpolated patterns
+ * or recognized lines. Does not translate or change the message.
+ */
 export function isSystemMessage(message) {
   if (!message) return false;
   if (Object.hasOwn(keys, message)) return true;
@@ -233,7 +249,13 @@ export function isSystemMessage(message) {
   return index >= 0 && isSystemMessage(message.slice(index + 2));
 }
 
-/** Adapt messages from pure services at the presentation boundary, without changing thrown errors. */
+/**
+ * Adapt messages from pure services at the presentation boundary, without changing thrown errors.
+ *
+ * Returns display text with known system fragments translated and captured
+ * authored names retained. Unrecognized diagnostics pass through unchanged;
+ * there is no persistent mutation and the original error is not modified.
+ */
 export function systemMessage(message, i18n = globalThis.game?.i18n) {
   if (!message) return message;
   if (Object.hasOwn(keys, message)) return uiText(message, {}, i18n);

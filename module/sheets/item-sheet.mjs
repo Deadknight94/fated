@@ -1,3 +1,8 @@
+/**
+ * @file Item sheet/controller for structured Action authoring. Localizes system choices,
+ * normalizes indexed forms, and replaces Action arrays through Item.update().
+ * Action Data Models validate values; this editor does not resolve Actions.
+ */
 import { uiText, systemMessage } from "../presentation/text.mjs";
 import { displayLabel } from "../presentation/labels.mjs";
 import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
@@ -9,6 +14,11 @@ import { SKILL_KEYS } from "../skills.mjs";
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
 
+/**
+ * ItemSheetV2 editor of Item data and embedded Actions. Form adaptation preserves
+ * siblings; editActions submits pending fields before replacing the Action array
+ * via Item.update(). View state and generated labels are not persisted.
+ */
 export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin(ItemSheetV2)) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "item", "standard-form"],
@@ -92,6 +102,7 @@ export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMix
   };
 }
 
+  /** Normalize indexed Action controls before Foundry validates/persists the form. */
   _processFormData(event, form, formData) {
     const data = super._processFormData(event, form, formData);
     if (data.system?.actions) data.system.actions = readActionForm(data.system.actions,
@@ -131,6 +142,7 @@ export class FatedItemSheet extends LocalizedSheetMixin(HandlebarsApplicationMix
   }
 
 
+  /** Flush the form, edit detached data, then replace the whole Action array. */
   async editActions(edit) {
     if (!this.isEditable) return;
     await this.submit();

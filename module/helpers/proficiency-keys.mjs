@@ -1,4 +1,9 @@
 /**
+ * @file Pure proficiency identifier helpers used by sheet/controller mutations. Normalizes
+ * authored names and checks exact key collisions; does not rename stored references
+ * or localize keys. proficiency-controls.mjs owns those Document writes.
+ */
+/**
  * Convert a human-readable proficiency name into a stable,
  * deterministic camelCase key.
  *
@@ -12,6 +17,9 @@
  *
  * @param {string} name
  * @returns {string|null}
+ *
+ * Pure normalization only; it does not check uniqueness or update references.
+ * Already-normalized camelCase keys should not be normalized again on no-op edits.
  */
 export function normalizeProficiencyKey(name) {
   if (typeof name !== "string") return null;
@@ -42,6 +50,8 @@ export function normalizeProficiencyKey(name) {
  * @param {Array<{key:string}>} proficiencies
  * @param {string} key
  * @returns {boolean}
+ *
+ * Pure exact-key membership check; display names and localization are irrelevant.
  */
 export function hasDuplicateKey(proficiencies, key) {
   return proficiencies.some(proficiency => proficiency.key === key);

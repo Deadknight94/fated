@@ -1,4 +1,15 @@
-/** Turn indexed form objects into arrays without letting field edits replace sibling Actions. */
+/**
+ * @file Pure form adapter between indexed Foundry submission objects and Action arrays.
+ * Preserves sibling Actions and unknown values; ItemSheet owns persistence and
+ * the Data Models own validation. This is not a rules calculation.
+ */
+/**
+ * Turn indexed form objects into arrays without letting field edits replace sibling Actions.
+ *
+ * Pure merge of submitted indexed fields into current plain Action objects.
+ * Returns an array, retaining absent siblings and the read-only legacy Threshold;
+ * empty numeric/choice inputs remain null. Does not validate or save Documents.
+ */
 export function readActionForm(submitted, current) {
   return current.map((action, index) => {
     const input = submitted[index];

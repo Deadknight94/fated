@@ -1,3 +1,8 @@
+/**
+ * @file Startup entry point loaded by system.json. Registers Foundry v14 Documents,
+ * Data Models and sheets at init, and the client Companion shell at ready.
+ * Imports combat hook registration; rules calculations live in module services.
+ */
 import { FatedActor, FatedItem } from "./module/documents.mjs";
 import {
   FatedDataModel,
@@ -13,8 +18,10 @@ import { FatedItemSheet } from "./module/sheets/item-sheet.mjs";
 import { FatedMobileSheet } from "./module/sheets/mobile-sheet.mjs";
 import { initializeCompanionMode } from "./module/companion.mjs";
 
+// Companion needs the linked User/Actor and browser UI, so it starts at ready.
 Hooks.once("ready", initializeCompanionMode);
 
+// Register schema/document adapters before world Documents and their sheets are used.
 Hooks.once("init", () => {
   console.log("Fated | Initializing Fated system");
 
@@ -77,5 +84,5 @@ Hooks.once("init", () => {
   });
 });
 
-// Import the combat hooks after system initialisation.
+// Static imports register hooks during module loading, before the init callback runs.
 import "./module/combat/hooks.mjs";

@@ -1,6 +1,16 @@
+/**
+ * @file Extended Rest services separate beginning, completed-day recovery and pending
+ * Grievous healing completion. Each operation can persist an Actor update; none
+ * tracks elapsed time or advances the care countdown automatically.
+ */
 import { clampHope } from "../resources.mjs";
 
-/** Beginning of an already fictionally authorized Extended Rest; no elapsed-time tracking. */
+/**
+ * Beginning of an already fictionally authorized Extended Rest; no elapsed-time tracking.
+ *
+ * Returns false for unsupported/non-owner Actors or severity >=4, otherwise true.
+ * Resets Power through Actor.update() only when needed; no other resource changes.
+ */
 export async function beginExtendedRest(actor) {
   if (actor?.type !== "fated" || !actor.isOwner) return false;
   if (actor.system.health.woundSeverity >= 4) return false;
@@ -8,7 +18,13 @@ export async function beginExtendedRest(actor) {
   return true;
 }
 
-/** One explicitly completed fictional day: full Endurance and +1 Hope, leaving Power alone. */
+/**
+ * One explicitly completed fictional day: full Endurance and +1 Hope, leaving Power alone.
+ *
+ * Returns Promise<boolean>; validates optional positive Healing successes for
+ * Grievous Wounds before one combined Actor.update(). May heal Light Wounds or
+ * schedule pending Grievous healing; does not decrement the care countdown.
+ */
 export async function completeExtendedRestDay(actor, { healingSuccesses } = {}) {
   if (actor?.type !== "fated" || !actor.isOwner) return false;
   const { attributes, resources, health } = actor.system;
@@ -30,7 +46,13 @@ export async function completeExtendedRestDay(actor, { healingSuccesses } = {}) 
   return true;
 }
 
-/** Caller confirms the scheduled 24 fictional hours have passed; resources are untouched. */
+/**
+ * Caller confirms the scheduled 24 fictional hours have passed; resources are untouched.
+ *
+ * Requires Grievous severity and grievousHealingPending at zero days. Writes
+ * severity/care together and returns true, or false when inapplicable. Does not
+ * clear recorded death, restore resources or infer elapsed time.
+ */
 export async function completeExtendedRestGrievousHealing(actor) {
   if (actor?.type !== "fated" || !actor.isOwner) return false;
   const { health } = actor.system;

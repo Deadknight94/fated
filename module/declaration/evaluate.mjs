@@ -1,10 +1,26 @@
+/**
+ * @file Target-agnostic declaration calculation layer. Evaluates draft legality and
+ * constructs detached edits/snapshots; service.mjs owns Actor writes and costs.
+ * No paths, targets, movement execution or physical-roll resolution are modeled.
+ */
 import { calculateActionFromActorData } from "../actions/actions.mjs";
 import { healthLockIssue } from "../health.mjs";
 import { enduranceSpendIssue } from "./endurance-push.mjs";
 
+/**
+ * Version stamped into draft and snapshot state; evaluator rejects other versions.
+ */
 export const DECLARATION_VERSION = 1;
+/**
+ * Accepted stored stance identifiers for draft editing/evaluation and planner UI.
+ */
 export const DECLARATION_STANCES = ["neutral", "offensive", "defensive", "ranged"];
 
+/**
+ * Pure turn-context provider returning separate dice/Threshold arrays with stance
+ * provenance. Explicit attacks get Offensive -1 Threshold or Defensive -1 die;
+ * Ranged adds one die only to ranged attacks. Other Actions receive no entries.
+ */
 export function stanceActionModifiers(action, stance) {
   const successDice = [];
   const successThreshold = [];
@@ -41,18 +57,34 @@ export function stanceActionModifiers(action, stance) {
   return { successDice, successThreshold };
 }
 
-/** Addition prevention only; existing invalid entries remain for evaluator review. */
+/**
+ * Addition prevention only; existing invalid entries remain for evaluator review.
+ *
+ * Pure picker/service guard using current Main/Power counts; returns a blocking
+ * message or null. It neither mutates the draft nor replaces full evaluation.
+ */
 export function powerActionAdditionIssue(action, { mainCount, powerCount }) {
   if (powerCount && ["main", "power"].includes(action.classification)) return "A Power Action is already declared; Main and additional Power Actions are unavailable.";
   if (mainCount && action.classification === "power") return "Main Actions are already declared; Power Actions are unavailable.";
   return null;
 }
 
+/**
+ * Pure factory for empty editing state at the supplied stance/revision: no
+ * snapshot, completion IDs or Endurance spend. Does not persist or reset resources.
+ */
 export function freshDeclaration(stance = "", revision = 0) {
   return { version: DECLARATION_VERSION, revision, status: "editing", stance, enduranceSpend: 0, entries: [], snapshot: null, completed: [] };
 }
 
-/** Legality is separate from owned + enabled availability. No map or target inputs. */
+/**
+ * Legality is separate from owned + enabled availability. No map or target inputs.
+ *
+ * Read-only calculation returning evaluated entries, issues/counts, original Main
+ * penalty and canLock. The attributes argument accepts Actor system data for
+ * source resolution/Endurance checks; additionalModifiers is a per-Action callback.
+ * Only required-roll entries get calculations. No Document writes occur here.
+ */
 export function evaluateDeclaration(declaration, actions, attributes = {}, additionalModifiers = () => ({}), actorState = null) {
   const issues = [];
   const spendIssue = enduranceSpendIssue(declaration.enduranceSpend ?? 0, attributes);
@@ -64,6 +96,7 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
   if (!DECLARATION_STANCES.includes(declaration.stance)) issue("stance", "Choose a stance before declaring Actions.", null, true);
   const entries = declaration.entries.map(entry => ({ ...entry,
     action: entry.kind === "action" ? actions.find(a => a.id === entry.actionId && a.source.itemId === entry.itemId) : null }));
+  // Count the original draft once. Completion later cannot reduce this penalty.
   const mainCount = entries.filter(e => e.action?.classification === "main").length;
   const powerCount = entries.filter(e => e.action?.classification === "power").length;
   const movementCount = entries.filter(e => e.kind === "movement").length;
@@ -88,6 +121,7 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
     if (action.rollRequirement !== "required" && action.rollRequirement !== "none") {
       issue("roll-unknown", `${name}: set Requires Roll or No Roll on the Item Action.`, entry.id, true);
     }
+    // No-roll entries skip numeric completeness; unspecified is a separate error.
     if (action.rollRequirement === "required") {
   const extra = additionalModifiers(action, declaration, entry) ?? {};
   const stanceModifiers = stanceActionModifiers(action, declaration.stance);
@@ -135,6 +169,12 @@ export function evaluateDeclaration(declaration, actions, attributes = {}, addit
   return { entries, issues, mainCount, powerCount, movementCount, multiActionPenalty, canLock: issues.length === 0 };
 }
 
+/**
+ * Validates an editing draft, then returns a deep-cloned locked declaration with
+ * Action/calculation snapshots, original counts, lock user/time and empty checklist.
+ * Throws on issues; does not spend resources or update the Actor. Supply now for
+ * deterministic results (the default reads the current clock).
+ */
 export function lockDeclaration(declaration, actions, attributes, { userId = "", now = new Date().toISOString(), additionalModifiers, actorState } = {}) {
   if (declaration.status !== "editing") throw new Error("Declaration is already locked.");
   const result = evaluateDeclaration(declaration, actions, attributes, additionalModifiers, actorState);
@@ -144,10 +184,17 @@ export function lockDeclaration(declaration, actions, attributes, { userId = "",
     entries: result.entries.map(entry => ({ id: entry.id, kind: entry.kind, itemId: entry.itemId, actionId: entry.actionId,
       movementHexes: entry.kind === "movement" ? 3 : null,
       action: entry.action ?? null, calculation: entry.calculation ?? null })) };
+  // Detach nested Actions and calculations before the service persists the snapshot.
   return structuredClone({ ...declaration, status: "locked", snapshot, completed: [] });
 }
 
-/** All edits return new state; locked snapshots are never re-evaluated. */
+/**
+ * All edits return new state; locked snapshots are never re-evaluated.
+ *
+ * Pure state transformation for clear, completion toggles and draft operations.
+ * New entries require a caller-provided ID; returns detached state (or a fresh
+ * draft) and throws on disallowed edits. Does not increment revision or persist.
+ */
 export function editDeclaration(declaration, operation, { id } = {}) {
   if (declaration.version !== DECLARATION_VERSION) throw new Error("Unsupported declaration version.");
   if (operation.type === "clear") return freshDeclaration(declaration.stance, declaration.revision);

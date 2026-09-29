@@ -1,3 +1,8 @@
+/**
+ * @file Long Rest service: resource recovery and optional Wound treatment in one Actor
+ * update. Consumes entered Healing successes; duration advancement is a separate
+ * service and fictional rest eligibility remains the caller/table responsibility.
+ */
 // Long Rest resource recovery implementation
 
 import { clampHope } from "../resources.mjs";
@@ -23,6 +28,10 @@ import { clampHope } from "../resources.mjs";
  * @param {object} [options]
  * @param {number} [options.healingSuccesses]
  * @returns {Promise<boolean>} true if rest succeeded, false otherwise.
+ *
+ * Uses at most one Actor.update() for the accepted resource/healing changes.
+ * Returns true for a valid rest even when all values already match; no countdown
+ * is advanced and no Healing dice are rolled.
  */
 export async function longRest(actor, { healingSuccesses } = {}) {
   // Validate actor type and ownership.

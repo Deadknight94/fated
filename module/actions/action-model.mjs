@@ -1,3 +1,8 @@
+/**
+ * @file Embedded Item Action schema and legacy source migration. Null/blank rule inputs
+ * remain unknown rather than implying permission. Calculation and availability
+ * are in actions.mjs; these embedded values are not separate Foundry Documents.
+ */
 const { ArrayField, BooleanField, EmbeddedDataField, NumberField, SchemaField, StringField } = foundry.data.fields;
 
 const text = () => new StringField({ required: true, nullable: false, initial: "" });
@@ -5,10 +10,24 @@ const choice = choices => new StringField({ required: true, blank: true, initial
 const optionalNumber = () => new NumberField({ required: true, nullable: true, initial: null, integer: true });
 const identifier = () => new StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() });
 
+/**
+ * Stable stored stance identifiers shared by Action and Actor/declaration schemas.
+ * Their labels and mechanical modifiers are defined in other modules.
+ */
 export const STANCES = ["neutral", "offensive", "defensive", "ranged"];
+/**
+ * Universal calculation base (4). The legacy Action field is retained for review
+ * and does not override this value; deviations use sourced modifiers.
+ */
 export const BASE_SUCCESS_THRESHOLD = 4;
 
-/** Unknown configuration remains unspecified; Success Threshold has a universal base. */
+/**
+ * Unknown configuration remains unspecified; Success Threshold has a universal base.
+ *
+ * Embedded schema with explicit required/none/null roll requirement and separate
+ * dice/Threshold modifier arrays. Joint validation checks range ordering only;
+ * declaration legality is evaluated elsewhere. Construction can generate IDs.
+ */
 export class ActionDataModel extends foundry.abstract.DataModel {
   static defineSchema() {
     const modifiers = () => new ArrayField(new SchemaField({
@@ -44,9 +63,19 @@ export class ActionDataModel extends foundry.abstract.DataModel {
   }
 }
 
+/**
+ * Schema factory returning a fresh ArrayField of embedded ActionDataModel values
+ * for each Item schema. Does not create or persist Item Documents.
+ */
 export const actionsField = () => new ArrayField(new EmbeddedDataField(ActionDataModel));
 
-/** Read-time, idempotent migration. Saving an Item persists the migrated array. */
+/**
+ * Read-time, idempotent migration. Saving an Item persists the migrated array.
+ *
+ * Mutates and returns the supplied source object only if it lacks actions.
+ * An existing array, even empty, wins. This read-time migration issues no
+ * Item.update(); a subsequent save persists the migrated representation.
+ */
 export function migrateLegacyAction(source) {
   if (Object.hasOwn(source, "actions")) return source;
   source.actions = [];

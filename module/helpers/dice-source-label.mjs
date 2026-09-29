@@ -1,6 +1,11 @@
+/**
+ * @file Presentation helper consumed by mobile Action cards and planner rows. Formats
+ * calculation provenance without recalculating dice or consulting live Actor values;
+ * localization belongs to shared presentation helpers, never authored names.
+ */
 // Helper for formatting the source label of a dice pool.
 // It inspects the calculation result from `calculateActorAction` and
-// uses the action definition and the actor data to produce a
+// uses its recorded source provenance to produce a
 // human‑readable label.
 //
 // Examples:
@@ -19,8 +24,12 @@ import { uiText } from "../presentation/text.mjs";
  * Return a display string for the source of a dice pool.
  * @param {object} action - The raw action data.
  * @param {object} calculation - The calculation result from `calculateActorAction`.
- * @param {object} actor - The actor instance (system data).
+ * @param {object} actor - Accepted for API compatibility; not read by this formatter.
  * @returns {string}
+ *
+ * Read-only formatter; actor is accepted for the existing API but not consulted.
+ * An optional i18n service localizes system labels; user proficiency names remain
+ * verbatim. Missing provenance returns Unspecified rather than recomputing a pool.
  */
 export function formatDiceSourceLabel(action, calculation, actor, i18n) {
   // Prefer authoritative provenance from the calculation result.

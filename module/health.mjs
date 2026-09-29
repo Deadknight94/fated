@@ -1,10 +1,26 @@
+/**
+ * @file Health rule/service layer. Pure projections derive conditions and roll modifiers;
+ * explicit async operations persist Wound events or manual bookkeeping via Actor.update().
+ * Data Model hooks own history-sensitive death normalization. No timers, witness
+ * discovery or dice rolling are installed here; sheets localize the returned text.
+ */
 import { calculateActionFromActorData } from "./actions/actions.mjs";
 import { normalizeWoundCare, manualWoundCareChoices } from "./wound-care.mjs";
 import { adjustResource, clampHope } from "./resources.mjs";
 
+/**
+ * English severity labels indexed 0 through 4; localizedHealth translates by
+ * severity at display time. These labels are not stored condition flags.
+ */
 export const WOUND_LABELS = ["Healthy", "Light Wound", "Grievous Wound", "Death's Door", "Dead"];
 
-/** Conditions are calculated, never independently stored/toggled. Accepts source or prepared data. */
+/**
+ * Conditions are calculated, never independently stored/toggled. Accepts source or prepared data.
+ *
+ * Pure calculation from system attributes, resources, Load and health. Returns
+ * severity, display label, resource/health condition booleans and the single
+ * Hope Threshold tier. Does not infer historical death from simultaneous causes.
+ */
 export function deriveHealth(system) {
   const severity = Math.min(4, system.health?.woundSeverity ?? 0);
   const { heart, body, mind } = system.attributes;
@@ -25,7 +41,13 @@ export function deriveHealth(system) {
     hopeThresholdModifier, broken, deathsDoor, dead, stabilized, incapacitated };
 }
 
-/** Only new causes reached while already incapacitated trigger second-incapacitation death. */
+/**
+ * Only new causes reached while already incapacitated trigger second-incapacitation death.
+ *
+ * Pure comparison of previous/proposed system data; returns {dead, stabilized}
+ * for Data Model hooks to persist. Administrative correction bypasses retained
+ * death, but cannot override terminal severity. Neither input is mutated.
+ */
 export function healthTransition(previous, next, { administrativeCorrection = false } = {}) {
   const before = deriveHealth(previous);
   const after = deriveHealth(next);
@@ -37,10 +59,19 @@ export function healthTransition(previous, next, { administrativeCorrection = fa
   };
 }
 
+/**
+ * Read-only Actor adapter for deriveHealth; returns the condition object or null
+ * for unsupported Actors. Does not update a Foundry Document.
+ */
 export function getActorHealth(actor) {
   return actor.type === "fated" && actor.system.resources ? deriveHealth(actor.system) : null;
 }
 
+/**
+ * Pure Actor-state projection returning {successThreshold: [...]} with stable
+ * condition IDs and Actor provenance. Care offsets Wound penalties separately;
+ * manual and contextual Action modifiers are added elsewhere.
+ */
 export function actorStateModifiers(actor) {
   const state = getActorHealth(actor);
   if (!state) return { successThreshold: [] };
@@ -61,6 +92,11 @@ export function actorStateModifiers(actor) {
   return { successThreshold: modifiers };
 }
 
+/**
+ * Read-only Action calculation adapter combining Actor-wide and caller-provided
+ * modifier arrays, then resolving dice from Actor system data. Returns separate
+ * dice/Threshold breakdowns and source provenance; no dice or updates occur.
+ */
 export function calculateActorAction(actor, action, additionalModifiers = {}) {
   const global = actorRollModifiers(actor);
   return calculateActionFromActorData(action, actor.system, { ...additionalModifiers,
@@ -68,7 +104,13 @@ export function calculateActorAction(actor, action, additionalModifiers = {}) {
     successThreshold: [...global.successThreshold, ...(additionalModifiers.successThreshold ?? [])] });
 }
 
-/** Actor-wide modifiers only; contextual Action/turn modifiers belong to callers. */
+/**
+ * Actor-wide modifiers only; contextual Action/turn modifiers belong to callers.
+ *
+ * Pure projection returning separate successDice/successThreshold arrays. Adds
+ * valid stored manual entries with actor-manual provenance; preserves authored
+ * labels and does not include stance, Item, Multi-Action or Endurance Push context.
+ */
 export function actorRollModifiers(actor) {
   const result = { successDice: [], successThreshold: [...actorStateModifiers(actor).successThreshold] };
   if (actor.type !== "fated") return result;
@@ -80,13 +122,24 @@ export function actorRollModifiers(actor) {
   return result;
 }
 
+/**
+ * Pure lock gate from derived health; returns an English system message for
+ * Dead/Incapacitated state, otherwise null. Presentation localizes the message.
+ */
 export function healthLockIssue(state) {
   if (state?.dead) return "This Fated is Dead and cannot lock a Turn Declaration.";
   if (state?.incapacitated) return `This Fated is Incapacitated (${[state.deathsDoor && "Death's Door", state.broken && "Broken"].filter(Boolean).join(" and ")}) and cannot lock a normal Turn Declaration.`;
   return null;
 }
 
-/** Pure projection of one simultaneous wound instance, including treatment reopening. */
+/**
+ * Pure projection of one simultaneous wound instance, including treatment reopening.
+ *
+ * Accepts stored health and a nonnegative safe-integer Wound count; returns
+ * woundSeverity, treatmentReopened and normalized woundCare. A treated Grievous
+ * Wound consumes the first incoming Wound; remaining simultaneous Wounds count.
+ * Throws on invalid counts and never mutates health.
+ */
 export function projectWounds(health, wounds) {
   if (!Number.isSafeInteger(wounds) || wounds < 0) throw new Error("Wounds must be a nonnegative whole number.");
   const woundCare = normalizeWoundCare(health.woundSeverity, health.woundCare);
@@ -96,7 +149,14 @@ export function projectWounds(health, wounds) {
     woundCare: normalizeWoundCare(woundSeverity, treatmentReopened ? { care: "none", daysRemaining: 0 } : woundCare) };
 }
 
-/** Apply one simultaneous damage instance through the existing document health lifecycle. */
+/**
+ * Apply one simultaneous damage instance through the existing document health lifecycle.
+ *
+ * Persistent Wound-event API for an owned Fated Actor. Includes final-severity
+ * self-Hope loss and any treatment reopening in one Actor.update(). Returns
+ * true after a write, false for zero/no change; invalid inputs throw. Manual
+ * severity correction uses updateHealth and does not share this Hope-loss path.
+ */
 export async function applyWounds(actor, wounds) {
   if (actor.type !== "fated" || !actor.isOwner) throw new Error("You cannot update this Fated Actor.");
   if (!Number.isSafeInteger(wounds) || wounds < 0) throw new Error("Wounds must be a nonnegative whole number.");
@@ -105,6 +165,7 @@ export async function applyWounds(actor, wounds) {
   if (projection.woundSeverity === actor.system.health.woundSeverity && !projection.treatmentReopened) return false;
   const changes = { "system.health.woundSeverity": projection.woundSeverity };
   const hope = actor.system.resources.hope.value;
+  // One simultaneous event uses only the resulting severity, not each crossed step.
   const loss = projection.woundSeverity === 1 ? Math.max(1, Math.ceil(hope / 2))
     : projection.woundSeverity === 2 ? Math.ceil((actor.system.attributes.heart + actor.system.attributes.mind) / 2) : 0;
   if (loss) changes["system.resources.hope.value"] = clampHope(hope - loss, actor.system.attributes);
@@ -113,7 +174,13 @@ export async function applyWounds(actor, wounds) {
   return true;
 }
 
-/** Explicit witnesses only: call once per witness per simultaneous Wound event. */
+/**
+ * Explicit witnesses only: call once per witness per simultaneous Wound event.
+ *
+ * Persists 1/2/3 Hope loss for a supplied final severity of 1/2/3 via Actor.update().
+ * Returns false for unsupported/non-owner/no-change cases, true after writing.
+ * This API does not discover witnesses or prevent duplicate event calls.
+ */
 export async function applyWitnessedWoundHopeLoss(actor, resultingSeverity) {
   if (actor.type !== "fated" || !actor.isOwner || ![1, 2, 3].includes(resultingSeverity)) return false;
   const hope = actor.system.resources.hope.value;
@@ -123,7 +190,13 @@ export async function applyWitnessedWoundHopeLoss(actor, resultingSeverity) {
   return true;
 }
 
-/** One elapsed combat round or out-of-combat hour; caller owns timing, never both. */
+/**
+ * One elapsed combat round or out-of-combat hour; caller owns timing, never both.
+ *
+ * Persists one explicit unstabilized living Death's Door tick through
+ * adjustResource: Endurance first, Hope only if already Exhausted. Returns
+ * false when inapplicable; installs no combat or world-time hook.
+ */
 export async function applyDeathsDoorDrain(actor) {
   if (actor.type !== "fated" || !actor.isOwner) return false;
   const state = getActorHealth(actor);
@@ -131,7 +204,13 @@ export async function applyDeathsDoorDrain(actor) {
   return adjustResource(actor, state.exhausted ? "hope" : "endurance", -1);
 }
 
-/** Manual bookkeeping only; no recovery, timed drain or resurrection. */
+/**
+ * Manual correction is separate from Wound-event Hope loss and rest recovery.
+ *
+ * Dispatches care, severity +/-1, stabilization or GM death-correction operations.
+ * Returns a Promise<boolean>; permitted operations call Actor.update(), whose
+ * lifecycle validates the transition. This is manual correction, not a Wound event.
+ */
 export async function updateHealth(actor, operation, { isGM = false } = {}) {
   if (actor.type !== "fated" || !actor.isOwner) return false;
   const health = actor.system.health;
@@ -151,7 +230,13 @@ export async function updateHealth(actor, operation, { isGM = false } = {}) {
   return true;
 }
 
-/** Small shared presentation model for Companion and GM desktop sheets. */
+/**
+ * Small shared presentation model for Companion and GM desktop sheets.
+ *
+ * Read-only presentation projection adding care choices, control eligibility and
+ * condition strings to derived health; returns null for unsupported Actors.
+ * The consumer must apply localizedHealth before rendering system labels.
+ */
 export function healthView(actor, { isGM = false } = {}) {
   const state = getActorHealth(actor);
   if (!state) return null;

@@ -1,3 +1,9 @@
+/**
+ * @file Mobile Fated sheet/controller and base for the Companion shell. Combines live
+ * Action views, character summaries and draft/locked planner presentation.
+ * Services own rule calculations and persistent mutations; this sheet holds only
+ * transient navigation, expansion/scroll state and local pending-operation guards.
+ */
 import { uiText, systemMessage } from "../presentation/text.mjs";
 import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, modifierLabel, defenseView, rangeLabel, declarationIssuesView } from "../presentation/labels.mjs";
 import { equipmentView } from "../equipment.mjs";
@@ -21,6 +27,7 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 const displayNumber = value => Number.isFinite(value) ? String(value) : uiText("Unspecified");
 
+/** Read-only display projection; null totals stay visibly unspecified, not zero. */
 function breakdownView(value) {
   return { base: displayNumber(value.base), total: displayNumber(value.total), complete: value.complete,
     modifiers: value.modifiers.map(modifier => ({
@@ -29,6 +36,11 @@ function breakdownView(value) {
     })) };
 }
 
+/**
+ * Four-section ActorSheetV2 controller shared with Companion. Rendering reads
+ * live Action calculations or saved planner snapshots; handlers delegate Actor
+ * writes and localize failures. UI pending flags only guard this sheet instance.
+ */
 export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(HandlebarsApplicationMixin(ActorSheetV2))) {
   static DEFAULT_OPTIONS = {
     classes: ["fated", "sheet", "fated-mobile"], tag: "form",
@@ -86,6 +98,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     }
   }
 
+  /** Build localized template data; reading a locked declaration uses its snapshot. */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const declaration = this.document.system.declaration.toObject();
@@ -168,6 +181,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     }
   }
 
+  /** Carry the rendered revision to the service; guard repeated taps in this sheet. */
   static async planner(event, button) {
     if (!this.isEditable || this.plannerPending) return;
     const revision = Number(button.closest("[data-declaration-revision]").dataset.declarationRevision);
@@ -229,6 +243,7 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     await this.document.update({
       "system.proficiencies": [...profs, newProf]
     });
+    // Existing unresolved dialog reference remains after the Actor write.
     await dialog;
   }
 
@@ -249,6 +264,10 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
   }
 }
 
+/**
+ * Reuses an Actor.apps mobile instance or constructs one, then returns its render
+ * result. Opens a UI only; does not change the Actor's default sheet or declaration.
+ */
 export function openMobileSheet(actor) {
   const existing = Object.values(actor.apps).find(app => app instanceof FatedMobileSheet);
   return (existing ?? new FatedMobileSheet({ document: actor })).render({ force: true });

@@ -1,3 +1,8 @@
+/**
+ * @file Embedded declaration schema for drafts, locked snapshots and completion IDs.
+ * Enforces structural relationships, not full gameplay legality. evaluate.mjs
+ * builds state and service.mjs persists it on the Actor.
+ */
 import { ActionDataModel, STANCES } from "../actions/action-model.mjs";
 
 const { ArrayField, BooleanField, EmbeddedDataField, NumberField, ObjectField, SchemaField, StringField } = foundry.data.fields;
@@ -13,6 +18,7 @@ const identity = () => ({
 });
 const source = () => new SchemaField({ itemId: text(), itemUuid: text(), itemName: text(), itemType: text() });
 
+/** Persisted Action copy: only schema-declared fields survive Data Model cleaning. */
 class SnapshotAction extends ActionDataModel {
   static defineSchema() { return { ...super.defineSchema(), key: text(), source: source() }; }
 }
@@ -22,10 +28,12 @@ const calculationValue = () => new SchemaField({
   modifiers: new ArrayField(new SchemaField({ id: text(), label: text(), value: optionalNumber(), source: new ObjectField() }))
 });
 
+/** Stores numeric breakdowns/modifier provenance, not sourceProvenance or untrained. */
 class SnapshotCalculation extends foundry.abstract.DataModel {
   static defineSchema() { return { successDice: calculationValue(), successThreshold: calculationValue() }; }
 }
 
+/** Historical execution data; live Item/Actor changes must not rebuild these values. */
 class DeclarationSnapshot extends foundry.abstract.DataModel {
   static defineSchema() {
     return {
@@ -38,6 +46,11 @@ class DeclarationSnapshot extends foundry.abstract.DataModel {
   }
 }
 
+/**
+ * Embedded draft/snapshot/checklist schema. Joint validation ties locked status
+ * to snapshot presence, requires unique entry IDs and valid completion references.
+ * It does not evaluate Action rules or persist an Actor by itself.
+ */
 export class DeclarationDataModel extends foundry.abstract.DataModel {
   static defineSchema() {
     return {
@@ -58,4 +71,8 @@ export class DeclarationDataModel extends foundry.abstract.DataModel {
   }
 }
 
+/**
+ * Schema factory embedding DeclarationDataModel with caller-supplied field options.
+ * Actor creation supplies the initial stance through those options.
+ */
 export const declarationField = options => new EmbeddedDataField(DeclarationDataModel, options);

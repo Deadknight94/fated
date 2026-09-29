@@ -1,4 +1,11 @@
 /**
+ * @file Combat lifecycle integration, registered as an import side effect from fated.mjs.
+ * Filters updateCombat events to the originating client and round changes before
+ * calling the phase service. No initiative ordering or declaration integration.
+ * The referenced isManagedRoundAdvance guard is currently undefined/unimported,
+ * so this path cannot be assumed to complete successfully.
+ */
+/**
  * Register hooks for the combat phase service.
  *
  * The hooks keep the Fated combat flags in sync with Foundry's built‑in
@@ -15,14 +22,18 @@ import { startRound } from "./phase.mjs";
  * @param {Combat} combat
  * @param {object} changed
  * @param {string} userId
+ *
+ * Returns Promise<void>; qualifying events reach an unresolved guard reference
+ * before startRound. No working managed-round guard is defined/imported here.
+ * A successful startRound would write flags; no Actor data is updated directly.
  */
 export async function synchronizeCombatRound(combat, changed, userId) {
   // Only react to an actual round change.
   if (!Object.hasOwn(changed, "round")) return;
   // Only the client that performed the update should do the sync.
   if (userId !== game.user.id) return;
-  // If this round advance was performed via endRound(), the guard will
-  // prevent double‑reset.
+  // This guard is referenced but not defined/imported in the current module.
+  // Preserve the implementation; callers cannot rely on successful synchronization.
   if (isManagedRoundAdvance(combat)) return;
   await startRound(combat);
 }

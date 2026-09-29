@@ -1,3 +1,8 @@
+/**
+ * @file Presentation models for sheets: translate system identifiers and provenance-backed
+ * labels while retaining authored text and numeric calculations. Reads localization
+ * services but never writes Documents or changes declaration snapshots.
+ */
 import { SKILL_LABELS } from "../skills.mjs";
 import { uiText, systemMessage } from "./text.mjs";
 
@@ -16,17 +21,31 @@ const labels = {
   care: { none: "None", bandaged: "Bandaged", treated: "Treated", grievousHealingPending: "Grievous healing pending" }
 };
 
-/** Stable internal values go in; display strings come out. Unknown nonempty keys remain visible. */
+/**
+ * Stable internal values go in; display strings come out. Unknown nonempty keys remain visible.
+ *
+ * Read-only localization lookup returning a string; unknown nonempty values stay
+ * visible. The optional i18n service supports headless callers.
+ */
 export function displayLabel(kind, value, i18n) {
   const text = labels[kind] && Object.hasOwn(labels[kind], value) ? labels[kind][value] : undefined;
   return text ? uiText(text, {}, i18n) : value || uiText("Unspecified", {}, i18n);
 }
 
+/**
+ * Returns copied groups/skill rows with localized system labels. Does not change
+ * skill keys, levels or the input grouping.
+ */
 export function skillGroupsView(groups, i18n) {
   return groups.map(group => ({ ...group, label: displayLabel("attribute", group.attribute, i18n),
     skills: group.skills.map(skill => ({ ...skill, label: displayLabel("skill", skill.key, i18n) })) }));
 }
 
+/**
+ * Returns a localized health presentation copy (or the falsy input). Displays
+ * care choices/descriptions and only Broken/Incapacitated/Dead condition rows;
+ * numeric roll effects belong in the shared Roll Summary.
+ */
 export function localizedHealth(view, i18n) {
   if (!view) return view;
   return {
@@ -53,12 +72,21 @@ export function localizedHealth(view, i18n) {
   };
 }
 
+/**
+ * Returns an equipment presentation copy with localized type and state labels;
+ * Item name, identity, equipped state and permissions remain unchanged.
+ */
 export function localizedEquipment(view, i18n) {
   return { ...view, typeLabel: displayLabel("itemType", view.type, i18n),
     stateLabel: uiText(view.type === "armor" ? "Worn" : "Equipped", {}, i18n) };
 }
 
-/** Only system provenance authorizes translation; custom Item/Action modifier labels stay verbatim. */
+/**
+ * Only system provenance authorizes translation; custom Item/Action modifier labels stay verbatim.
+ *
+ * Returns the display label based on source provenance, not label spelling alone.
+ * Reads i18n only; never rewrites stored modifier labels or numeric contributions.
+ */
 export function modifierLabel(modifier, i18n) {
   const source = modifier.source;
   if (source?.type === "actor-manual") return modifier.label;
@@ -76,20 +104,36 @@ export function modifierLabel(modifier, i18n) {
   return modifier.label || uiText("Unlabelled modifier", {}, i18n);
 }
 
+/**
+ * Returns copied modifier rows with display labels; numbers and provenance are
+ * retained, and the input array/snapshot is not mutated.
+ */
 export function modifiersView(modifiers, i18n) {
   return modifiers.map(modifier => ({ ...modifier, label: modifierLabel(modifier, i18n) }));
 }
 
+/**
+ * Returns a Defense presentation copy with localized modifier rows. Arithmetic
+ * is already complete in calculateDefense and is not repeated here.
+ */
 export function defenseView(defense, i18n) {
   return { ...defense, modifiers: modifiersView(defense.modifiers, i18n) };
 }
 
+/**
+ * Formats min/max or unknown endpoints and verbatim authored units. Returns a
+ * localized unspecified label when both endpoints are null; does not check range.
+ */
 export function rangeLabel(range, i18n) {
   if (range.min === null && range.max === null) return uiText("Unspecified", {}, i18n);
   // Range units are free-form authored text and must remain verbatim.
   return `${range.min ?? "?"}–${range.max ?? "?"} ${range.units || uiText("(units unspecified)", {}, i18n)}`;
 }
 
+/**
+ * Returns copied issue rows with localized system messages, preserving authored
+ * Action names. Uses entries only to distinguish generated unnamed fallbacks.
+ */
 export function declarationIssuesView(evaluation, i18n) {
   return evaluation.issues.map(issue => {
     let message = systemMessage(issue.message, i18n);

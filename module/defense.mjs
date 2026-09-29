@@ -1,4 +1,15 @@
-/** Worn Armor and stance remain individually traceable; effective Defense has a floor of 1. */
+/**
+ * @file Pure Defense and attack Damage-source calculations used by Documents, sheets
+ * and damage previews. Reads Actor/Item data without updates; target legality
+ * and the application of Wounds belong elsewhere.
+ */
+/**
+ * Worn Armor and stance remain individually traceable; effective Defense has a floor of 1.
+ *
+ * Pure read of Actor attributes, current stance, worn Armor and optional sourced
+ * modifiers. Returns {body, mind, base, modifiers, raw, total}; throws for multiple
+ * worn Armor or incomplete provenance/numbers. Does not store the result.
+ */
 export function calculateDefense(actor, additionalModifiers = []) {
   const { body, mind } = actor.system.attributes;
   const stance = actor.system.currentStance;
@@ -19,7 +30,12 @@ export function calculateDefense(actor, additionalModifiers = []) {
 }
 
 
-/** Explicit Action override; weapon Damage is reused only for explicitly melee/ranged Actions. */
+/**
+ * Explicit Action override; weapon Damage is reused only for explicitly melee/ranged Actions.
+ *
+ * Pure Damage-per-Success lookup: explicit melee/ranged Actions use their own
+ * override, then Weapon Damage fallback. Returns null for other/unknown sources.
+ */
 export function actionDamage(action, item) {
   if (!["melee", "ranged"].includes(action?.attackType)) return null;
   return action.damage ?? (item?.type === "weapon" ? item.system.damage : null);

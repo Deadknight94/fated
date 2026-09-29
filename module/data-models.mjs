@@ -1,5 +1,10 @@
+/**
+ * @file Core schema and lifecycle boundary for Actor/Item system data. Uses action,
+ * declaration, health and resource services to validate or normalize pending writes.
+ * Preparation derives in-memory values; it does not call Document.update().
+ * Item-aware Load and final Defense preparation belong to documents.mjs.
+ */
 import { actionsField, migrateLegacyAction, STANCES } from "./actions/action-model.mjs";
-// ArrayField is needed for the proficiencies array
 import { SKILL_ATTRIBUTE_MAP } from "./skills.mjs";
 import { declarationField } from "./declaration/data-model.mjs";
 import { clampHope } from "./resources.mjs";
@@ -18,6 +23,7 @@ const {
   StringField
 } = foundry.data.fields;
 
+// Field factories allocate independent schema fields; they are not stored values.
 const int = (initial = 0, min = undefined) => new NumberField({
   required: true,
   nullable: false,
@@ -31,6 +37,11 @@ const resourceField = ({ initial = 0, max = 0, allowNegative = false } = {}) => 
   max: int(max, 0)
 });
 
+/**
+ * Actor system schema for Fated. Creation corrects pending source; updates modify
+ * the pending changes for Hope, Power, death, stabilization and care. Derived
+ * preparation changes in-memory resources/Defense only, without recursive writes.
+ */
 export class FatedDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
@@ -81,6 +92,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     };
   }
 
+  /** Normalize pending creation source without issuing a second Document write. */
   async _preCreate(data, options, user) {
     if (await super._preCreate(data, options, user) === false) return false;
     const source = this.toObject();
@@ -104,8 +116,10 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
   }
 
+  /** Validate/normalize the proposed write; throw to reject before persistence. */
   async _preUpdate(changes, options, user) {
     if (await super._preUpdate(changes, options, user) === false) return false;
+    // Accept either dotted or nested updates, preserving the caller's payload shape.
     const expanded = foundry.utils.expandObject(changes);
     const candidate = this.clone(expanded.system ?? {});
     const source = this.toObject();
@@ -123,6 +137,8 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
       && expanded.system.health.dead !== source.health.dead && !user?.isGM) {
       throw new Error("Only a GM can administratively correct the recorded death state.");
     }
+    // Compare history only after Hope correction: new incapacity differs from
+    // remaining continuously incapacitated, even if the final conditions match.
     const transition = healthTransition(source, proposed, {
       administrativeCorrection: user?.isGM && expanded.system?.health?.dead === false && source.health.dead
     });
@@ -166,6 +182,7 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
     }
   }
 
+  /** Recompute prepared values in memory; no Actor.update() is called here. */
   prepareDerivedData() {
     super.prepareDerivedData();
 
@@ -187,6 +204,11 @@ export class FatedDataModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+/**
+ * Simplified NPC system schema: attributes, Resilience, editable Defense and
+ * description. Preparation clamps Resilience in memory; no Shadow field,
+ * Fated resources, health or declaration schema is defined here.
+ */
 export class NpcDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() {
     return {
@@ -201,12 +223,14 @@ export class NpcDataModel extends foundry.abstract.TypeDataModel {
     };
   }
 
+  /** Recompute prepared values in memory; no Actor.update() is called here. */
   prepareDerivedData() {
     super.prepareDerivedData();
     this.resilience.value = Math.clamp(this.resilience.value, 0, this.resilience.max);
   }
 }
 
+/** Shared Item schema/migration; validates Action IDs within one Item only. */
 class BaseItemDataModel extends foundry.abstract.TypeDataModel {
   static migrateData(source) {
     return super.migrateData(migrateLegacyAction(source));
@@ -226,6 +250,10 @@ class BaseItemDataModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+/**
+ * Weapon Item schema with equipped state, proficiency key and default Damage.
+ * Inherits Action migration/validation; does not compute attack results.
+ */
 export class WeaponDataModel extends BaseItemDataModel {
   static defineSchema() {
     return {
@@ -237,6 +265,11 @@ export class WeaponDataModel extends BaseItemDataModel {
   }
 }
 
+/**
+ * Equipment Item schema adds equipped state and an optional proficiency key to
+ * shared description, Load and Actions. Ownership contributes Load independently
+ * of equipped state in FatedActor preparation.
+ */
 export class EquipmentDataModel extends BaseItemDataModel {
   static defineSchema() {
     return {
@@ -255,15 +288,21 @@ export class EquipmentDataModel extends BaseItemDataModel {
   }
 }
 
+/**
+ * Equipment schema with fixed Armor. Pre-create/pre-update reject wearing a
+ * second Armor on a Fated owner via wornArmorIssue; no automatic unwearing occurs.
+ */
 export class ArmorDataModel extends EquipmentDataModel {
   static defineSchema() { return { ...super.defineSchema(), armor: int(0, 0) }; }
 
+  /** Normalize pending creation source without issuing a second Document write. */
   async _preCreate(data, options, user) {
     if (await super._preCreate(data, options, user) === false) return false;
     const issue = wornArmorIssue(this.parent, this.equipped);
     if (issue) throw new Error(issue);
   }
 
+  /** Validate/normalize the proposed write; throw to reject before persistence. */
   async _preUpdate(changes, options, user) {
     if (await super._preUpdate(changes, options, user) === false) return false;
     const equipped = foundry.utils.expandObject(changes).system?.equipped;
@@ -272,6 +311,10 @@ export class ArmorDataModel extends EquipmentDataModel {
   }
 }
 
+/**
+ * Rules-record Item schema containing description, Actions and a key. Actor
+ * proficiency levels live in system.proficiencies; this Item does not store them.
+ */
 export class WeaponProficiencyDataModel extends BaseItemDataModel {
   static defineSchema() {
     return {
@@ -282,4 +325,8 @@ export class WeaponProficiencyDataModel extends BaseItemDataModel {
   }
 }
 
+/**
+ * Feature Item uses the shared description/Load/Actions schema unchanged.
+ * FatedActor excludes Features from carried Load despite the inherited field.
+ */
 export class FeatureDataModel extends BaseItemDataModel {}

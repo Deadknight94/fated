@@ -1,4 +1,9 @@
 /**
+ * @file Short Rest service for explicitly confirmed fictional rests and physical Healing
+ * successes. Validates before one combined Actor.update(); does not roll Healing,
+ * advance care duration or measure elapsed time. RestApp is its UI consumer.
+ */
+/**
  * Perform a Short Rest on a Fated Actor.
  *
  * @param {object} actor - The Foundry Actor document.
@@ -7,6 +12,10 @@
  * @param {number} [options.extraRecovery=0] - Extra Endurance to recover when spending Hope.
  * @param {number} [options.healingSuccesses] - Positive integer successes from a Healing check.
  * @returns {Promise<boolean>} - true if the rest succeeded, otherwise false.
+ *
+ * Persistent service: optional Hope expenditure and physical Healing results are
+ * validated before any write. May recover stabilized Death's Door to Grievous or
+ * bandage Light/Grievous Wounds; returns true even when no values need writing.
  */
 export async function shortRest(actor, { spendHope = false, extraRecovery = 0, healingSuccesses } = {}) {
   // Validate actor type and ownership.
