@@ -39,39 +39,29 @@ If the user specifies a report format, follow that format in the final assistant
 
 ## Test Environment Constraint
 
-This repository may be worked on inside a Docker/containerized development environment that does not have access to a running Foundry VTT instance or browser session.
+This OpenCode environment runs in a Docker container and has no access to a live Foundry VTT instance or browser session.
 
-Therefore:
+Live Foundry/browser testing is outside this agent's responsibilities.
 
-- Do NOT attempt live Foundry testing.
-- Do NOT attempt browser/UI interaction testing against a running Foundry world.
-- Do NOT attempt to launch or connect to a Foundry instance.
-- Do NOT claim live verification was performed.
-- Do NOT block completion on unavailable live testing.
-- Do NOT add temporary infrastructure, containers, browsers, or Foundry installations merely to simulate live testing unless explicitly requested.
+Do NOT:
+- attempt to install Foundry
+- attempt to launch Foundry
+- attempt to connect to an external Foundry server
+- run browser automation against Foundry
+- create additional containers or infrastructure for live Foundry testing
+- block completion because live Foundry testing is unavailable
+- claim live verification was performed
 
-Validation in this environment is limited to repository-local checks such as:
-
+Use repository-local validation only:
 - syntax checks
-- unit/integration tests runnable under Node
+- Node tests
 - localization/JSON validation
 - template/static inspection
-- `git diff --check`
-- focused automated tests
-- full `node --test` where supported
+- rendered HTML tests supported by the existing harness
+- accessibility/state assertions
+- git diff --check
 
-For UI changes, verify as much as possible through:
-- template structure
-- controller state
-- accessibility attributes
-- localization tests
-- existing rendering/unit tests
-
-Then clearly report:
-
-"Live Foundry/browser verification was not performed because this agent environment has no Foundry instance."
-
-Do not treat that as a task failure.
+For UI work, report that live Foundry/browser verification must be performed separately on the real Foundry installation.
 
 ## Project
 
