@@ -37,20 +37,41 @@ Do not end the turn immediately after a tool call.
 Do not use a shell command, file, or tool output as a substitute for the final assistant response.
 If the user specifies a report format, follow that format in the final assistant response.
 
-## Local Foundry Test Environment
+## Test Environment Constraint
 
-On the current Windows development machine:
+This repository may be worked on inside a Docker/containerized development environment that does not have access to a running Foundry VTT instance or browser session.
 
-`FOUNDRY_APP_PATH=E:\Program Files\FoundryVTT\Foundry Virtual Tabletop\resources\app`
+Therefore:
 
-Foundry-dependent Node tests require this environment variable.
+- Do NOT attempt live Foundry testing.
+- Do NOT attempt browser/UI interaction testing against a running Foundry world.
+- Do NOT attempt to launch or connect to a Foundry instance.
+- Do NOT claim live verification was performed.
+- Do NOT block completion on unavailable live testing.
+- Do NOT add temporary infrastructure, containers, browsers, or Foundry installations merely to simulate live testing unless explicitly requested.
 
-PowerShell example:
+Validation in this environment is limited to repository-local checks such as:
 
-```powershell
-$env:FOUNDRY_APP_PATH = "E:\Program Files\FoundryVTT\Foundry Virtual Tabletop\resources\app"
-node --test
-```
+- syntax checks
+- unit/integration tests runnable under Node
+- localization/JSON validation
+- template/static inspection
+- `git diff --check`
+- focused automated tests
+- full `node --test` where supported
+
+For UI changes, verify as much as possible through:
+- template structure
+- controller state
+- accessibility attributes
+- localization tests
+- existing rendering/unit tests
+
+Then clearly report:
+
+"Live Foundry/browser verification was not performed because this agent environment has no Foundry instance."
+
+Do not treat that as a task failure.
 
 ## Project
 
