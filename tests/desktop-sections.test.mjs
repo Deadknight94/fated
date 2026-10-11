@@ -28,7 +28,7 @@ const { RestApp } = await import("../module/apps/rest-app.mjs");
 const { adjustResource } = await import("../module/resources.mjs");
 const { toggleEquipment } = await import("../module/sheets/equipment-controls.mjs");
 
-const SECTIONS = ["character", "items", "notes"];
+const SECTIONS = ["character", "actions", "items", "notes"];
 
 const actor = {
   id: "a1", _id: "a1", name: "Yara", type: "fated", img: "", isOwner: true,
@@ -40,11 +40,12 @@ const actor = {
     health: { wounds: [], soak: 0, resilience: { value: 7, max: 7 } },
     declaration: null, currentStance: "neutral"
   },
+  getAvailableActions: () => [],
   items: (() => { const contents = []; return { contents, [Symbol.iterator]: () => contents[Symbol.iterator]() }; })()
 };
 
 const sheet = new FatedActorSheet({ document: actor });
-const flags = (context) => [context.itemsSection, context.notesSection];
+const flags = (context) => [context.actionsSection, context.itemsSection, context.notesSection];
 const click = (section) => FatedActorSheet.selectSection.call(sheet, { type: "button" }, { type: "button", dataset: { section } });
 
 // Minimal stand-in for the rendered sheet DOM: the scroll container plus the proficiency
@@ -56,14 +57,14 @@ const sheetElement = (scroll) => ({
 
 test("desktop sheet defaults to the Character tab", async () => {
   assert.equal(sheet._fatedSection, "character");
-  assert.deepEqual(await flags(await sheet._prepareContext({})), [false, false]);
+  assert.deepEqual(await flags(await sheet._prepareContext({})), [false, false, false]);
 });
 
 test("each tab exposes exactly one section flag and persists across rerenders", async () => {
   for (const section of SECTIONS) {
     sheet._fatedSection = section;
     for (const rerender of [1, 2]) {
-      assert.deepEqual(await flags(await sheet._prepareContext({})), [section === "items", section === "notes"]);
+      assert.deepEqual(await flags(await sheet._prepareContext({})), [section === "actions", section === "items", section === "notes"]);
       assert.equal(sheet._fatedSection, section);
     }
   }
@@ -71,9 +72,9 @@ test("each tab exposes exactly one section flag and persists across rerenders", 
 });
 
 test("unknown or missing tab data falls back to the Character tab", async () => {
-  for (const value of ["turn", "actions", "", null, undefined, 0, {}]) {
+  for (const value of ["turn", "", null, undefined, 0, {}]) {
     sheet._fatedSection = value;
-    assert.deepEqual(await flags(await sheet._prepareContext({})), [false, false]);
+    assert.deepEqual(await flags(await sheet._prepareContext({})), [false, false, false]);
   }
   sheet._fatedSection = "character";
 });

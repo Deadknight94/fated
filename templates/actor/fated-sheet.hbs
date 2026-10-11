@@ -1,6 +1,7 @@
 <div class="fated-sheet-body">
   <nav class="fated-section-nav" aria-label="{{localize "FATED.Sheet.Sections"}}">
-    <button type="button" data-action="selectSection" data-section="character" aria-label="{{localize "FATED.Common.Character"}}"{{#if (or itemsSection notesSection)}}{{else}} aria-current="page"{{/if}}>{{localize "FATED.Common.Character"}}</button>
+    <button type="button" data-action="selectSection" data-section="character" aria-label="{{localize "FATED.Common.Character"}}"{{#if (or actionsSection itemsSection notesSection)}}{{else}} aria-current="page"{{/if}}>{{localize "FATED.Common.Character"}}</button>
+    <button type="button" data-action="selectSection" data-section="actions" aria-label="{{localize "FATED.Common.Actions"}}"{{#if actionsSection}} aria-current="page"{{/if}}>{{localize "FATED.Common.Actions"}}</button>
     <button type="button" data-action="selectSection" data-section="items" aria-label="{{localize "FATED.Sheet.Items"}}"{{#if itemsSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Items"}}</button>
     <button type="button" data-action="selectSection" data-section="notes" aria-label="{{localize "FATED.Sheet.Biography"}}"{{#if notesSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Biography"}}</button>
   </nav>
@@ -28,6 +29,50 @@
   <section class="panel biography">
     <h2>{{localize "FATED.Sheet.Biography"}}</h2>
     <textarea name="system.biography" rows="8" {{disabled (not editable)}}>{{system.biography}}</textarea>
+  </section>
+  {{else if actionsSection}}
+  <section class="fated-actions" aria-label="{{localize "FATED.Common.Actions"}}">
+    <h2>{{localize "FATED.Common.Actions"}} ({{actions.length}})</h2>
+    <p class="muted">{{localize "FATED.Mobile.ActionHint"}}</p>
+    <div class="fated-action-list">
+      {{#each actions as |action|}}
+      <article class="fated-action-card">
+        <header>
+          <div><small>{{action.classificationLabel}}</small><h3>{{action.name}}</h3><p>{{action.source.itemName}}</p></div>
+          <button type="button" data-action="openItem" data-item-id="{{action.source.itemId}}">{{localize "FATED.Common.Open"}}: {{action.source.itemName}}</button>
+        </header>
+        <p>{{action.rollRequirementLabel}}</p>
+        {{#if action.thresholdReviewIssue}}<p class="fated-action-warning" role="alert">{{action.thresholdReviewIssue}}</p>{{/if}}
+        <dl class="fated-action-facts">
+          <div class="fated-action-total"><dt>{{localize "FATED.Roll.SuccessDice"}}</dt><dd>{{action.dice.total}}</dd></div>
+          <div class="fated-action-total"><dt>{{localize "FATED.Roll.SuccessThreshold"}}</dt><dd>{{action.threshold.total}}</dd></div>
+          <div><dt>{{localize "FATED.Damage.PerSuccess"}}</dt><dd>{{#if action.hasDamage}}{{action.damagePerSuccess}}{{else}}{{localize "FATED.Common.Unspecified"}}{{/if}}</dd></div>
+          <div><dt>{{localize "FATED.Action.Range"}}</dt><dd>{{action.rangeLabel}}</dd></div>
+          <div><dt>{{localize "FATED.Action.Use"}}</dt><dd>{{action.attackLabel}}</dd></div>
+          <div><dt>{{localize "FATED.Action.AllowedStances"}}</dt><dd>{{action.stanceLabel}}</dd></div>
+          <div><dt>{{localize "FATED.Action.MultiEligible"}}</dt><dd>{{action.eligibilityLabel}}</dd></div>
+        </dl>
+        {{#if action.hasDamage}}{{#each action.damageModifiers}}<p>{{label}}: {{value}} {{localize "FATED.Damage.Final"}}</p>{{/each}}{{/if}}
+        {{#if action.effect}}<p class="fated-action-rules"><strong>{{localize "FATED.Action.DamageEffect"}}:</strong> {{action.effect}}</p>{{/if}}
+        {{#if action.rules}}<p class="fated-action-rules">{{action.rules}}</p>{{/if}}
+        <details class="fated-action-breakdown">
+          <summary>{{localize "FATED.Mobile.DiceDetails"}}</summary>
+          <div class="fated-action-calculations">
+            <div><h4>{{localize "FATED.Roll.SuccessDice"}}</h4><p>{{action.diceSourceLabel}}</p>
+              <dl><div><dt>{{localize "FATED.Action.BaseDice"}}</dt><dd>{{action.dice.base}}</dd></div>
+              {{#each action.dice.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+              <div><dt>{{localize "FATED.Action.ConfiguredDice"}}</dt><dd>{{action.dice.total}}</dd></div></dl>
+            </div>
+            <div><h4>{{localize "FATED.Roll.SuccessThreshold"}}</h4>
+              <dl><div><dt>{{localize "FATED.Action.BaseThreshold"}}</dt><dd>{{action.threshold.base}}</dd></div>
+              {{#each action.threshold.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}
+              <div><dt>{{localize "FATED.Action.FinalThreshold"}}</dt><dd>{{action.threshold.total}}</dd></div></dl>
+            </div>
+          </div>
+        </details>
+      </article>
+      {{else}}<div class="panel"><h3>{{localize "FATED.Mobile.NoActions"}}</h3><p>{{localize "FATED.Mobile.AddActionHint"}}</p></div>{{/each}}
+    </div>
   </section>
   {{else}}
   <header class="fated-sheet-header">

@@ -14,6 +14,7 @@ import { openMobileSheet } from "./mobile-sheet.mjs";
 import { adjustResource } from "../resources.mjs";
 import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
 import { changeManualModifier, manualModifierAction } from "./manual-modifier-controls.mjs";
+import { availableActionsView } from "../presentation/actions.mjs";
 import { rollSummary, signedModifier } from "../presentation/roll-summary.mjs";
 import { healthView } from "../health.mjs";
 import { healthAction } from "./health-controls.mjs";
@@ -80,7 +81,7 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
 }
 
 /** Desktop tab ids; the first entry is the section a freshly opened sheet shows. */
-const FATED_SECTIONS = ["character", "items", "notes"];
+const FATED_SECTIONS = ["character", "actions", "items", "notes"];
 
 /**
  * Desktop Fated controller with health, rest, damage and manual-modifier controls.
@@ -106,6 +107,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       rollSummary: rollSummary(this.document), manualModifiers: this.document.system.manualRollModifiers.map(entry =>
         ({ ...entry, signedValue: signedModifier(entry.value) })),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),
+      actions: availableActionsView(this.document), actionsSection: section === "actions",
       itemsSection: section === "items", notesSection: section === "notes" };
   }
 
@@ -125,7 +127,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   }
 
   /**
-   * Switch the desktop tab (Character / Items / Notes).
+   * Switch the desktop tab (Character / Actions / Items / Notes).
    * Pending form fields are submitted first so edits made in the section being left
    * are never dropped; the new section then starts at the top of its own content.
    * Only the sheet instance remembers the selection, never the Actor document.

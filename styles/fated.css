@@ -178,6 +178,29 @@
   outline-offset: 2px;
 }
 
+/* Desktop Action cards use the window width; facts and breakdowns wrap independently. */
+.fated-actor .fated-actions,
+.fated-actor .fated-action-card,
+.fated-actor .fated-action-card header > *,
+.fated-actor .fated-action-calculations > * { min-width: 0; overflow-wrap: anywhere; }
+.fated-actor .fated-action-list { display: grid; gap: 1rem; }
+.fated-actor .fated-action-card { border: 1px solid var(--fated-border); border-radius: 0.5rem; padding: 1rem; }
+.fated-actor .fated-action-card header { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 0.75rem; }
+.fated-actor .fated-action-card header > div { flex: 1 1 14rem; }
+.fated-actor .fated-action-card h3 { margin-block: 0.25rem; }
+.fated-actor .fated-action-card button { max-width: 100%; min-height: 2.75rem; height: auto; white-space: normal; overflow-wrap: anywhere; }
+.fated-actor .fated-action-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 0.75rem; }
+.fated-actor .fated-action-card dd { margin: 0.25rem 0 0; }
+.fated-actor .fated-action-total dd { font-size: 1.4rem; font-weight: bold; }
+.fated-actor .fated-action-rules { white-space: pre-wrap; line-height: 1.5; }
+.fated-actor .fated-action-warning { border-left: 3px solid #d6a85b; padding-left: 0.75rem; }
+.fated-actor .fated-action-breakdown { border-top: 1px solid var(--fated-border); }
+.fated-actor .fated-action-breakdown summary { cursor: pointer; min-height: 2.75rem; padding-block: 0.75rem; }
+.fated-actor .fated-action-calculations { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1rem; }
+.fated-actor .fated-action-calculations dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 0.75rem; padding-block: 0.25rem; }
+.fated-actor .fated-action-card button:focus-visible,
+.fated-actor .fated-action-breakdown summary:focus-visible { outline: 3px solid #d6a85b; outline-offset: 2px; }
+
 /* The sheet grid supplies spacing below Health; keep Rest a compact secondary control. */
 .fated-actor .fated-character-rest {
   justify-self: start;

@@ -12,30 +12,32 @@ const mobileTemplate = readFileSync(new URL("../templates/actor/mobile-sheet.hbs
 const npcTemplate = readFileSync(new URL("../templates/actor/npc-sheet.hbs", import.meta.url), "utf8");
 const catalogs = Object.fromEntries(["en", "it"].map(lang => [lang, JSON.parse(readFileSync(new URL(`../lang/${lang}.json`, import.meta.url), "utf8"))]));
 
-// The three branch markers split the file into the sections they render.
+// Branch markers split the file into the sections they render.
 const navStart = template.indexOf("fated-section-nav");
 const navEnd = template.indexOf("</nav>") + "</nav>".length;
 const itemsStart = template.indexOf("{{#if itemsSection}}", navEnd);
 const notesStart = template.indexOf("{{else if notesSection}}", itemsStart);
-const characterStart = template.indexOf("{{else}}", notesStart);
+const actionsStart = template.indexOf("{{else if actionsSection}}", notesStart);
+const characterStart = template.lastIndexOf("{{else}}", template.indexOf('<header class="fated-sheet-header">'));
 const branchEnd = template.lastIndexOf("{{/if}}");
 const between = (from, to) => template.slice(from, to);
 
 test("the desktop sheet declares one navigation bar with one button per tab", () => {
   assert.match(template, /<nav class="fated-section-nav" aria-label="\{\{localize "FATED\.Sheet\.Sections"\}\}">/);
   const nav = between(navStart, navEnd);
-  for (const section of ["character", "items", "notes"])
+  for (const section of ["character", "actions", "items", "notes"])
     assert.equal((nav.match(new RegExp(`<button[^>]*data-action="selectSection"[^>]*data-section="${section}"`, "g")) ?? []).length, 1, section);
-  assert.equal((nav.match(/data-action="selectSection"/g) ?? []).length, 3);
+  assert.equal((nav.match(/data-action="selectSection"/g) ?? []).length, 4);
 });
 
 test("every tab button names itself and marks only itself as active", () => {
   const active = {
-    character: /\{\{#if \(or itemsSection notesSection\)\}\}\{\{else\}\} aria-current="page"\{\{\/if\}\}/,
+    character: /\{\{#if \(or actionsSection itemsSection notesSection\)\}\}\{\{else\}\} aria-current="page"\{\{\/if\}\}/,
+    actions: /\{\{#if actionsSection\}\} aria-current="page"\{\{\/if\}\}/,
     items: /\{\{#if itemsSection\}\} aria-current="page"\{\{\/if\}\}/,
     notes: /\{\{#if notesSection\}\} aria-current="page"\{\{\/if\}\}/
   };
-  const label = { character: "FATED.Common.Character", items: "FATED.Sheet.Items", notes: "FATED.Sheet.Biography" };
+  const label = { actions: "FATED.Common.Actions", character: "FATED.Common.Character", items: "FATED.Sheet.Items", notes: "FATED.Sheet.Biography" };
   for (const section of Object.keys(active)) {
     // The opening tag ends at the ">" that precedes the button's localized label.
     const [button] = template.match(new RegExp(`<button[^>]*data-section="${section}"[\\s\\S]*?(?=>\\{\\{localize)`));
@@ -43,14 +45,14 @@ test("every tab button names itself and marks only itself as active", () => {
     assert.match(button, new RegExp(`aria-label="\\{\\{localize "${label[section]}"\\}\\}"`));
     assert.match(button, active[section]);
   }
-  assert.equal((template.match(/aria-current="page"/g) ?? []).length, 3);
+  assert.equal((template.match(/aria-current="page"/g) ?? []).length, 4);
   // Only the selected section is rendered, so the ARIA tablist roles would be wrong here.
   assert.doesNotMatch(template, /role="tab(list)?"/);
 });
 
 test("the sections are mutually exclusive and exactly one is rendered", () => {
   assert.ok(0 < navStart && navStart < navEnd && navEnd < itemsStart);
-  assert.ok(itemsStart < notesStart && notesStart < characterStart && characterStart < branchEnd);
+  assert.ok(itemsStart < notesStart && notesStart < actionsStart && actionsStart < characterStart && characterStart < branchEnd);
   assert.match(between(branchEnd, template.length), /^\s*\{\{\/if\}\}\s*<\/div>\s*$/);
 });
 
@@ -76,7 +78,7 @@ test("the Items tab holds only the inventory controls", () => {
 });
 
 test("the Notes tab holds only the biography field", () => {
-  const notes = between(notesStart, characterStart);
+  const notes = between(notesStart, actionsStart);
   assert.match(notes, /<section class="panel biography">/);
   assert.match(notes, /name="system\.biography"/);
   for (const absent of ['data-action="toggleEquipment"', 'data-action="removeItem"', 'name="system.skills'])
@@ -128,7 +130,7 @@ test("the new navigation label exists in both language catalogs", () => {
 test("no stored field or control is rendered by more than one tab", () => {
   const sections = {
     items: between(itemsStart, notesStart),
-    notes: between(notesStart, characterStart),
+    notes: between(notesStart, actionsStart),
     character: between(characterStart, branchEnd)
   };
   const owned = {
@@ -193,4 +195,26 @@ test("EN/IT catalogs align and every desktop localization key exists in both", (
   assert.deepEqual(flatten(catalogs.en).sort(), flatten(catalogs.it).sort());
   for (const { 1: key } of template.matchAll(/localize "([^"]+)"/g)) for (const lang of ["en", "it"])
     assert.equal(typeof key.split(".").reduce((value, part) => value?.[part], catalogs[lang]), "string", `${lang}: ${key}`);
+});
+
+test("Actions navigation order, card information, details and empty state are accessible without editing", () => {
+  const nav = between(navStart, navEnd);
+  assert.deepEqual([...nav.matchAll(/data-section="([^"]+)"/g)].map(m => m[1]), ["character", "actions", "items", "notes"]);
+  const actions = between(actionsStart, characterStart);
+  for (const field of ["name", "source.itemName", "classificationLabel", "rollRequirementLabel", "dice.total",
+    "threshold.total", "damagePerSuccess", "attackLabel", "rangeLabel", "stanceLabel", "eligibilityLabel",
+    "effect", "rules", "thresholdReviewIssue", "diceSourceLabel", "dice.base", "threshold.base"])
+    assert.ok(actions.includes(`{{action.${field}}}`), field);
+  for (const type of ["dice", "threshold"])
+    assert.ok(actions.includes(`{{#each action.${type}.modifiers}}<div><dt>{{label}}</dt><dd>{{value}}</dd></div>{{/each}}`));
+  assert.match(actions, /<details class="fated-action-breakdown">\s*<summary>/);
+  assert.match(actions, /data-action="openItem" data-item-id="\{\{action.source.itemId\}\}"/);
+  assert.match(actions, /FATED.Mobile.NoActions/);
+  assert.match(actions, /FATED.Mobile.AddActionHint/);
+  assert.match(actions, /FATED.Common.Unspecified/);
+  assert.doesNotMatch(actions, /disabled|@root.editable|data-action="planner"|name="system\.|\{\{\{action\./);
+  assert.match(css, /\.fated-actor \.fated-action-breakdown summary:focus-visible/);
+  assert.match(css, /\.fated-actor \.fated-action-card button:focus-visible/);
+  assert.match(css, /\.fated-actor \.fated-action-rules \{ white-space: pre-wrap; line-height: 1.5; \}/);
+  assert.match(css, /minmax\(min\(100%, 14rem\), 1fr\)/);
 });

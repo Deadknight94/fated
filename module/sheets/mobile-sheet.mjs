@@ -5,19 +5,20 @@
  * transient navigation, expansion/scroll state and local pending-operation guards.
  */
 import { uiText, systemMessage } from "../presentation/text.mjs";
-import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, modifierLabel, defenseView, rangeLabel, declarationIssuesView } from "../presentation/labels.mjs";
+import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView, rangeLabel, declarationIssuesView } from "../presentation/labels.mjs";
 import { equipmentView } from "../equipment.mjs";
 import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
-import { calculateActorAction, healthView } from "../health.mjs";
+import { healthView } from "../health.mjs";
 import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
+import { availableActionsView, breakdownView } from "../presentation/actions.mjs";
 import { rollSummary } from "../presentation/roll-summary.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
 import { enduranceSpendOptions } from "../declaration/endurance-push.mjs";
 import { adjustResource } from "../resources.mjs";
-import { calculateDefense, actionDamage } from "../defense.mjs";
+import { calculateDefense } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
 import { buildSkillGroups } from "../skills.mjs";
 import { LocalizedSheetMixin } from "../presentation/sheet-mixin.mjs";
@@ -25,17 +26,6 @@ import { ProficiencySheetMixin, captureProficiencyDetails, restoreProficiencyDet
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
-const displayNumber = value => Number.isFinite(value) ? String(value) : uiText("Unspecified");
-
-/** Read-only display projection; null totals stay visibly unspecified, not zero. */
-function breakdownView(value) {
-  return { base: displayNumber(value.base), total: displayNumber(value.total), complete: value.complete,
-    modifiers: value.modifiers.map(modifier => ({
-      label: modifierLabel(modifier),
-      value: Number.isFinite(modifier.value) ? `${modifier.value >= 0 ? "+" : ""}${modifier.value}` : uiText("Unspecified")
-    })) };
-}
-
 /**
  * Four-section ActorSheetV2 controller shared with Companion. Rendering reads
  * live Action calculations or saved planner snapshots; handlers delegate Actor
@@ -105,23 +95,9 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     const context = await super._prepareContext(options);
     const declaration = this.document.system.declaration.toObject();
     const evaluation = getDeclarationEvaluation(this.document);
-    const actions = this.document.getAvailableActions().map(action => {
-      const calculation = calculateActorAction(this.document, action);
-      const range = rangeLabel(action.range);
-      return { ...action,
-        damagePerSuccess: actionDamage(action, this.document.items.get(action.source.itemId)),
-        hasDamage: actionDamage(action, this.document.items.get(action.source.itemId)) !== null,
-        additionIssue: evaluation.locked ? null : systemMessage(powerActionAdditionIssue(action, evaluation)),
-        name: action.name || uiText("Unnamed Action"),
-        rollRequirementLabel: action.rollRequirement ? displayLabel("rollRequirement", action.rollRequirement) : uiText("Roll requirement unspecified"),
-        classificationLabel: displayLabel("classification", action.classification), attackLabel: displayLabel("attack", action.attackType), rangeLabel: range,
-        stanceLabel: action.allowedStances.length ? action.allowedStances.map(value => displayLabel("stance", value)).join(", ") : uiText("Unspecified"),
-        eligibilityLabel: uiText(action.multiActionEligible === null ? "Unspecified" : action.multiActionEligible ? "Yes" : "No"),
-        diceSourceLabel: formatDiceSourceLabel(action, calculation, this.document),
-        dice: breakdownView(calculation.successDice), threshold: breakdownView(calculation.successThreshold),
-        thresholdReviewIssue: systemMessage(calculation.successThreshold.reviewIssue)
-      };
-    });
+    const actions = availableActionsView(this.document).map(action => ({ ...action,
+      additionIssue: evaluation.locked ? null : systemMessage(powerActionAdditionIssue(action, evaluation))
+    }));
     const planner = { ...evaluation, revision: declaration.revision, stanceLabel: displayLabel("stance", declaration.stance),
       enduranceSpend: evaluation.locked ? evaluation.enduranceSpend : declaration.enduranceSpend,
       enduranceOptions: enduranceSpendOptions(this.document, declaration.enduranceSpend),
