@@ -5,18 +5,17 @@
  * transient navigation, expansion/scroll state and local pending-operation guards.
  */
 import { uiText, systemMessage } from "../presentation/text.mjs";
-import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView, rangeLabel, declarationIssuesView } from "../presentation/labels.mjs";
+import { displayLabel, skillGroupsView, localizedHealth, localizedEquipment, defenseView } from "../presentation/labels.mjs";
 import { equipmentView } from "../equipment.mjs";
 import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { healthView } from "../health.mjs";
-import { formatDiceSourceLabel } from "../helpers/dice-source-label.mjs";
-import { availableActionsView, breakdownView } from "../presentation/actions.mjs";
+import { availableActionsView } from "../presentation/actions.mjs";
+import { plannerView } from "../presentation/planner.mjs";
 import { rollSummary } from "../presentation/roll-summary.mjs";
 import { healthAction } from "./health-controls.mjs";
 import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
-import { enduranceSpendOptions } from "../declaration/endurance-push.mjs";
 import { adjustResource } from "../resources.mjs";
 import { calculateDefense } from "../defense.mjs";
 import { openRestApp } from "../apps/rest-app.mjs";
@@ -98,25 +97,8 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     const actions = availableActionsView(this.document).map(action => ({ ...action,
       additionIssue: evaluation.locked ? null : systemMessage(powerActionAdditionIssue(action, evaluation))
     }));
-    const planner = { ...evaluation, revision: declaration.revision, stanceLabel: displayLabel("stance", declaration.stance),
-      enduranceSpend: evaluation.locked ? evaluation.enduranceSpend : declaration.enduranceSpend,
-      enduranceOptions: enduranceSpendOptions(this.document, declaration.enduranceSpend),
-      issues: declarationIssuesView(evaluation),
-      stanceChosen: Boolean(declaration.stance),
-      actionPickerOpen: this.actionPickerOpen && Boolean(declaration.stance) && !evaluation.locked,
-      actionPickerId: `${this.id}-action-picker`,
-      stances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === declaration.stance })),
-      canAddMovement: !evaluation.locked && evaluation.movementCount === 0 && Boolean(declaration.stance),
-      entries: evaluation.entries.map((entry, index, all) => ({ ...entry, number: index + 1,
-        movement: entry.kind === "movement", name: entry.action?.name || uiText("Missing or unnamed Action"),
-        classificationLabel: displayLabel("classification", entry.action?.classification),
-        requiresRoll: entry.action?.rollRequirement === "required", noRoll: entry.action?.rollRequirement === "none",
-        dice: entry.calculation ? breakdownView(entry.calculation.successDice) : null,
-        threshold: entry.calculation ? breakdownView(entry.calculation.successThreshold) : null,
-        diceSourceLabel: formatDiceSourceLabel(entry.action, entry.calculation, this.document),
-        rangeLabel: entry.action ? rangeLabel(entry.action.range) : "",
-        canMoveUp: index > 0, canMoveDown: index < all.length - 1, completed: declaration.completed.includes(entry.id)
-      })) };
+    const planner = plannerView(this.document, { declaration, evaluation,
+      actionPickerOpen: this.actionPickerOpen, actionPickerId: `${this.id}-action-picker` });
     return { ...context, actor: this.document, system: this.document.system, editable: this.isEditable, actions, planner, skills: skillGroupsView(buildSkillGroups(this.document.system.skills)),
       canEditProficiencyKeys: game.user.isGM && this.isEditable,
       healthState: localizedHealth(healthView(this.document, { isGM: game.user.isGM })),
