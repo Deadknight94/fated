@@ -77,16 +77,24 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
   }
 }
 
+/** Desktop tab ids; the first entry is the section a freshly opened sheet shows. */
+const FATED_SECTIONS = ["character", "items", "notes"];
+
 /**
  * Desktop Fated controller with health, rest, damage and manual-modifier controls.
  * _prepareContext reads services; form/actions persist through Foundry Documents.
  * The current desktop template has no stance selector or Turn Planner.
  */
 export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
+  /** Selected desktop tab. Sheet-instance state only, never Actor data. */
+  _fatedSection = "character";
+
   async _prepareContext(options) {
+    const section = FATED_SECTIONS.includes(this._fatedSection) ? this._fatedSection : "character";
     return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,
       rollSummary: rollSummary(this.document), manualModifiers: this.document.system.manualRollModifiers.map(entry =>
-        ({ ...entry, signedValue: signedModifier(entry.value) })) };
+        ({ ...entry, signedValue: signedModifier(entry.value) })),
+      itemsSection: section === "items", notesSection: section === "notes" };
   }
 
   async _onChangeForm(formConfig, event) {
@@ -104,6 +112,22 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     }
   }
 
+  /**
+   * Switch the desktop tab (Character / Items / Notes).
+   * Pending form fields are submitted first so edits made in the section being left
+   * are never dropped; the new section then starts at the top of its own content.
+   * Only the sheet instance remembers the selection, never the Actor document.
+   */
+  static async selectSection(event, button) {
+    const section = button?.dataset?.section;
+    if (!FATED_SECTIONS.includes(section)) return;
+    const previous = FATED_SECTIONS.includes(this._fatedSection) ? this._fatedSection : "character";
+    if (this.isEditable) await this.submit();
+    this._fatedSection = section;
+    this._sectionChanged = section !== previous;
+    await this.render({ force: true });
+  }
+
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
     actions: {
@@ -113,6 +137,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       health: healthAction,
       manualModifier: manualModifierAction,
       openDamage: openDamageBookkeeping,
+      selectSection: FatedActorSheet.selectSection,
       // Proficiency mutation actions
       addProficiency: FatedActorSheet.addProficiency,
       removeProficiency: FatedActorSheet.removeProficiency,
@@ -128,6 +153,8 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   /**
    * Preserve scroll position and expanded proficiency rows across renders.
    * Capture before the sheet renders, then restore after rendering.
+   * A tab switch is the one case where the old offset is wrong: the new section
+   * starts at the top of its own content.
    */
   async _preRender(context, options) {
     this._scrollPosition =
@@ -143,7 +170,15 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     restoreProficiencyDetails(this);
 
     const scrollContainer = this.element?.querySelector(".window-content");
-    if (!scrollContainer || this._scrollPosition === undefined) return;
+    if (!scrollContainer) return;
+
+    if (this._sectionChanged) {
+      delete this._sectionChanged;
+      scrollContainer.scrollTop = 0;
+      return;
+    }
+
+    if (this._scrollPosition === undefined) return;
 
     requestAnimationFrame(() => {
       scrollContainer.scrollTop = this._scrollPosition;

@@ -188,6 +188,7 @@
       "Deceive": "Deceive"
     },
     "Sheet": {
+      "Sections": "Sheet sections",
       "Name": "Name",
       "PrimaryAttributes": "Primary Attributes",
       "Skills": "Skills",

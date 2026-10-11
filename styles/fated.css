@@ -141,6 +141,55 @@
   min-width: 0;
 }
 
+/* Desktop tab navigation. Only the selected section is rendered, so inactive
+   sections hold no focusable controls. The bar stays pinned while scrolling. */
+.fated .fated-section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  background: #10151b;
+  border-bottom: 1px solid var(--color-border-light-primary, #777);
+}
+
+.fated .fated-section-nav button {
+  flex: 1;
+  min-height: 2.75rem;
+  height: auto;
+  white-space: normal;
+  cursor: pointer;
+  border: 1px solid var(--fated-border);
+  border-radius: 0.35rem;
+  background: transparent;
+}
+
+.fated .fated-section-nav button[aria-current="page"] {
+  background: var(--color-warm-2, #65452b);
+  color: #fff;
+  font-weight: bold;
+  outline: 2px solid currentColor;
+}
+
+.fated .fated-section-nav button:focus-visible {
+  outline: 3px solid #d6a85b;
+  outline-offset: 2px;
+}
+
+.fated .fated-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fated .fated-sheet-actions button {
+  min-height: 2.75rem;
+  height: auto;
+  white-space: normal;
+}
+
 .fated .fated-sheet-header {
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);

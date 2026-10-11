@@ -1,6 +1,40 @@
 <div class="fated-sheet-body">
-  <button type="button" data-action="openMobile">{{localize "FATED.Sheet.OpenMobile"}}</button>
-  <button type="button" data-action="openRest">{{localize "FATED.Sheet.Rest"}}</button>
+  <nav class="fated-section-nav" aria-label="{{localize "FATED.Sheet.Sections"}}">
+    <button type="button" data-action="selectSection" data-section="character" aria-label="{{localize "FATED.Common.Character"}}"{{#if (or itemsSection notesSection)}}{{else}} aria-current="page"{{/if}}>{{localize "FATED.Common.Character"}}</button>
+    <button type="button" data-action="selectSection" data-section="items" aria-label="{{localize "FATED.Sheet.Items"}}"{{#if itemsSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Items"}}</button>
+    <button type="button" data-action="selectSection" data-section="notes" aria-label="{{localize "FATED.Sheet.Biography"}}"{{#if notesSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Biography"}}</button>
+  </nav>
+
+  <div class="fated-sheet-actions">
+    <button type="button" data-action="openMobile">{{localize "FATED.Sheet.OpenMobile"}}</button>
+    <button type="button" data-action="openRest">{{localize "FATED.Sheet.Rest"}}</button>
+  </div>
+
+  {{#if itemsSection}}
+  <section class="panel inventory">
+    <h2>{{localize "FATED.Sheet.Items"}}</h2>
+    {{#if items.length}}
+      <ul class="item-list">
+        {{#each items as |item|}}
+          <li class="item-row draggable" data-item-id="{{item.id}}">
+            <img src="{{item.img}}" alt="">
+            <span>{{item.name}}</span>
+            <small>{{item.typeLabel}}</small>
+            {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}{{localize "FATED.Common.Yes"}}{{else}}{{localize "FATED.Common.No"}}{{/if}}</button>{{/if}}
+            <button type="button" data-action="removeItem" data-item-id="{{item.id}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="muted">{{localize "FATED.Sheet.NoItems"}}</p>
+    {{/if}}
+  </section>
+  {{else if notesSection}}
+  <section class="panel biography">
+    <h2>{{localize "FATED.Sheet.Biography"}}</h2>
+    <textarea name="system.biography" rows="8" {{disabled (not editable)}}>{{system.biography}}</textarea>
+  </section>
+  {{else}}
   <header class="fated-sheet-header">
     <img class="portrait" src="{{actor.img}}" alt="{{actor.name}}" data-action="editImage" data-edit="img">
     <div class="identity">
@@ -20,30 +54,30 @@
   </section>
 
   <section class="panel">
-  <h2>{{localize "FATED.Sheet.Skills"}}</h2>
+    <h2>{{localize "FATED.Sheet.Skills"}}</h2>
 
-  <div class="skills-grid">
-    {{#each skills as |group|}}
-      <div class="skill-group">
-        <h3>{{group.label}}</h3>
+    <div class="skills-grid">
+      {{#each skills as |group|}}
+        <div class="skill-group">
+          <h3>{{group.label}}</h3>
 
-        {{#each group.skills as |skill|}}
-          <label>
-            {{skill.label}}
-            <input
-              type="number"
-              name="system.skills.{{skill.key}}"
-              value="{{skill.value}}"
-              min="0"
-              step="1"
-              {{disabled (not @root.editable)}}
-            >
-          </label>
-        {{/each}}
-      </div>
-    {{/each}}
-  </div>
-</section>
+          {{#each group.skills as |skill|}}
+            <label>
+              {{skill.label}}
+              <input
+                type="number"
+                name="system.skills.{{skill.key}}"
+                value="{{skill.value}}"
+                min="0"
+                step="1"
+                {{disabled (not @root.editable)}}
+              >
+            </label>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+  </section>
 
   <section class="panel">
     <h2>{{localize "FATED.Sheet.Resources"}}</h2>
@@ -156,28 +190,5 @@
 
   {{> "systems/fated/templates/actor/defense.hbs"}}
   {{#if isGM}}<button type="button" data-action="openDamage">{{localize "FATED.Common.PhysicalDamage"}}</button>{{/if}}
-
-  <section class="panel inventory">
-    <h2>{{localize "FATED.Sheet.Items"}}</h2>
-    {{#if items.length}}
-      <ul class="item-list">
-        {{#each items as |item|}}
-          <li class="item-row draggable" data-item-id="{{item.id}}">
-            <img src="{{item.img}}" alt="">
-            <span>{{item.name}}</span>
-            <small>{{item.typeLabel}}</small>
-            {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}{{localize "FATED.Common.Yes"}}{{else}}{{localize "FATED.Common.No"}}{{/if}}</button>{{/if}}
-            <button type="button" data-action="removeItem" data-item-id="{{item.id}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
-          </li>
-        {{/each}}
-      </ul>
-    {{else}}
-      <p class="muted">{{localize "FATED.Sheet.NoItems"}}</p>
-    {{/if}}
-  </section>
-
-  <section class="panel biography">
-    <h2>{{localize "FATED.Sheet.Biography"}}</h2>
-    <textarea name="system.biography" rows="8" {{disabled (not editable)}}>{{system.biography}}</textarea>
-  </section>
+  {{/if}}
 </div>
