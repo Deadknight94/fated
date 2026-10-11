@@ -89,6 +89,15 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   /** Selected desktop tab. Sheet-instance state only, never Actor data. */
   _fatedSection = "character";
 
+  /** Add the mobile entry to Foundry's native menu, retaining inherited controls. */
+  _getHeaderControls() {
+    return [...super._getHeaderControls(), {
+      action: "openMobile",
+      label: "FATED.Sheet.OpenMobile",
+      icon: "fa-solid fa-mobile-screen-button"
+    }];
+  }
+
   async _prepareContext(options) {
     const section = FATED_SECTIONS.includes(this._fatedSection) ? this._fatedSection : "character";
     return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,

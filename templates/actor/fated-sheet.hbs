@@ -5,11 +5,6 @@
     <button type="button" data-action="selectSection" data-section="notes" aria-label="{{localize "FATED.Sheet.Biography"}}"{{#if notesSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Biography"}}</button>
   </nav>
 
-  <div class="fated-sheet-actions">
-    <button type="button" data-action="openMobile">{{localize "FATED.Sheet.OpenMobile"}}</button>
-    <button type="button" data-action="openRest">{{localize "FATED.Sheet.Rest"}}</button>
-  </div>
-
   {{#if itemsSection}}
   <section class="panel inventory">
     <h2>{{localize "FATED.Sheet.Items"}}</h2>
@@ -157,6 +152,7 @@
   </section>
 
   {{> "systems/fated/templates/actor/health-state.hbs"}}
+  <button type="button" class="fated-character-rest" data-action="openRest">{{localize "FATED.Sheet.Rest"}}</button>
 
   <section class="panel manual-modifiers">
     <h2>{{localize "FATED.Roll.ManualModifiers"}}</h2>

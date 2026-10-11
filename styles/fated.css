@@ -178,16 +178,17 @@
   outline-offset: 2px;
 }
 
-.fated .fated-sheet-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.fated .fated-sheet-actions button {
+/* The sheet grid supplies spacing below Health; keep Rest a compact secondary control. */
+.fated-actor .fated-character-rest {
+  justify-self: start;
+  width: auto;
   min-height: 2.75rem;
   height: auto;
+  padding: 0.35rem 0.85rem;
   white-space: normal;
+  background: transparent;
+  border: 1px solid var(--fated-border);
+  border-radius: 0.35rem;
 }
 
 .fated .fated-sheet-header {

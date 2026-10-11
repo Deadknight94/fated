@@ -14,6 +14,7 @@ foundry.abstract = { DataModel: class {}, Type: class {} };
 foundry.utils = { randomID: () => "id", clone: (value) => value };
 foundry.common = { documentTypes: new Proxy({}, { get: (_, key) => class {} }) };
 foundry.applications.sheets.ActorSheetV2.prototype._prepareContext = async () => ({});
+foundry.applications.sheets.ActorSheetV2.prototype._getHeaderControls = () => [];
 
 const submits = [];
 foundry.applications.api.ApplicationV2.prototype.submit = () => submits.push("submit");
@@ -21,7 +22,9 @@ foundry.applications.api.ApplicationV2.prototype._onRender = async () => {};
 foundry.applications.api.ApplicationV2.prototype._preRender = async () => {};
 globalThis.requestAnimationFrame = (callback) => callback();
 
-const { FatedActorSheet } = await import("../module/sheets/actor-sheets.mjs");
+const { FatedActorSheet, NpcActorSheet } = await import("../module/sheets/actor-sheets.mjs");
+const { FatedMobileSheet } = await import("../module/sheets/mobile-sheet.mjs");
+const { RestApp } = await import("../module/apps/rest-app.mjs");
 
 const SECTIONS = ["character", "items", "notes"];
 
@@ -141,4 +144,58 @@ test("the desktop tab action is desktop-only and every existing desktop control 
       assert.ok(actions[action], action);
   for (const forbidden of ["selectNpcSection", "showSection", "planner", "moveTurn", "addAction", "clearTurn", "pushTurn"])
     assert.equal(Object.hasOwn(actions, forbidden), false, forbidden);
+});
+
+test("the native mobile header entry preserves inherited controls on every desktop tab", (t) => {
+  const inherited = Object.freeze([
+    Object.freeze({ action: "configureSheet", label: "Sheet", visible: false }),
+    Object.freeze({ action: "showPortraitArtwork", label: "Portrait" })
+  ]);
+  t.mock.method(foundry.applications.sheets.ActorSheetV2.prototype, "_getHeaderControls",
+    function () { return inherited; });
+  const desktop = new FatedActorSheet({ document: actor });
+  for (const editable of [true, false]) for (const section of SECTIONS) {
+    desktop.isEditable = editable;
+    desktop._fatedSection = section;
+    const controls = desktop._getHeaderControls();
+    assert.deepEqual(controls.slice(0, -1), inherited);
+    assert.equal(controls[0], inherited[0]);
+    assert.deepEqual(controls.at(-1), {
+      action: "openMobile", label: "FATED.Sheet.OpenMobile", icon: "fa-solid fa-mobile-screen-button"
+    });
+    assert.equal(controls.length, inherited.length + 1);
+  }
+  assert.deepEqual(new NpcActorSheet({ document: actor })._getHeaderControls(), inherited);
+  assert.equal(Object.hasOwn(FatedMobileSheet.prototype, "_getHeaderControls"), false);
+  assert.equal(Object.hasOwn(NpcActorSheet.DEFAULT_OPTIONS.actions, "openMobile"), false);
+});
+
+test("desktop menu and Rest actions reuse the existing apps without writes or tab changes", async (t) => {
+  const document = { ...actor, apps: {}, update() { assert.fail("opening an app must not update the Actor"); } };
+  const before = structuredClone(document.system);
+  const desktop = new FatedActorSheet({ document });
+  t.mock.method(FatedMobileSheet.prototype, "render", async function (options) {
+    assert.deepEqual(options, { force: true });
+    assert.equal(this.document, document);
+    return this;
+  });
+  t.mock.method(RestApp.prototype, "render", async function (options) {
+    assert.deepEqual(options, { force: true });
+    assert.equal(this.document, document);
+    return this;
+  });
+  submits.length = 0;
+  for (const section of SECTIONS) {
+    desktop._fatedSection = section;
+    const mobile = await FatedActorSheet.DEFAULT_OPTIONS.actions.openMobile.call(desktop);
+    assert.ok(mobile instanceof FatedMobileSheet);
+    document.apps.mobile = mobile;
+    assert.equal(await FatedActorSheet.DEFAULT_OPTIONS.actions.openMobile.call(desktop), mobile);
+    const rest = await FatedActorSheet.DEFAULT_OPTIONS.actions.openRest.call(desktop);
+    assert.ok(rest instanceof RestApp);
+    assert.equal(await FatedActorSheet.DEFAULT_OPTIONS.actions.openRest.call(desktop), rest);
+    assert.equal(desktop._fatedSection, section);
+  }
+  assert.deepEqual(document.system, before);
+  assert.deepEqual(submits, []);
 });

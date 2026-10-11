@@ -14,8 +14,8 @@ const catalogs = Object.fromEntries(["en", "it"].map(lang => [lang, JSON.parse(r
 
 // The three branch markers split the file into the sections they render.
 const navStart = template.indexOf("fated-section-nav");
-const actionsStart = template.indexOf("fated-sheet-actions");
-const itemsStart = template.indexOf("{{#if itemsSection}}", actionsStart);
+const navEnd = template.indexOf("</nav>") + "</nav>".length;
+const itemsStart = template.indexOf("{{#if itemsSection}}", navEnd);
 const notesStart = template.indexOf("{{else if notesSection}}", itemsStart);
 const characterStart = template.indexOf("{{else}}", notesStart);
 const branchEnd = template.lastIndexOf("{{/if}}");
@@ -23,7 +23,7 @@ const between = (from, to) => template.slice(from, to);
 
 test("the desktop sheet declares one navigation bar with one button per tab", () => {
   assert.match(template, /<nav class="fated-section-nav" aria-label="\{\{localize "FATED\.Sheet\.Sections"\}\}">/);
-  const nav = between(navStart, actionsStart);
+  const nav = between(navStart, navEnd);
   for (const section of ["character", "items", "notes"])
     assert.equal((nav.match(new RegExp(`<button[^>]*data-action="selectSection"[^>]*data-section="${section}"`, "g")) ?? []).length, 1, section);
   assert.equal((nav.match(/data-action="selectSection"/g) ?? []).length, 3);
@@ -49,15 +49,22 @@ test("every tab button names itself and marks only itself as active", () => {
 });
 
 test("the sections are mutually exclusive and exactly one is rendered", () => {
-  assert.ok(0 < navStart && navStart < actionsStart && actionsStart < itemsStart);
+  assert.ok(0 < navStart && navStart < navEnd && navEnd < itemsStart);
   assert.ok(itemsStart < notesStart && notesStart < characterStart && characterStart < branchEnd);
   assert.match(between(branchEnd, template.length), /^\s*\{\{\/if\}\}\s*<\/div>\s*$/);
 });
 
-test("the always-available sheet actions stay outside every section", () => {
-  const always = between(actionsStart, itemsStart);
-  for (const action of ["openMobile", "openRest"]) assert.match(always, new RegExp(`data-action="${action}"`));
-  assert.doesNotMatch(always, /data-action="(health|manualModifier|toggleEquipment|removeItem|openDamage)"/);
+test("mobile is absent from the body and Rest follows Health only in Character", () => {
+  assert.doesNotMatch(template, /data-action="openMobile"|fated-sheet-actions/);
+  assert.doesNotMatch(between(0, characterStart), /data-action="openRest"/);
+  assert.equal((template.match(/data-action="openRest"/g) ?? []).length, 1);
+  assert.match(between(characterStart, branchEnd), /\{\{> "systems\/fated\/templates\/actor\/health-state\.hbs"\}\}\s*<button type="button" class="fated-character-rest" data-action="openRest">\{\{localize "FATED\.Sheet\.Rest"\}\}<\/button>/);
+  assert.doesNotMatch(css, /fated-sheet-actions/);
+  assert.match(css, /\.fated-actor \.fated-character-rest\s*\{[^}]*justify-self: start;[^}]*min-height: 2\.75rem;[^}]*background: transparent;/);
+  for (const lang of ["en", "it"]) {
+    assert.ok(catalogs[lang].FATED.Sheet.OpenMobile);
+    assert.ok(catalogs[lang].FATED.Sheet.Rest);
+  }
 });
 
 test("the Items tab holds only the inventory controls", () => {
@@ -100,7 +107,7 @@ test("the Character tab keeps every pre-existing desktop control", () => {
 
 test("the styling distinguishes the active tab and shows keyboard focus", () => {
   for (const rule of [".fated .fated-section-nav {", '.fated .fated-section-nav button[aria-current="page"] {',
-    ".fated .fated-section-nav button:focus-visible {", ".fated .fated-sheet-actions {"])
+    ".fated .fated-section-nav button:focus-visible {"])
     assert.ok(css.includes(rule), rule);
   const nav = css.slice(css.indexOf(".fated .fated-section-nav {"));
   assert.match(nav, /position:\s*sticky;\s*top:\s*0;/);
