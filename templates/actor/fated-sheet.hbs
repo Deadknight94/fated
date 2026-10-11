@@ -13,7 +13,7 @@
         {{#each items as |item|}}
           <li class="item-row draggable" data-item-id="{{item.id}}">
             <img src="{{item.img}}" alt="">
-            <span>{{item.name}}</span>
+            <button type="button" class="fated-item-open" data-action="openItem" data-item-id="{{item.id}}">{{localize "FATED.Common.Open"}}: {{item.name}}</button>
             <small>{{item.typeLabel}}</small>
             {{#if item.equipmentState}}<button type="button" data-action="toggleEquipment" data-item-id="{{item.id}}" aria-pressed="{{item.equipped}}" {{disabled (not item.editable)}}>{{item.stateLabel}}: {{#if item.equipped}}{{localize "FATED.Common.Yes"}}{{else}}{{localize "FATED.Common.No"}}{{/if}}</button>{{/if}}
             <button type="button" data-action="removeItem" data-item-id="{{item.id}}" {{disabled (not @root.editable)}}>{{localize "FATED.Sheet.Remove"}}</button>
@@ -77,21 +77,38 @@
   <section class="panel">
     <h2>{{localize "FATED.Sheet.Resources"}}</h2>
     <div class="resource-grid">
-      <label>{{localize "FATED.Resource.Endurance"}}
-        <span class="resource-pair">
-          <input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}>
-          <strong>/ {{system.resources.endurance.max}}</strong>
-        </span>
-      </label>
-      <label>{{localize "FATED.Resource.Hope"}}
-        <span class="resource-pair">
-          <input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}>
-          <strong>± {{system.resources.hope.max}}</strong>
-        </span>
-      </label>
-      <label>{{localize "FATED.Resource.Power"}} <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" {{disabled (not editable)}}></label>
+      <div class="fated-resource">
+        <label>{{localize "FATED.Resource.Endurance"}}
+          <span class="resource-pair">
+            <input type="number" name="system.resources.endurance.value" value="{{system.resources.endurance.value}}" min="0" max="{{system.resources.endurance.max}}" {{disabled (not editable)}}>
+            <strong>/ {{system.resources.endurance.max}}</strong>
+          </span>
+        </label>
+        <div class="fated-resource-controls"><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreaseEndurance"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="endurance" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreaseEndurance"}}" {{disabled (not editable)}}>+1</button></div>
+      </div>
+      <div class="fated-resource">
+        <label>{{localize "FATED.Resource.Hope"}}
+          <span class="resource-pair">
+            <input type="number" name="system.resources.hope.value" value="{{system.resources.hope.value}}" min="-{{system.resources.hope.max}}" max="{{system.resources.hope.max}}" {{disabled (not editable)}}>
+            <strong>± {{system.resources.hope.max}}</strong>
+          </span>
+        </label>
+        <div class="fated-resource-controls"><button type="button" data-action="adjustResource" data-resource="hope" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreaseHope"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="hope" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreaseHope"}}" {{disabled (not editable)}}>+1</button></div>
+      </div>
+      <div class="fated-resource">
+        <label>{{localize "FATED.Resource.Power"}}
+          <span class="resource-pair">
+            <input type="number" name="system.resources.power" value="{{system.resources.power}}" min="0" max="{{powerMax}}" {{disabled (not editable)}}>
+            <strong>/ {{powerMax}}</strong>
+          </span>
+        </label>
+        <div class="fated-resource-controls"><button type="button" data-action="adjustResource" data-resource="power" data-delta="-1" aria-label="{{localize "FATED.Mobile.DecreasePower"}}" {{disabled (not editable)}}>−1</button><button type="button" data-action="adjustResource" data-resource="power" data-delta="1" aria-label="{{localize "FATED.Mobile.IncreasePower"}}" {{disabled (not editable)}}>+1</button></div>
+      </div>
       <label>{{localize "FATED.Resource.Load"}} <input type="number" value="{{system.load}}" readonly></label>
     </div>
+    <label class="fated-current-stance">{{localize "FATED.Sheet.CurrentStance"}}
+      <select name="system.currentStance" {{disabled (not editable)}}>{{#each currentStances}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
+    </label>
   </section>
 
   <section class="panel">

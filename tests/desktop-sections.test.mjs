@@ -25,6 +25,8 @@ globalThis.requestAnimationFrame = (callback) => callback();
 const { FatedActorSheet, NpcActorSheet } = await import("../module/sheets/actor-sheets.mjs");
 const { FatedMobileSheet } = await import("../module/sheets/mobile-sheet.mjs");
 const { RestApp } = await import("../module/apps/rest-app.mjs");
+const { adjustResource } = await import("../module/resources.mjs");
+const { toggleEquipment } = await import("../module/sheets/equipment-controls.mjs");
 
 const SECTIONS = ["character", "items", "notes"];
 
@@ -198,4 +200,152 @@ test("desktop menu and Rest actions reuse the existing apps without writes or ta
   }
   assert.deepEqual(document.system, before);
   assert.deepEqual(submits, []);
+});
+
+function resourceSheet() {
+  const document = { ...actor, system: structuredClone(actor.system), updates: [],
+    async update(data) {
+      this.updates.push(data);
+      for (const [path, value] of Object.entries(data)) {
+        const parts = path.split(".");
+        const key = parts.pop();
+        parts.reduce((object, part) => object[part], this)[key] = value;
+      }
+    } };
+  const desktop = new FatedActorSheet({ document });
+  desktop.submit = async () => {};
+  return desktop;
+}
+const adjust = (desktop, resource = "hope", delta = 1) =>
+  FatedActorSheet.DEFAULT_OPTIONS.actions.adjustResource.call(desktop, {}, { dataset: { resource, delta: String(delta) } });
+
+test("desktop resource actions match the shared service for normal, bounded and invalid inputs", async () => {
+  for (const resource of ["endurance", "hope", "power", "load", "unknown"]) {
+    for (const delta of [-1, 1, 2, NaN]) for (const value of [0, 3, 7, -3]) {
+      const desktop = resourceSheet();
+      if (resource === "power") desktop.document.system.resources.power = value;
+      else if (["endurance", "hope"].includes(resource)) desktop.document.system.resources[resource].value = value;
+      const expected = resourceSheet().document;
+      expected.system = structuredClone(desktop.document.system);
+      await adjustResource(expected, resource, delta);
+      await adjust(desktop, resource, delta);
+      assert.deepEqual(desktop.document.updates, expected.updates);
+      assert.deepEqual(desktop.document.system, expected.system);
+      assert.equal(desktop.resourcePending, false);
+    }
+  }
+});
+
+test("pending edits persist before adjustment and duplicate clicks are blocked throughout both writes", async () => {
+  const desktop = resourceSheet();
+  let finishSubmit, finishUpdate;
+  desktop.submit = async () => {
+    await new Promise(resolve => { finishSubmit = resolve; });
+    desktop.document.system.resources.hope.value = 1;
+    desktop.document.system.biography = "pending notes";
+  };
+  const update = desktop.document.update.bind(desktop.document);
+  desktop.document.update = async data => {
+    await new Promise(resolve => { finishUpdate = resolve; });
+    await update(data);
+  };
+  const first = adjust(desktop);
+  await adjust(desktop);
+  assert.equal(desktop.document.updates.length, 0);
+  finishSubmit();
+  while (!finishUpdate) await Promise.resolve();
+  await adjust(desktop);
+  finishUpdate();
+  await first;
+  assert.deepEqual(desktop.document.updates, [{ "system.resources.hope.value": 2 }]);
+  assert.equal(desktop.document.system.biography, "pending notes");
+  assert.equal(desktop.resourcePending, false);
+});
+
+test("resource permission checks prevent writes and read-only sheets never submit", async () => {
+  const desktop = resourceSheet();
+  desktop.isEditable = false;
+  desktop.submit = async () => assert.fail("read-only submit");
+  await adjust(desktop);
+  assert.deepEqual(desktop.document.updates, []);
+  desktop.isEditable = true;
+  desktop.submit = async () => {};
+  desktop.document.isOwner = false;
+  await adjust(desktop);
+  assert.deepEqual(desktop.document.updates, []);
+});
+
+test("failed submission or update warns, releases the guard and does not retry the write", async (t) => {
+  const warnings = [];
+  t.mock.method(ui.notifications, "warn", message => warnings.push(message));
+  for (const stage of ["submit", "update"]) {
+    const desktop = resourceSheet();
+    const target = stage === "submit" ? desktop : desktop.document;
+    target[stage] = async () => { throw new Error("Rejected edit"); };
+    await adjust(desktop);
+    assert.equal(desktop.resourcePending, false);
+    assert.deepEqual(desktop.document.updates, []);
+  }
+  assert.deepEqual(warnings, ["Rejected edit", "Rejected edit"]);
+});
+
+test("current stance choices reflect Actor state and normal form events delegate unchanged", async (t) => {
+  const desktop = resourceSheet();
+  const inherited = foundry.applications.sheets.ActorSheetV2.prototype;
+  inherited._onChangeForm ??= async () => {};
+  inherited._processFormData ??= (event, form, formData) => formData.object;
+  t.mock.method(inherited, "_onChangeForm", async function (config, event) {
+    assert.equal(config, FatedActorSheet.DEFAULT_OPTIONS.form);
+    if (this.isEditable) await this.document.update({ [event.target.name]: event.target.value });
+  });
+  const beforeDeclaration = desktop.document.system.declaration;
+  for (const stance of ["neutral", "offensive", "defensive", "ranged"]) {
+    const event = { target: { name: "system.currentStance", value: stance, matches: () => false } };
+    const data = { system: { currentStance: stance } };
+    assert.deepEqual(desktop._processFormData(event, {}, { object: data }), data);
+    await desktop._onChangeForm(FatedActorSheet.DEFAULT_OPTIONS.form, event);
+    const context = await desktop._prepareContext({});
+    assert.deepEqual(context.currentStances.map(choice => choice.value), ["neutral", "offensive", "defensive", "ranged"]);
+    assert.deepEqual(context.currentStances.filter(choice => choice.selected).map(choice => choice.value), [stance]);
+  }
+  assert.equal(desktop.document.system.declaration, beforeDeclaration);
+  assert.equal(FatedActorSheet.DEFAULT_OPTIONS.form.submitOnChange, true);
+  assert.equal(Object.hasOwn(NpcActorSheet.DEFAULT_OPTIONS.actions, "adjustResource"), false);
+  assert.notEqual(FatedMobileSheet.DEFAULT_OPTIONS.actions.adjustResource, FatedActorSheet.DEFAULT_OPTIONS.actions.adjustResource);
+});
+
+test("Item opening uses only the embedded sheet, including read-only viewing and missing Items", () => {
+  const calls = [];
+  const desktop = resourceSheet();
+  desktop.document.items = new Map([["owned", { sheet: { render: options => calls.push(options) } }]]);
+  for (const editable of [true, false]) {
+    desktop.isEditable = editable;
+    for (const itemId of ["owned", "missing"])
+      FatedActorSheet.DEFAULT_OPTIONS.actions.openItem.call(desktop, {}, { dataset: { itemId } });
+  }
+  assert.deepEqual(calls, [{ force: true }, { force: true }]);
+  assert.deepEqual(desktop.document.updates, []);
+});
+
+test("equipment keeps its shared handler and removal still submits and honors edit permission", async () => {
+  assert.equal(FatedActorSheet.DEFAULT_OPTIONS.actions.toggleEquipment, toggleEquipment);
+  const desktop = resourceSheet();
+  const calls = [];
+  const item = { id: "owned", type: "weapon", isOwner: true, system: { equipped: false },
+    async update(data) { calls.push(data); this.system.equipped = data["system.equipped"]; } };
+  desktop.document.items = new Map([[item.id, item]]);
+  const before = structuredClone(desktop.document.system);
+  for (const expected of [true, false]) {
+    await FatedActorSheet.DEFAULT_OPTIONS.actions.toggleEquipment.call(desktop, {}, { dataset: { itemId: item.id } });
+    assert.equal(item.system.equipped, expected);
+  }
+  assert.deepEqual(calls, [{ "system.equipped": true }, { "system.equipped": false }]);
+  assert.deepEqual(desktop.document.system, before);
+  calls.length = 0;
+  desktop.submit = async () => calls.push("submit");
+  desktop.document.deleteEmbeddedDocuments = async (type, ids) => calls.push([type, ids]);
+  await FatedActorSheet.DEFAULT_OPTIONS.actions.removeItem.call(desktop, {}, { dataset: { itemId: "owned" } });
+  desktop.isEditable = false;
+  await FatedActorSheet.DEFAULT_OPTIONS.actions.removeItem.call(desktop, {}, { dataset: { itemId: "owned" } });
+  assert.deepEqual(calls, ["submit", ["Item", ["owned"]]]);
 });

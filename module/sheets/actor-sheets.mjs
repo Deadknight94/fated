@@ -11,6 +11,8 @@ import { equipmentView } from "../equipment.mjs";
 import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { openMobileSheet } from "./mobile-sheet.mjs";
+import { adjustResource } from "../resources.mjs";
+import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
 import { changeManualModifier, manualModifierAction } from "./manual-modifier-controls.mjs";
 import { rollSummary, signedModifier } from "../presentation/roll-summary.mjs";
 import { healthView } from "../health.mjs";
@@ -83,7 +85,7 @@ const FATED_SECTIONS = ["character", "items", "notes"];
 /**
  * Desktop Fated controller with health, rest, damage and manual-modifier controls.
  * _prepareContext reads services; form/actions persist through Foundry Documents.
- * The current desktop template has no stance selector or Turn Planner.
+ * Current stance uses ordinary form persistence; the Turn Planner remains mobile-only.
  */
 export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
   /** Selected desktop tab. Sheet-instance state only, never Actor data. */
@@ -103,6 +105,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,
       rollSummary: rollSummary(this.document), manualModifiers: this.document.system.manualRollModifiers.map(entry =>
         ({ ...entry, signedValue: signedModifier(entry.value) })),
+      currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),
       itemsSection: section === "items", notesSection: section === "notes" };
   }
 
@@ -137,10 +140,30 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     await this.render({ force: true });
   }
 
+  /** Save pending fields before adjusting; guard both submission and the service write. */
+  static async adjustResource(event, button) {
+    if (!this.isEditable || this.resourcePending) return;
+    this.resourcePending = true;
+    try {
+      await this.submit();
+      await adjustResource(this.document, button.dataset.resource, Number(button.dataset.delta));
+    } catch (error) {
+      ui.notifications.warn(systemMessage(error.message));
+    } finally {
+      this.resourcePending = false;
+    }
+  }
+
+  static openItem(event, button) {
+    this.document.items.get(button.dataset.itemId)?.sheet.render({ force: true });
+  }
+
   static DEFAULT_OPTIONS = {
     ...super.DEFAULT_OPTIONS,
     actions: {
       toggleEquipment,
+      adjustResource: FatedActorSheet.adjustResource,
+      openItem: FatedActorSheet.openItem,
       openRest: function () { return openRestApp(this.document); },
       openMobile: function () { return openMobileSheet(this.document); },
       health: healthAction,

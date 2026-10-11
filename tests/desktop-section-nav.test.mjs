@@ -101,8 +101,8 @@ test("the Character tab keeps every pre-existing desktop control", () => {
     'data-health-operation="stabilize"', 'data-health-operation="correct-death"', 'data-care="{{value}}"',
     'aria-pressed="{{selected}}"'])
     assert.ok(healthState.includes(control), control);
-  // The desktop sheet never offered a stance selector.
-  assert.doesNotMatch(character, /name="system\.currentStance"/);
+  // Current stance uses the ordinary Actor form field.
+  assert.match(character, /name="system\.currentStance"/);
 });
 
 test("the styling distinguishes the active tab and shows keyboard focus", () => {
@@ -151,4 +151,46 @@ test("the mobile and NPC sheets are untouched by the desktop tab work", () => {
   for (const other of [mobileTemplate, npcTemplate]) assert.doesNotMatch(other, /selectSection|fated-section-nav/);
   assert.match(mobileTemplate, /data-action="showSection"/);
   assert.match(npcTemplate, /data-action="selectNpcSection"/);
+});
+
+test("desktop resources retain inputs and limits with six localized, permission-aware buttons", () => {
+  const character = between(characterStart, branchEnd);
+  const buttons = [...character.matchAll(/<button[^>]*data-action="adjustResource"[^>]*>/g)].map(match => match[0]);
+  assert.equal(buttons.length, 6);
+  for (const resource of ["endurance", "hope", "power"]) for (const delta of [-1, 1]) {
+    const button = buttons.find(button => button.includes(`data-resource="${resource}"`) && button.includes(`data-delta="${delta}"`));
+    assert.ok(button);
+    assert.match(button, /type="button"/);
+    assert.match(button, /\{\{disabled \(not editable\)\}\}/);
+    assert.match(button, /aria-label="\{\{localize "FATED\.Mobile\.(Decrease|Increase)/);
+  }
+  assert.match(character, /value="\{\{system.load\}\}" readonly/);
+  assert.doesNotMatch(character, /data-resource="load"/);
+  assert.match(character, /<strong>\/ \{\{system.resources.endurance.max\}\}<\/strong>/);
+  assert.match(character, /<strong>± \{\{system.resources.hope.max\}\}<\/strong>/);
+  assert.match(character, /<strong>\/ \{\{powerMax\}\}<\/strong>/);
+  assert.match(character, /<select name="system.currentStance" \{\{disabled \(not editable\)\}\}>\{\{#each currentStances\}\}<option value="\{\{value\}\}"/);
+});
+
+test("Item Open is a separate named button from equipment and removal", () => {
+  const items = between(itemsStart, notesStart);
+  assert.match(items, /<button type="button" class="fated-item-open" data-action="openItem" data-item-id="\{\{item.id\}\}">\{\{localize "FATED.Common.Open"\}\}: \{\{item.name\}\}<\/button>/);
+  for (const action of ["openItem", "toggleEquipment", "removeItem"])
+    assert.equal((items.match(new RegExp(`data-action="${action}"`, "g")) ?? []).length, 1);
+});
+
+test("desktop additions have scoped responsive and keyboard focus styles", () => {
+  for (const name of ["fated-resource", "fated-resource-controls", "fated-current-stance", "fated-item-open"])
+    assert.match(css, new RegExp(`\\.fated-actor \\.${name}`));
+  assert.match(css, /\.fated-actor \.fated-resource \{[^}]*flex-wrap: wrap;/);
+  for (const selector of [".fated-resource-controls button", ".fated-current-stance select", ".fated-item-open"])
+    assert.ok(css.includes(`.fated-actor ${selector}:focus-visible`));
+});
+
+test("EN/IT catalogs align and every desktop localization key exists in both", () => {
+  const flatten = (object, prefix = "") => Object.entries(object).flatMap(([key, value]) =>
+    typeof value === "object" ? flatten(value, `${prefix}${key}.`) : [prefix + key]);
+  assert.deepEqual(flatten(catalogs.en).sort(), flatten(catalogs.it).sort());
+  for (const { 1: key } of template.matchAll(/localize "([^"]+)"/g)) for (const lang of ["en", "it"])
+    assert.equal(typeof key.split(".").reduce((value, part) => value?.[part], catalogs[lang]), "string", `${lang}: ${key}`);
 });
