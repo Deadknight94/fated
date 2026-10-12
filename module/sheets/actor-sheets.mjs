@@ -331,9 +331,6 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
    await this.document.update({
      "system.proficiencies": [...profs, newProf]
    });
-
-   // Existing unresolved dialog reference remains after the Actor write.
-    await dialog;
   }
 
   /**

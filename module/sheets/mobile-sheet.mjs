@@ -215,8 +215,6 @@ export class FatedMobileSheet extends ProficiencySheetMixin(LocalizedSheetMixin(
     await this.document.update({
       "system.proficiencies": [...profs, newProf]
     });
-    // Existing unresolved dialog reference remains after the Actor write.
-    await dialog;
   }
 
   static async removeProficiency(event, button) {
