@@ -509,3 +509,27 @@
   .fated .manual-modifier-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .fated .roll-summary-grid { grid-template-columns: 1fr; }
 }
+/* Desktop Turn Planner: shared markup, scoped desktop presentation. */
+.fated-actor .turn-planner { display: grid; gap: 0.8rem; min-width: 0; }
+.fated-actor .turn-planner button { min-height: 2.75rem; white-space: normal; overflow-wrap: anywhere; }
+.fated-actor .turn-stance-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+.fated-actor .turn-stance-buttons [aria-pressed="true"],
+.fated-actor .turn-primary { background: var(--color-warm-2, #964b25); color: #fff; font-weight: bold; }
+.fated-actor .turn-sequence { display: grid; gap: 1rem; list-style: none; margin: 0; padding: 0; }
+.fated-actor .turn-entry { border: 1px solid var(--color-border-light-2, #777); border-radius: 8px; padding: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.fated-actor .turn-instruction { font-size: 1.2rem; font-weight: bold; }
+.fated-actor .turn-entry-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.fated-actor .turn-add-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.fated-actor .turn-add-controls button { min-width: 0; }
+.fated-actor .turn-picker[hidden] { display: none; }
+.fated-actor .turn-picker button { display: grid; width: 100%; text-align: left; gap: 0.25rem; margin: 0.5rem 0; }
+.fated-actor .turn-picker span, .fated-actor .turn-planner .mobile-note { font-size: 0.9rem; }
+.fated-actor .turn-issues { border: 1px solid #a66c25; border-radius: 8px; padding: 0.75rem; }
+.fated-actor .turn-completed { border: 2px solid var(--color-warm-2, #964b25); }
+.fated-actor .turn-planner .mobile-breakdown dl > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; }
+.fated-actor .turn-planner .mobile-breakdown dt { overflow-wrap: anywhere; }
+.fated-actor .turn-planner .mobile-breakdown dd { flex-shrink: 0; }
+.fated-actor .turn-planner .mobile-rules { white-space: pre-wrap; }
+.fated-actor .turn-planner button:disabled { opacity: 0.45; cursor: not-allowed; }
+.fated-actor .turn-planner button:focus-visible,
+.fated-actor .turn-planner summary:focus-visible { outline: 2px solid var(--color-warm-2, #964b25); outline-offset: 2px; }

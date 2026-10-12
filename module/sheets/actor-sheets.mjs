@@ -1,7 +1,7 @@
 /**
  * @file Desktop Fated and simplified NPC sheet/controllers using Foundry ActorSheetV2.
  * Build localized presentation models and route edits to Documents/shared controls.
- * The Fated desktop has global modifier editing; the mobile sheet owns the planner.
+ * The Fated desktop has global modifier editing; both sheets share the planner.
  * NPC views do not acquire Fated health, stance or declaration mechanics.
  */
 import { uiText, systemMessage } from "../presentation/text.mjs";
@@ -12,8 +12,10 @@ import { toggleEquipment } from "./equipment-controls.mjs";
 import { normalizeProficiencyKey, hasDuplicateKey } from "../helpers/proficiency-keys.mjs";
 import { openMobileSheet } from "./mobile-sheet.mjs";
 import { adjustResource } from "../resources.mjs";
-import { DECLARATION_STANCES } from "../declaration/evaluate.mjs";
+import { DECLARATION_STANCES, powerActionAdditionIssue } from "../declaration/evaluate.mjs";
 import { changeManualModifier, manualModifierAction } from "./manual-modifier-controls.mjs";
+import { plannerView } from "../presentation/planner.mjs";
+import { getDeclarationEvaluation, updateDeclaration } from "../declaration/service.mjs";
 import { availableActionsView } from "../presentation/actions.mjs";
 import { rollSummary, signedModifier } from "../presentation/roll-summary.mjs";
 import { healthView } from "../health.mjs";
@@ -81,16 +83,17 @@ class BaseFatedActorSheet extends LocalizedSheetMixin(HandlebarsApplicationMixin
 }
 
 /** Desktop tab ids; the first entry is the section a freshly opened sheet shows. */
-const FATED_SECTIONS = ["character", "actions", "items", "notes"];
+const FATED_SECTIONS = ["character", "turn", "actions", "items", "notes"];
 
 /**
  * Desktop Fated controller with health, rest, damage and manual-modifier controls.
  * _prepareContext reads services; form/actions persist through Foundry Documents.
- * Current stance uses ordinary form persistence; the Turn Planner remains mobile-only.
+ * The Turn Planner delegates to the same presentation and services as mobile.
  */
 export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) {
   /** Selected desktop tab. Sheet-instance state only, never Actor data. */
   _fatedSection = "character";
+  actionPickerOpen = false;
 
   /** Add the mobile entry to Foundry's native menu, retaining inherited controls. */
   _getHeaderControls() {
@@ -103,12 +106,24 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
 
   async _prepareContext(options) {
     const section = FATED_SECTIONS.includes(this._fatedSection) ? this._fatedSection : "character";
+    const actions = availableActionsView(this.document);
+    let turnContext = {};
+    if (section === "turn") {
+      const declaration = this.document.system.declaration.toObject();
+      const evaluation = getDeclarationEvaluation(this.document);
+      turnContext = { planner: plannerView(this.document, { declaration, evaluation,
+        actionPickerOpen: this.actionPickerOpen, actionPickerId: `${this.id}-desktop-action-picker` }),
+        actions: actions.map(action => ({ ...action,
+          additionIssue: evaluation.locked ? null : systemMessage(powerActionAdditionIssue(action, evaluation))
+        })) };
+    }
     return { ...await super._prepareContext(options), canEditProficiencyKeys: game.user.isGM && this.isEditable,
       rollSummary: rollSummary(this.document), manualModifiers: this.document.system.manualRollModifiers.map(entry =>
         ({ ...entry, signedValue: signedModifier(entry.value) })),
       currentStances: DECLARATION_STANCES.map(value => ({ value, label: displayLabel("stance", value), selected: value === this.document.system.currentStance })),
-      actions: availableActionsView(this.document), actionsSection: section === "actions",
-      itemsSection: section === "items", notesSection: section === "notes" };
+      actions, actionsSection: section === "actions",
+      itemsSection: section === "items", notesSection: section === "notes",
+      turnSection: section === "turn", ...turnContext };
   }
 
   async _onChangeForm(formConfig, event) {
@@ -127,7 +142,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
   }
 
   /**
-   * Switch the desktop tab (Character / Actions / Items / Notes).
+   * Switch the desktop tab (Character / Turn / Actions / Items / Notes).
    * Pending form fields are submitted first so edits made in the section being left
    * are never dropped; the new section then starts at the top of its own content.
    * Only the sheet instance remembers the selection, never the Actor document.
@@ -156,6 +171,32 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     }
   }
 
+  /** Sheet-local expansion only: no submit or declaration operation. */
+  static toggleActionPicker(event, button) {
+    if (!this.isEditable || button.disabled) return;
+    const picker = this.element.querySelector(".turn-picker");
+    if (!picker) return;
+    this.actionPickerOpen = !this.actionPickerOpen;
+    picker.hidden = !this.actionPickerOpen;
+    button.setAttribute("aria-expanded", String(this.actionPickerOpen));
+  }
+
+  /** Carry the rendered revision to the service; guard repeated taps in this sheet. */
+  static async planner(event, button) {
+    if (!this.isEditable || this.plannerPending) return;
+    const revision = Number(button.closest("[data-declaration-revision]").dataset.declarationRevision);
+    const { operation: type, stance, kind, itemId, actionId, entryId, direction, enduranceSpend } = button.dataset;
+    this.plannerPending = true;
+    try {
+      await updateDeclaration(this.document, revision, { type, stance, kind, itemId, actionId, entryId, direction: Number(direction), enduranceSpend: Number(enduranceSpend) });
+    } catch (error) {
+      ui.notifications.warn(systemMessage(error.message));
+    } finally {
+      this.plannerPending = false;
+      await this.render({ force: true });
+    }
+  }
+
   static openItem(event, button) {
     this.document.items.get(button.dataset.itemId)?.sheet.render({ force: true });
   }
@@ -172,6 +213,8 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       manualModifier: manualModifierAction,
       openDamage: openDamageBookkeeping,
       selectSection: FatedActorSheet.selectSection,
+      planner: FatedActorSheet.planner,
+      toggleActionPicker: FatedActorSheet.toggleActionPicker,
       // Proficiency mutation actions
       addProficiency: FatedActorSheet.addProficiency,
       removeProficiency: FatedActorSheet.removeProficiency,
@@ -194,6 +237,10 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     this._scrollPosition =
       this.element?.querySelector(".window-content")?.scrollTop ?? 0;
     captureProficiencyDetails(this);
+    if (this.element?.querySelector(".turn-planner")) {
+      this.openPlannerDetails = new Set([...(this.element.querySelectorAll("details[open][data-planner-detail]") ?? [])]
+        .map(element => element.dataset.plannerDetail));
+    }
 
     await super._preRender(context, options);
   }
@@ -202,6 +249,9 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
     await super._onRender(context, options);
 
     restoreProficiencyDetails(this);
+    for (const element of this.element?.querySelectorAll("details[data-planner-detail]") ?? []) {
+      element.open = this.openPlannerDetails?.has(element.dataset.plannerDetail) ?? false;
+    }
 
     const scrollContainer = this.element?.querySelector(".window-content");
     if (!scrollContainer) return;
@@ -224,7 +274,7 @@ export class FatedActorSheet extends ProficiencySheetMixin(BaseFatedActorSheet) 
       id: "main",
       root: true,
       template: "systems/fated/templates/actor/fated-sheet.hbs",
-      templates: ["systems/fated/templates/actor/health-state.hbs", "systems/fated/templates/actor/defense.hbs"]
+      templates: ["systems/fated/templates/actor/turn-planner.hbs", "systems/fated/templates/actor/health-state.hbs", "systems/fated/templates/actor/defense.hbs"]
     }
   };
 

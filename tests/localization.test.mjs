@@ -434,7 +434,7 @@ for (const [lang, i18n] of [["en", en], ["it", it]]) {
   });
 }
 
-test("locked planner presentation reads frozen numbers and does not recalculate from live data", async () => {
+for (const Sheet of [FatedMobileSheet, FatedActorSheet]) test(`${Sheet.name}: locked planner presentation reads frozen numbers and does not recalculate from live data`, async () => {
   globalThis.game = { i18n: it, user: { isGM: false } };
   const actor = actorFixture();
   const declaration = { revision: 2, status: "locked", stance: "offensive", completed: [], snapshot: {
@@ -444,22 +444,31 @@ test("locked planner presentation reads frozen numbers and does not recalculate 
         successThreshold: { base: 4, total: 5, complete: true, modifiers: [{ id: "multi-action", label: "Multi-Action", value: 1, source: { type: "declaration" } }] } } }] } };
   const before = structuredClone(declaration);
   actor.system.declaration = { toObject: () => declaration };
-  const context = await new FatedMobileSheet({ document: actor })._prepareContext({});
+  const sheet = new Sheet({ document: actor });
+  if (Sheet === FatedActorSheet) sheet._fatedSection = "turn";
+  const context = await sheet._prepareContext({});
   assert.equal(context.planner.entries[0].dice.total, "2");
   assert.equal(context.planner.entries[0].diceSourceLabel, "Furtività 2");
   assert.equal(context.planner.entries[0].threshold.modifiers[0].label, "Azioni Multiple");
   assert.match(templates.get("templates/actor/turn-planner.hbs")(context), /Tira 2 Dadi Successo/);
   assert.match(templates.get("templates/actor/turn-planner.hbs")(context), /Sforzo di Resistenza: 2/);
   assert.doesNotMatch(templates.get("templates/actor/turn-planner.hbs")(context), /data-operation="endurance-spend"/);
+  if (Sheet === FatedActorSheet) {
+    const html = templates.get("templates/actor/fated-sheet.hbs")(context);
+    assert.match(html, /class="turn-planner"/);
+    assert.match(html, /Tira 2 Dadi Successo/);
+    assert.doesNotMatch(html, /fated-sheet-header|class="panel inventory"|class="panel biography"|class="fated-action-card"/);
+  }
   assert.deepEqual(declaration, before);
   delete globalThis.game;
 });
 
-for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: unified sequence controls toggle locally and preserve planner operations`, async () => {
+for (const Sheet of [FatedMobileSheet, FatedActorSheet]) for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: ${Sheet.name} unified sequence controls toggle locally and preserve planner operations`, async () => {
   globalThis.game = { i18n, user: { isGM: false } };
   const actor = actorFixture();
   actor.system.updateSource({ declaration: { stance: "neutral" } });
-  const sheet = new FatedMobileSheet({ document: actor });
+  const sheet = new Sheet({ document: actor });
+  if (Sheet === FatedActorSheet) sheet._fatedSection = "turn";
   const render = async () => templates.get("templates/actor/turn-planner.hbs")(await sheet._prepareContext({}));
   const before = actor.system.toObject();
   actor.update = async () => assert.fail("Toggling must not write Actor data");
@@ -467,7 +476,7 @@ for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: unified sequ
   const picker = { hidden: true };
   const toggle = { disabled: false, setAttribute(name, value) { this[name] = value; } };
   sheet.element = { querySelector(selector) { assert.equal(selector, ".turn-picker"); return picker; } };
-  const handler = FatedMobileSheet.DEFAULT_OPTIONS.actions.toggleActionPicker;
+  const handler = Sheet.DEFAULT_OPTIONS.actions.toggleActionPicker;
   let html = await render();
   const labels = catalogs[lang].FATED.Planner;
   assert.ok(html.includes(`<h3>${labels.AddToSequence}</h3>`));
@@ -491,14 +500,14 @@ for (const [lang, i18n] of [["en", en], ["it", it]]) test(`${lang}: unified sequ
   assert.equal(toggle["aria-expanded"], "false");
   assert.match(await render(), /class="turn-picker"[^>]*hidden/);
   assert.deepEqual(actor.system.toObject(), before);
-  assert.equal(new FatedMobileSheet({ document: actor }).actionPickerOpen, false);
+  assert.equal(new Sheet({ document: actor }).actionPickerOpen, false);
 
   // Exercise the unchanged sheet dispatcher and real declaration service.
   handler.call(sheet, {}, toggle);
   let writes = 0;
   actor.update = async changes => { writes++; actor.system.updateSource({ declaration: changes["system.declaration"] }); };
   sheet.render = async () => { sheet.context = await sheet._prepareContext({}); };
-  const add = async kind => FatedMobileSheet.DEFAULT_OPTIONS.actions.planner.call(sheet, {}, {
+  const add = async kind => Sheet.DEFAULT_OPTIONS.actions.planner.call(sheet, {}, {
     dataset: { operation: "add", kind, itemId: "item", actionId: "action" },
     closest: () => ({ dataset: { declarationRevision: actor.system.declaration.revision } })
   });

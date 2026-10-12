@@ -28,7 +28,7 @@ const { RestApp } = await import("../module/apps/rest-app.mjs");
 const { adjustResource } = await import("../module/resources.mjs");
 const { toggleEquipment } = await import("../module/sheets/equipment-controls.mjs");
 
-const SECTIONS = ["character", "actions", "items", "notes"];
+const SECTIONS = ["character", "turn", "actions", "items", "notes"];
 
 const actor = {
   id: "a1", _id: "a1", name: "Yara", type: "fated", img: "", isOwner: true,
@@ -63,16 +63,18 @@ test("desktop sheet defaults to the Character tab", async () => {
 test("each tab exposes exactly one section flag and persists across rerenders", async () => {
   for (const section of SECTIONS) {
     sheet._fatedSection = section;
+    if (section === "turn") actor.system.declaration = { toObject: () => ({ version: 1, revision: 0, status: "editing", stance: "neutral", enduranceSpend: 0, entries: [], snapshot: null, completed: [] }) };
     for (const rerender of [1, 2]) {
       assert.deepEqual(await flags(await sheet._prepareContext({})), [section === "actions", section === "items", section === "notes"]);
       assert.equal(sheet._fatedSection, section);
     }
   }
+  actor.system.declaration = null;
   sheet._fatedSection = "character";
 });
 
 test("unknown or missing tab data falls back to the Character tab", async () => {
-  for (const value of ["turn", "", null, undefined, 0, {}]) {
+  for (const value of ["unknown", "", null, undefined, 0, {}]) {
     sheet._fatedSection = value;
     assert.deepEqual(await flags(await sheet._prepareContext({})), [false, false, false]);
   }
@@ -135,7 +137,7 @@ test("reselecting the current tab leaves the scroll position alone", async () =>
 test("invalid tab data is ignored and leaves the selected tab unchanged", async () => {
   submits.length = 0;
   await click(undefined);
-  await click("turn");
+  await click("unknown");
   assert.equal(sheet._fatedSection, "character");
   assert.deepEqual(submits, []);
 });
@@ -145,7 +147,7 @@ test("the desktop tab action is desktop-only and every existing desktop control 
   for (const action of ["toggleEquipment", "openRest", "openMobile", "health", "manualModifier", "openDamage",
     "selectSection", "addProficiency", "removeProficiency", "removeItem"])
       assert.ok(actions[action], action);
-  for (const forbidden of ["selectNpcSection", "showSection", "planner", "moveTurn", "addAction", "clearTurn", "pushTurn"])
+  for (const forbidden of ["selectNpcSection", "showSection", "moveTurn", "addAction", "clearTurn", "pushTurn"])
     assert.equal(Object.hasOwn(actions, forbidden), false, forbidden);
 });
 

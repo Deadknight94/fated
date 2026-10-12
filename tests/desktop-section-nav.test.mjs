@@ -25,19 +25,20 @@ const between = (from, to) => template.slice(from, to);
 test("the desktop sheet declares one navigation bar with one button per tab", () => {
   assert.match(template, /<nav class="fated-section-nav" aria-label="\{\{localize "FATED\.Sheet\.Sections"\}\}">/);
   const nav = between(navStart, navEnd);
-  for (const section of ["character", "actions", "items", "notes"])
+  for (const section of ["character", "turn", "actions", "items", "notes"])
     assert.equal((nav.match(new RegExp(`<button[^>]*data-action="selectSection"[^>]*data-section="${section}"`, "g")) ?? []).length, 1, section);
-  assert.equal((nav.match(/data-action="selectSection"/g) ?? []).length, 4);
+  assert.equal((nav.match(/data-action="selectSection"/g) ?? []).length, 5);
 });
 
 test("every tab button names itself and marks only itself as active", () => {
   const active = {
-    character: /\{\{#if \(or actionsSection itemsSection notesSection\)\}\}\{\{else\}\} aria-current="page"\{\{\/if\}\}/,
+    character: /\{\{#if \(or turnSection actionsSection itemsSection notesSection\)\}\}\{\{else\}\} aria-current="page"\{\{\/if\}\}/,
+    turn: /\{\{#if turnSection\}\} aria-current="page"\{\{\/if\}\}/,
     actions: /\{\{#if actionsSection\}\} aria-current="page"\{\{\/if\}\}/,
     items: /\{\{#if itemsSection\}\} aria-current="page"\{\{\/if\}\}/,
     notes: /\{\{#if notesSection\}\} aria-current="page"\{\{\/if\}\}/
   };
-  const label = { actions: "FATED.Common.Actions", character: "FATED.Common.Character", items: "FATED.Sheet.Items", notes: "FATED.Sheet.Biography" };
+  const label = { turn: "FATED.Common.Turn", actions: "FATED.Common.Actions", character: "FATED.Common.Character", items: "FATED.Sheet.Items", notes: "FATED.Sheet.Biography" };
   for (const section of Object.keys(active)) {
     // The opening tag ends at the ">" that precedes the button's localized label.
     const [button] = template.match(new RegExp(`<button[^>]*data-section="${section}"[\\s\\S]*?(?=>\\{\\{localize)`));
@@ -45,7 +46,7 @@ test("every tab button names itself and marks only itself as active", () => {
     assert.match(button, new RegExp(`aria-label="\\{\\{localize "${label[section]}"\\}\\}"`));
     assert.match(button, active[section]);
   }
-  assert.equal((template.match(/aria-current="page"/g) ?? []).length, 4);
+  assert.equal((template.match(/aria-current="page"/g) ?? []).length, 5);
   // Only the selected section is rendered, so the ARIA tablist roles would be wrong here.
   assert.doesNotMatch(template, /role="tab(list)?"/);
 });
@@ -199,7 +200,7 @@ test("EN/IT catalogs align and every desktop localization key exists in both", (
 
 test("Actions navigation order, card information, details and empty state are accessible without editing", () => {
   const nav = between(navStart, navEnd);
-  assert.deepEqual([...nav.matchAll(/data-section="([^"]+)"/g)].map(m => m[1]), ["character", "actions", "items", "notes"]);
+  assert.deepEqual([...nav.matchAll(/data-section="([^"]+)"/g)].map(m => m[1]), ["character", "turn", "actions", "items", "notes"]);
   const actions = between(actionsStart, characterStart);
   for (const field of ["name", "source.itemName", "classificationLabel", "rollRequirementLabel", "dice.total",
     "threshold.total", "damagePerSuccess", "attackLabel", "rangeLabel", "stanceLabel", "eligibilityLabel",

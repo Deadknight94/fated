@@ -1,6 +1,7 @@
 <div class="fated-sheet-body">
   <nav class="fated-section-nav" aria-label="{{localize "FATED.Sheet.Sections"}}">
-    <button type="button" data-action="selectSection" data-section="character" aria-label="{{localize "FATED.Common.Character"}}"{{#if (or actionsSection itemsSection notesSection)}}{{else}} aria-current="page"{{/if}}>{{localize "FATED.Common.Character"}}</button>
+    <button type="button" data-action="selectSection" data-section="character" aria-label="{{localize "FATED.Common.Character"}}"{{#if (or turnSection actionsSection itemsSection notesSection)}}{{else}} aria-current="page"{{/if}}>{{localize "FATED.Common.Character"}}</button>
+    <button type="button" data-action="selectSection" data-section="turn" aria-label="{{localize "FATED.Common.Turn"}}"{{#if turnSection}} aria-current="page"{{/if}}>{{localize "FATED.Common.Turn"}}</button>
     <button type="button" data-action="selectSection" data-section="actions" aria-label="{{localize "FATED.Common.Actions"}}"{{#if actionsSection}} aria-current="page"{{/if}}>{{localize "FATED.Common.Actions"}}</button>
     <button type="button" data-action="selectSection" data-section="items" aria-label="{{localize "FATED.Sheet.Items"}}"{{#if itemsSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Items"}}</button>
     <button type="button" data-action="selectSection" data-section="notes" aria-label="{{localize "FATED.Sheet.Biography"}}"{{#if notesSection}} aria-current="page"{{/if}}>{{localize "FATED.Sheet.Biography"}}</button>
@@ -30,6 +31,8 @@
     <h2>{{localize "FATED.Sheet.Biography"}}</h2>
     <textarea name="system.biography" rows="8" {{disabled (not editable)}}>{{system.biography}}</textarea>
   </section>
+  {{else if turnSection}}
+  {{> "systems/fated/templates/actor/turn-planner.hbs"}}
   {{else if actionsSection}}
   <section class="fated-actions" aria-label="{{localize "FATED.Common.Actions"}}">
     <h2>{{localize "FATED.Common.Actions"}} ({{actions.length}})</h2>
