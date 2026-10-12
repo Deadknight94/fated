@@ -163,3 +163,14 @@ test('read-only desktop permits viewing but no planner or picker mutation', asyn
   assert.equal(f.writes.length, 0); assert.equal(f.sheet.actionPickerOpen, false);
   assert.equal((await f.sheet._prepareContext({})).editable, false);
 });
+
+test('desktop planner multiline buttons grow without changing mobile styling', () => {
+  const css = readFileSync(new URL('../styles/fated.css', import.meta.url), 'utf8');
+  const desktopButtons = css.match(/\.fated-actor \.turn-planner button \{([^}]+)\}/)?.[1];
+  assert.ok(desktopButtons);
+  assert.match(desktopButtons, /min-height: 2\.75rem;/);
+  assert.match(desktopButtons, /height: auto;/);
+  assert.match(desktopButtons, /white-space: normal;/);
+  assert.match(desktopButtons, /overflow-wrap: anywhere;/);
+  assert.match(css, /\.fated-mobile button \{[^}]*height: auto;/);
+});

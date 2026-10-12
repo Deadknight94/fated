@@ -511,7 +511,7 @@
 }
 /* Desktop Turn Planner: shared markup, scoped desktop presentation. */
 .fated-actor .turn-planner { display: grid; gap: 0.8rem; min-width: 0; }
-.fated-actor .turn-planner button { min-height: 2.75rem; white-space: normal; overflow-wrap: anywhere; }
+.fated-actor .turn-planner button { min-height: 2.75rem; height: auto; white-space: normal; overflow-wrap: anywhere; }
 .fated-actor .turn-stance-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
 .fated-actor .turn-stance-buttons [aria-pressed="true"],
 .fated-actor .turn-primary { background: var(--color-warm-2, #964b25); color: #fff; font-weight: bold; }
